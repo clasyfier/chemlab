@@ -346,6 +346,14 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
 .prog-row .pbar{flex:1}
 .prog-row .pc{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:13px;min-width:86px;text-align:right;font-variant-numeric:tabular-nums}
 .prog-row .em{width:24px;text-align:center}
+.pickrow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pickcard{display:flex;flex-direction:column;gap:8px;align-items:flex-start;text-align:left;
+  border:1px solid var(--line);border-radius:12px;background:var(--panel2);padding:18px;cursor:pointer;
+  transition:transform .12s,border-color .12s;font:inherit;color:inherit}
+.pickcard:hover{transform:translateY(-3px);border-color:var(--bunsen)}
+.pickcard b{font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;font-size:17px}
+.pickcard .sub{font-size:13px;color:var(--ink-soft)}
+@media (max-width:560px){.pickrow{grid-template-columns:1fr}}
 .planbox{white-space:pre-wrap;font-size:14.5px;line-height:1.6;background:var(--panel2);border-radius:10px;padding:16px 18px;margin-top:12px;max-width:78ch}
 @media (max-width:760px){.prog-row .nm{flex-basis:130px;font-size:13px}}
 .topic.locked h3{opacity:.55}
@@ -524,6 +532,27 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
     </div>
   </div>
 </div>
+<div class="modal" id="testpick" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-label="Choose test type" style="max-width:560px">
+    <button class="modal-x" id="testpick-x" aria-label="Close">×</button>
+    <div style="padding:26px">
+      <h2 class="serif" style="font-size:22px;margin:0 0 4px">How do you want to test yourself?</h2>
+      <p style="color:var(--ink-soft);font-size:14px;margin:0 0 16px">Pick one and we'll take you straight there.</p>
+      <div class="pickrow">
+        <button class="pickcard" data-pick="quickfire">
+          <span style="font-size:30px">⚡</span>
+          <b>Quick-fire quiz</b>
+          <span class="sub">One question at a time, instant marking, streaks. Perfect for a spare five minutes.</span>
+        </button>
+        <button class="pickcard" data-pick="exam">
+          <span style="font-size:30px">📝</span>
+          <b>Exam-like questions</b>
+          <span class="sub">Timed papers — multiple choice, written or practical — marked by the AI examiner.</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 <div class="modal" id="acctmodal" hidden>
   <div class="modal-card" role="dialog" aria-modal="true" aria-label="Account settings" style="max-width:640px">
     <button class="modal-x" id="acctmodal-x" aria-label="Close">×</button>
@@ -621,7 +650,7 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
     </div>
     <div id="ex-area"></div>
   </div>
-  <h2 class="serif" style="font-size:22px;margin:8px 0 6px">Quick-fire quiz</h2>
+  <h2 class="serif" id="quickfire" style="font-size:22px;margin:8px 0 6px;scroll-margin-top:70px">Quick-fire quiz</h2>
   <div class="controls" style="margin:0 0 12px"><div class="ctrl"><label for="q-topic">Practise</label>
     <select id="q-topic"></select></div></div>
   <div class="quiz-card" id="quizcard"></div>
@@ -1577,6 +1606,7 @@ function showView(v){
   window.scrollTo({top:0});
   if(v==="home")renderDash();
   if(v==="progress")renderProgress();
+  if(v==="quiz"&&!(typeof EX!=="undefined"&&EX&&!EX.done))showTestPick();
   redrawAll();
 }
 
@@ -2513,6 +2543,18 @@ function drawShape(){
   $("#sh-name").textContent=g.n; $("#sh-ang").textContent=g.a; $("#sh-ex").textContent=g.ex;
 }
 ["sh-bp","sh-lp"].forEach(id=>$("#"+id).addEventListener("input",drawShape));
+
+/* ---------- test-type chooser ---------- */
+function showTestPick(){ const m=$("#testpick"); if(m)m.hidden=false; }
+function closeTestPick(){ const m=$("#testpick"); if(m)m.hidden=true; }
+$("#testpick-x").addEventListener("click",closeTestPick);
+$("#testpick").addEventListener("click",e=>{if(e.target.id==="testpick")closeTestPick();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeTestPick();});
+$$("#testpick .pickcard").forEach(b=>b.addEventListener("click",()=>{
+  closeTestPick();
+  const target=b.dataset.pick==="exam"?document.querySelector("#examcard"):document.querySelector("#quickfire");
+  if(target)setTimeout(()=>target.scrollIntoView({behavior:"smooth",block:"start"}),60);
+}));
 
 /* ---------- topic stats ---------- */
 function recTopic(t,got,max){
