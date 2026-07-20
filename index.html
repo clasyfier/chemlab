@@ -323,6 +323,9 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
 .btn[disabled]{opacity:.45;cursor:default}
 .danger-zone{border:1px dashed var(--danger);border-radius:10px;padding:12px 14px;margin-top:10px;display:none}
 .danger-zone.open{display:block}
+.charmeter{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:11.5px;color:var(--ink-soft);margin-top:4px;font-variant-numeric:tabular-nums}
+.charmeter.ok{color:var(--ok)}
+.charmeter.max{color:var(--warn)}
 .topbar{position:sticky;top:0;z-index:35;display:flex;justify-content:flex-end;align-items:center;gap:8px;
   padding:6px 0 10px;background:linear-gradient(var(--ground) 75%,transparent);min-height:46px}
 .avatar.sm{width:36px;height:36px;font-size:15px;flex:0 0 36px;cursor:pointer;transition:transform .12s}
@@ -1889,7 +1892,7 @@ function renderAuth(){
     <div class="field"><label for="a-email">Email</label><input id="a-email" type="email" autocomplete="email" placeholder="you@example.com"></div>
     <div class="field"><label for="a-pass">Password</label>
       <div class="pwwrap"><input id="a-pass" type="password" autocomplete="${tab==="in"?"current":"new"}-password" placeholder="${tab==="up"?"8+ characters":"••••••••"}"><button class="eye" id="a-eye" type="button" aria-label="Show password">👁</button></div>
-      ${tab==="up"?'<div class="strength"><i id="a-str"></i></div>':""}
+      ${tab==="up"?'<div class="strength"><i id="a-str"></i></div><div class="charmeter" id="a-count">0/8 minimum</div>':""}
     </div>
     <div class="aerr" id="a-err"></div>
     <button class="btn" id="a-go" style="width:100%;padding:11px">${tab==="in"?"Sign in":"Create account"}</button>
@@ -1899,10 +1902,15 @@ function renderAuth(){
   q("#t-up").onclick=()=>{tab="up";renderAuth();};
   q("#a-eye").onclick=()=>{const f=q("#a-pass");f.type=f.type==="password"?"text":"password";};
   q("#a-pass").addEventListener("input",()=>{
-    const bar=q("#a-str"); if(!bar)return;
-    const sc=pwScore(q("#a-pass").value);
-    bar.style.width=(sc*25)+"%";
-    bar.style.background=["var(--danger)","var(--danger)","var(--warn)","var(--cu)","var(--ok)"][sc];
+    const v=q("#a-pass").value;
+    const bar=q("#a-str");
+    if(bar){
+      const sc=pwScore(v);
+      bar.style.width=(sc*25)+"%";
+      bar.style.background=["var(--danger)","var(--danger)","var(--warn)","var(--cu)","var(--ok)"][sc];
+    }
+    const c=q("#a-count");
+    if(c){c.textContent=v.length+"/8 minimum";c.classList.toggle("ok",v.length>=8);}
   });
   const go=async()=>{
     const email=q("#a-email").value.trim(), password=q("#a-pass").value;
@@ -1980,6 +1988,7 @@ function render(){
         <input id="nick" maxlength="24" value="${prof.nickname||""}" placeholder="e.g. MoleMaster"
           style="font:inherit;padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);min-width:200px">
         <button class="btn ghost" id="nick-save">Save</button></p>
+      <div class="charmeter" id="nick-count">${(prof.nickname||"").length}/24</div>
       <h4 class="setlbl" style="margin-top:14px">Profile picture</h4>
       <div class="avpick">${AV_EMOJI.map(e=>`<button class="av-e${prof.avatar===e?" on":""}" data-e="${e}" aria-label="Avatar ${e}">${e}</button>`).join("")}</div>
       <div class="avhues">${AV_HUES.map(h=>`<button class="av-h${prof.avatar_hue===h?" on":""}" data-h="${h}" style="background:hsl(${h},50%,45%)" aria-label="Colour"></button>`).join("")}</div>
@@ -1996,6 +2005,7 @@ function render(){
         <input id="pw-new" type="password" autocomplete="new-password" placeholder="New password (8+ characters)"
           style="font:inherit;padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);min-width:230px">
         <button class="btn ghost" id="pw-save">Update password</button></p>
+      <div class="charmeter" id="pw-count">0/8 minimum</div>
       <div class="aerr" id="pw-msg"></div>
     </div>
   </div>
@@ -2051,6 +2061,10 @@ function render(){
     saveProf({nickname:v||null});
   };
   $("#nick").addEventListener("keydown",e=>{if(e.key==="Enter")$("#nick-save").click();});
+  $("#nick").addEventListener("input",()=>{
+    const n=$("#nick").value.length;
+    const c=$("#nick-count"); c.textContent=n+"/24"; c.classList.toggle("max",n>=24);
+  });
   acct.querySelectorAll(".av-e").forEach(b=>b.onclick=()=>saveProf({avatar:prof.avatar===b.dataset.e?null:b.dataset.e},true));
   acct.querySelectorAll(".av-h").forEach(b=>b.onclick=()=>saveProf({avatar_hue:+b.dataset.h},true));
   $("#av-upload").onclick=()=>$("#av-file").click();
@@ -2067,6 +2081,10 @@ function render(){
     }catch(err){$("#av-msg").textContent="Couldn't read that image — try a JPG or PNG.";}
   });
   const avrm=$("#av-remove"); if(avrm)avrm.onclick=()=>saveProf({avatar:null});
+  $("#pw-new").addEventListener("input",()=>{
+    const n=$("#pw-new").value.length;
+    const c=$("#pw-count"); c.textContent=n+"/8 minimum"; c.classList.toggle("ok",n>=8);
+  });
   $("#pw-save").onclick=async()=>{
     const v=$("#pw-new").value;
     if(v.length<8){$("#pw-msg").textContent="Use at least 8 characters.";return;}
