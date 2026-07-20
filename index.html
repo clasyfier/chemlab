@@ -78,8 +78,14 @@ section.view.on{display:block;animation:fadein .25s ease}
 .lede{color:var(--ink-soft);max-width:62ch;margin:0 0 26px}
 
 /* hero */
-#spectrum{width:100%;height:175px;display:block;border-radius:var(--r);background:#05080c;cursor:pointer;touch-action:manipulation}
+#spectrum{width:100%;height:310px;display:block;border-radius:var(--r);background:#05080c;cursor:pointer;touch-action:manipulation}
 .hero-wrap{position:relative;margin:6px 0 26px}
+#spec-chips{display:flex;gap:8px;margin:12px 0 0;flex-wrap:wrap}
+#spec-chips button{display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--panel);border-radius:99px;padding:6px 14px;font-size:13.5px;color:var(--ink-soft)}
+#spec-chips button:hover{border-color:var(--bunsen)}
+#spec-chips button.on{border-color:var(--bunsen);color:var(--ink);font-weight:600;background:var(--bunsen-soft)}
+#spec-chips i{width:10px;height:10px;border-radius:50%;display:inline-block}
+@media (max-width:760px){#spectrum{height:250px}}
 #spec-info{display:flex;align-items:flex-start;gap:10px;margin:10px 2px 0;font-size:14px;color:var(--ink-soft);max-width:78ch}
 #spec-info i{width:12px;height:12px;border-radius:3px;flex:0 0 12px;margin-top:4px;display:inline-block}
 #spec-info b{color:var(--ink)}
@@ -265,9 +271,10 @@ ul.chk{list-style:none;padding-left:0!important;margin:8px 0}
 <main>
 
 <section class="view on" id="v-home">
-  <div class="eyebrow">Hydrogen emission spectrum · hover or tap a line</div>
+  <div class="eyebrow">Hydrogen emission spectrum · watch the electron fall</div>
   <div class="hero-wrap">
-    <canvas id="spectrum" height="175"></canvas>
+    <canvas id="spectrum" height="310"></canvas>
+    <div id="spec-chips"></div>
     <p id="spec-info"></p>
   </div>
   <h1>Chemistry, from first principles to the lab bench.</h1>
@@ -739,64 +746,100 @@ const BALMER=[
  {wl:486.1,n:4,name:"Hβ",desc:"blue-green"},
  {wl:434.0,n:5,name:"Hγ",desc:"violet-blue"},
  {wl:410.2,n:6,name:"Hδ",desc:"violet"}];
-let selLine=0;
-const W2X=(wl,w)=>((wl-380)/(700-380))*w;
+let selLine=0, specT=0;
+const W2X=(wl,w)=>60+((wl-390)/(680-390))*(w-90);
 function drawSpectrum(){
   const c=$("#spectrum"); if(!c.clientWidth) return;
   const [ctx,w,h]=setupCanvas(c);
   ctx.fillStyle="#05080c"; ctx.fillRect(0,0,w,h);
-  const stripB=60;
-  // the four emission lines, crisp on black
+  const sTop=16, sBot=112;
+  const dTop=176, dBot=h-18;
+  const yOf=n=>dTop+((-13.6/(n*n))/(-3.4))*(dBot-dTop);
+  const P=reduced?0.999:(specT%170)/170;         // one animation cycle
+  const fall=Math.min(1,P/0.5), flash=P>0.55?Math.sin((P-0.55)/0.45*Math.PI):0;
+  const sel=BALMER[selLine], selX=w1=>W2X(sel.wl,w1);
+  ctx.font="11px ui-monospace,Menlo,monospace";
+  // section captions, sparse
+  ctx.fillStyle="rgba(230,238,240,.4)";
+  ctx.fillText("what you see — the emission spectrum",60,sTop-4);
+  ctx.fillText("why — electrons falling between energy levels",60,dTop-24);
+  // spectrum strip
   BALMER.forEach((L,i)=>{
     const x=W2X(L.wl,w), [r,g,b]=wl2rgb(L.wl), on=i===selLine;
+    const glow=on?(14+flash*26):0;
     if(on){
-      const grad=ctx.createLinearGradient(x-14,0,x+14,0);
-      grad.addColorStop(0,`rgba(${r},${g},${b},0)`); grad.addColorStop(.5,`rgba(${r},${g},${b},.5)`); grad.addColorStop(1,`rgba(${r},${g},${b},0)`);
-      ctx.fillStyle=grad; ctx.fillRect(x-14,0,28,stripB);
+      const grad=ctx.createLinearGradient(x-glow,0,x+glow,0);
+      grad.addColorStop(0,`rgba(${r},${g},${b},0)`); grad.addColorStop(.5,`rgba(${r},${g},${b},${.35+.45*flash})`); grad.addColorStop(1,`rgba(${r},${g},${b},0)`);
+      ctx.fillStyle=grad; ctx.fillRect(x-glow,sTop,glow*2,sBot-sTop);
     }
-    ctx.fillStyle=`rgba(${r},${g},${b},${on?1:.6})`;
-    ctx.fillRect(x-(on?2:1.2),0,on?4:2.4,stripB);
-    ctx.font=(on?"bold ":"")+"11px ui-monospace,Menlo,monospace";
-    ctx.fillStyle=on?"#fff":"rgba(230,238,240,.5)";
-    ctx.fillText(L.name,x-9,stripB+13);
-    ctx.fillStyle=on?`rgb(${r},${g},${b})`:"rgba(230,238,240,.35)";
-    ctx.fillText(Math.round(L.wl)+"nm",x-16,stripB+26);
+    ctx.fillStyle=`rgba(${r},${g},${b},${on?1:.55})`;
+    ctx.fillRect(x-(on?2.2:1.2),sTop,on?4.4:2.4,sBot-sTop);
+    ctx.font=(on?"bold 13px":"12px")+" ui-monospace,Menlo,monospace";
+    ctx.fillStyle=on?"#fff":"rgba(230,238,240,.45)";
+    ctx.fillText(L.name,x-11,sBot+20);
+    if(on){ctx.fillStyle=`rgb(${r},${g},${b})`;ctx.fillText(L.wl+" nm",x-26,sBot+38);}
   });
-  // energy levels n=2..6 with transition arrows landing on each line
-  const top=h-70, bot=h-12;
-  const yOf=n=>top+((-13.6/(n*n))/(-3.4))*(bot-top);
-  ctx.font="10px ui-monospace,Menlo,monospace"; ctx.lineWidth=1;
+  // energy levels
+  ctx.font="11px ui-monospace,Menlo,monospace"; ctx.lineWidth=1;
   for(let n=2;n<=6;n++){
-    const y=yOf(n);
-    ctx.strokeStyle="rgba(230,238,240,.22)";
-    ctx.beginPath(); ctx.moveTo(36,y); ctx.lineTo(w-8,y); ctx.stroke();
-    ctx.fillStyle="rgba(230,238,240,.5)";
-    ctx.fillText("n="+n,6,y+3);
+    const y=yOf(n), on=n===2||n===sel.n;
+    ctx.strokeStyle=`rgba(230,238,240,${on?.5:.18})`;
+    ctx.beginPath(); ctx.moveTo(46,y); ctx.lineTo(w-10,y); ctx.stroke();
+    ctx.fillStyle=`rgba(230,238,240,${on?.85:.4})`;
+    ctx.fillText("n="+n,8,y+4);
   }
+  // transition arrows (faint for unselected)
   BALMER.forEach((L,i)=>{
-    const x=W2X(L.wl,w), [r,g,b]=wl2rgb(L.wl), on=i===selLine;
-    const y1=yOf(L.n), y2=yOf(2);
-    ctx.strokeStyle=`rgba(${r},${g},${b},${on?1:.35})`; ctx.lineWidth=on?2.5:1.2;
-    ctx.beginPath(); ctx.moveTo(x,y1); ctx.lineTo(x,y2-7); ctx.stroke();
-    ctx.fillStyle=`rgba(${r},${g},${b},${on?1:.35})`;
-    ctx.beginPath(); ctx.moveTo(x,y2); ctx.lineTo(x-4,y2-8); ctx.lineTo(x+4,y2-8); ctx.closePath(); ctx.fill();
+    if(i===selLine)return;
+    const x=W2X(L.wl,w), [r,g,b]=wl2rgb(L.wl);
+    ctx.strokeStyle=`rgba(${r},${g},${b},.22)`; ctx.lineWidth=1.2;
+    ctx.beginPath(); ctx.moveTo(x,yOf(L.n)); ctx.lineTo(x,yOf(2)-6); ctx.stroke();
   });
-  ctx.fillStyle="rgba(230,238,240,.45)";
-  ctx.fillText("electron falls ↓ = photon out",w-190,top-6);
+  // selected transition: bright arrow + falling electron + photon burst
+  {
+    const x=selX(w), [r,g,b]=wl2rgb(sel.wl);
+    const y1=yOf(sel.n), y2=yOf(2);
+    ctx.strokeStyle=`rgba(${r},${g},${b},.9)`; ctx.lineWidth=2.6;
+    ctx.beginPath(); ctx.moveTo(x,y1); ctx.lineTo(x,y2-8); ctx.stroke();
+    ctx.fillStyle=`rgba(${r},${g},${b},.9)`;
+    ctx.beginPath(); ctx.moveTo(x,y2); ctx.lineTo(x-5,y2-10); ctx.lineTo(x+5,y2-10); ctx.closePath(); ctx.fill();
+    // electron
+    const ey=y1+(y2-10-y1)*fall*fall;
+    ctx.beginPath(); ctx.arc(x,ey,6,0,7);
+    ctx.fillStyle="#fff"; ctx.shadowColor=`rgb(${r},${g},${b})`; ctx.shadowBlur=12;
+    ctx.fill(); ctx.shadowBlur=0;
+    if(fall<0.25){ctx.fillStyle="rgba(255,255,255,.8)";ctx.font="11px ui-monospace,Menlo,monospace";ctx.fillText("e⁻",x+11,ey+4);}
+    // photon: expanding ring rising toward the strip after impact
+    if(flash>0){
+      const py=y2-14-(y2-sBot-30)*((P-0.55)/0.45);
+      ctx.strokeStyle=`rgba(${r},${g},${b},${flash*.9})`; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.arc(x,py,6+10*(1-flash),0,7); ctx.stroke();
+      ctx.fillStyle=`rgba(${r},${g},${b},${flash*.7})`;
+      ctx.font="11px ui-monospace,Menlo,monospace"; ctx.fillText("photon ↑",x+14,py+4);
+    }
+  }
 }
 function specInfo(){
   const L=BALMER[selLine], [r,g,b]=wl2rgb(L.wl);
-  $("#spec-info").innerHTML=`<i style="background:rgb(${r},${g},${b})"></i><span><b>${L.name} — the ${L.desc} line at ${L.wl} nm.</b> An electron drops from level n = ${L.n} to n = 2, and the energy gap leaves the atom as one photon of ${L.desc} light. Bigger drop → bigger gap → bluer line.</span>`;
+  $("#spec-info").innerHTML=`<i style="background:rgb(${r},${g},${b})"></i><span><b>${L.name} — the ${L.desc} line at ${L.wl} nm.</b> The electron falls from n = ${L.n} to n = 2 and the energy gap leaves as one photon of ${L.desc} light. Bigger fall → bigger energy gap → bluer line.</span>`;
+  $$("#spec-chips button").forEach((b,i)=>b.classList.toggle("on",i===selLine));
 }
+function setLine(i){ if(i!==selLine){selLine=i; specT=0; drawSpectrum(); specInfo();} }
+$("#spec-chips").innerHTML=BALMER.map((L,i)=>{
+  const [r,g,b]=wl2rgb(L.wl);
+  return `<button data-i="${i}"><i style="background:rgb(${r},${g},${b})"></i>${L.name} · n ${L.n} → 2</button>`;
+}).join("");
+$$("#spec-chips button").forEach(b=>b.addEventListener("click",()=>setLine(+b.dataset.i)));
 function pickLine(ev){
   const rect=$("#spectrum").getBoundingClientRect();
   const x=ev.clientX-rect.left;
-  let best=-1, bd=26;
+  let best=-1, bd=30;
   BALMER.forEach((L,i)=>{const d=Math.abs(W2X(L.wl,rect.width)-x); if(d<bd){bd=d; best=i;}});
-  if(best>=0&&best!==selLine){selLine=best; drawSpectrum(); specInfo();}
+  if(best>=0)setLine(best);
 }
 $("#spectrum").addEventListener("pointermove",pickLine);
 $("#spectrum").addEventListener("click",pickLine);
+function heroLoop(){ specT++; if($("#v-home").classList.contains("on")) drawSpectrum(); requestAnimationFrame(heroLoop); }
 specInfo();
 
 /* ---------- learn ---------- */
@@ -1324,7 +1367,7 @@ matchMedia("(prefers-color-scheme: dark)").addEventListener("change",redrawAll);
 new MutationObserver(redrawAll).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
 renderDash();
 redrawAll();
-if(!reduced){gasLoop();}
+if(!reduced){heroLoop();gasLoop();}
 </script>
 
 </body>
