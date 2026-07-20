@@ -129,6 +129,16 @@ section.view.on{display:block;animation:fadein .25s ease}
 .topic .body h4{margin:16px 0 6px;font-size:14px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft)}
 .topic .body p,.topic .body li{font-size:15px;max-width:72ch}
 .topic .body ul{margin:6px 0;padding-left:20px}
+.topic .body h4 .sc{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:10.5px;color:var(--bunsen);background:var(--bunsen-soft);border-radius:5px;padding:1px 6px;margin-right:7px;letter-spacing:.02em}
+.worked{border:1px solid var(--line);border-left:4px solid var(--cu);border-radius:0 10px 10px 0;padding:12px 16px;margin:12px 0;max-width:74ch;font-size:14.5px;background:var(--panel)}
+.worked b:first-child{color:var(--cu)}
+.worked ol{margin:6px 0;padding-left:20px}
+.tip{background:var(--bunsen-soft);border-radius:10px;padding:10px 14px;margin:12px 0;font-size:14px;max-width:74ch}
+.tip b{color:var(--bunsen)}
+.notetable{border-collapse:collapse;font-size:13.5px;margin:10px 0;max-width:100%}
+.notetable th,.notetable td{border:1px solid var(--line);padding:6px 10px;text-align:left}
+.notetable th{background:var(--panel2);font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft)}
+.tblwrap{overflow-x:auto}
 .defbox{background:var(--panel2);border-radius:8px;padding:10px 14px;margin:10px 0;font-size:14.5px;max-width:72ch}
 .defbox b{color:var(--bunsen)}
 .eq{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:14px;background:var(--panel2);
@@ -565,7 +575,23 @@ const TOPICS=[
 <li>When transition metals ionise, <b>4s electrons are lost first</b>.</li></ul>
 <h4>Time-of-flight mass spectrometry</h4>
 <ul><li>Stages: ionisation (electron impact or electrospray) → acceleration (all ions gain the same kinetic energy) → flight tube (lighter ions travel faster) → detection (ions gain electrons; current ∝ abundance).</li>
-<li>Relative atomic mass from spectrum: <span class="eq">Ar = Σ(isotope mass × % abundance) ÷ 100</span></li></ul>`},
+<li>Relative atomic mass from spectrum: <span class="eq">Ar = Σ(isotope mass × % abundance) ÷ 100</span></li></ul>
+<h4><span class="sc">3.1.1.1</span>Fundamental particles</h4>
+<div class="tblwrap"><table class="notetable"><tr><th>Particle</th><th>Relative mass</th><th>Relative charge</th><th>Where</th></tr>
+<tr><td>Proton</td><td>1</td><td>+1</td><td>nucleus</td></tr>
+<tr><td>Neutron</td><td>1</td><td>0</td><td>nucleus</td></tr>
+<tr><td>Electron</td><td>1/1836</td><td>−1</td><td>shells / orbitals</td></tr></table></div>
+<ul><li>Mass number A = protons + neutrons; atomic number Z = protons. Isotopes: same Z, different A — identical chemistry (same electron configuration), different physical properties.</li>
+<li>Ions: electrons change, never protons. Ti²⁺ has 22 protons and 20 electrons.</li></ul>
+<h4><span class="sc">3.1.1.3</span>Successive ionisation energies — the evidence for shells</h4>
+<ul><li>Removing each successive electron costs more (same protons pulling fewer electrons).</li>
+<li>A <b>large jump</b> between the nth and (n+1)th ionisation energies means the (n+1)th electron comes from a new shell, closer to the nucleus — the element is in group n.</li></ul>
+<div class="worked"><b>Worked example.</b> An element's first four ionisation energies are 578, 1817, 2745, 11 578 kJ mol⁻¹.
+<ol><li>Jumps: ×3.1, ×1.5, then <b>×4.2</b> — the huge jump is after the 3rd electron.</li>
+<li>Three easily-removed outer electrons → group 3. (It is aluminium.)</li></ol></div>
+<div class="worked"><b>Worked example — Ar from a mass spectrum.</b> A sample of chlorine shows peaks at m/z 35 (abundance 75%) and 37 (25%).
+<ol><li>Ar = (35 × 75 + 37 × 25) ÷ 100 = <b>35.5</b></li></ol></div>
+<div class="tip"><b>Exam tip.</b> The ionisation energy definition needs all three markers: <i>one mole</i> of electrons, from <i>gaseous</i> atoms, forming <i>gaseous</i> 1+ ions. Missing "gaseous" loses the mark every time.</div>`},
 {c:"--na",t:"Bonding & structure",s:"Ionic, covalent, metallic · shapes of molecules · intermolecular forces",b:`
 <h4>Shapes of molecules (electron-pair repulsion)</h4>
 <ul><li>Pairs of electrons repel to maximum separation; <b>lone pairs repel more</b> than bonding pairs, closing bond angles by ≈2.5° each.</li>
@@ -578,7 +604,29 @@ const TOPICS=[
 <h4>Structure determines properties</h4>
 <ul><li>Giant ionic: high melting point, conducts only molten/aqueous.</li>
 <li>Giant covalent (diamond, graphite, SiO₂): very high melting point; graphite conducts via delocalised electrons between layers.</li>
-<li>Simple molecular: low melting point — only weak intermolecular forces break, not covalent bonds.</li></ul>`},
+<li>Simple molecular: low melting point — only weak intermolecular forces break, not covalent bonds.</li></ul>
+<h4><span class="sc">3.1.3.5</span>Shapes summary — learn this table cold</h4>
+<div class="tblwrap"><table class="notetable"><tr><th>Bond pairs</th><th>Lone pairs</th><th>Shape</th><th>Angle</th><th>Example</th></tr>
+<tr><td>2</td><td>0</td><td>Linear</td><td>180°</td><td>CO₂, BeCl₂</td></tr>
+<tr><td>3</td><td>0</td><td>Trigonal planar</td><td>120°</td><td>BF₃, AlCl₃</td></tr>
+<tr><td>4</td><td>0</td><td>Tetrahedral</td><td>109.5°</td><td>CH₄, NH₄⁺</td></tr>
+<tr><td>3</td><td>1</td><td>Trigonal pyramidal</td><td>107°</td><td>NH₃, PCl₃</td></tr>
+<tr><td>2</td><td>2</td><td>Bent</td><td>104.5°</td><td>H₂O, H₂S</td></tr>
+<tr><td>5</td><td>0</td><td>Trigonal bipyramidal</td><td>120° &amp; 90°</td><td>PCl₅</td></tr>
+<tr><td>6</td><td>0</td><td>Octahedral</td><td>90°</td><td>SF₆</td></tr></table></div>
+<h4><span class="sc">3.1.3.2</span>Co-ordinate (dative covalent) bonding</h4>
+<ul><li>Both shared electrons come from one atom: NH₄⁺ (N donates to H⁺), H₃O⁺, Al₂Cl₆, and every metal–ligand bond in complex ions.</li>
+<li>Once formed it is identical to any other covalent bond — all four N–H bonds in NH₄⁺ are equivalent.</li></ul>
+<h4><span class="sc">3.1.3.1</span>The four crystal types</h4>
+<div class="tblwrap"><table class="notetable"><tr><th>Type</th><th>Particles / forces</th><th>Example</th><th>Properties</th></tr>
+<tr><td>Ionic</td><td>ions, electrostatic attraction</td><td>NaCl</td><td>high mp; conducts molten/aq only; brittle</td></tr>
+<tr><td>Metallic</td><td>cations + delocalised electrons</td><td>Mg</td><td>conducts as solid; malleable; mp rises with charge</td></tr>
+<tr><td>Macromolecular</td><td>atoms, covalent network</td><td>diamond, graphite, SiO₂</td><td>very high mp; graphite conducts (delocalised layer electrons)</td></tr>
+<tr><td>Molecular</td><td>molecules, weak IMFs</td><td>I₂, ice</td><td>low mp; never conducts</td></tr></table></div>
+<div class="worked"><b>Worked example.</b> Predict the shape and bond angle of NH₄⁺.
+<ol><li>N has 5 outer electrons; 4 bonds (one dative) use all of them: 4 bonding pairs, 0 lone pairs.</li>
+<li>Maximum separation of 4 pairs → <b>tetrahedral, 109.5°</b>.</li></ol></div>
+<div class="tip"><b>Exam tip.</b> Explaining a shape is a 3-step ritual: count electron pairs → state that pairs repel to maximise separation → note lone pairs repel more than bonding pairs (each lone pair −2.5°). State all three.</div>`},
 {c:"--cu",t:"Amount of substance",s:"Moles, gases, titrations, yield",b:`
 <div class="defbox"><b>Avogadro constant</b> N<sub>A</sub> = 6.022 × 10²³ mol⁻¹ — the number of particles in one mole.</div>
 <span class="eq">n = m / M &nbsp;&nbsp;·&nbsp;&nbsp; n = c × V(dm³) &nbsp;&nbsp;·&nbsp;&nbsp; pV = nRT (R = 8.314 J K⁻¹ mol⁻¹)</span>
@@ -586,7 +634,22 @@ const TOPICS=[
 <li>Titration: n(known) from c×V → use mole ratio from the equation → c(unknown) = n/V. Concordant titres agree within 0.10 cm³; use their mean.</li></ul>
 <span class="eq">% atom economy = (M of desired product ÷ Σ M of all products) × 100</span>
 <span class="eq">% yield = (actual moles ÷ theoretical moles) × 100</span>
-<p>Atom economy is about the <i>reaction type</i> (addition = 100%); yield is about <i>practical losses</i>. Examiners ask you to distinguish them.</p>`},
+<p>Atom economy is about the <i>reaction type</i> (addition = 100%); yield is about <i>practical losses</i>. Examiners ask you to distinguish them.</p>
+<h4><span class="sc">3.1.2.4</span>Full titration calculation — the 5-step routine</h4>
+<div class="worked"><b>Worked example.</b> 25.0 cm³ of NaOH is neutralised by 21.40 cm³ of 0.0850 mol dm⁻³ HCl. Find [NaOH].
+<ol><li>n(HCl) = c × V = 0.0850 × 0.02140 = 1.819 × 10⁻³ mol</li>
+<li>Equation: HCl + NaOH → NaCl + H₂O — ratio 1 : 1</li>
+<li>n(NaOH) = 1.819 × 10⁻³ mol</li>
+<li>c = n ÷ V = 1.819 × 10⁻³ ÷ 0.0250 = <b>0.0728 mol dm⁻³</b></li>
+<li>3 significant figures — match the data given.</li></ol></div>
+<h4><span class="sc">3.1.2.3</span>Using pV = nRT without unit disasters</h4>
+<ul><li>Convert first, every time: kPa → Pa (×1000) · cm³ → m³ (×10⁻⁶) · dm³ → m³ (×10⁻³) · °C → K (+273).</li></ul>
+<div class="worked"><b>Worked example.</b> What volume does 0.100 mol of gas occupy at 298 K and 100 kPa?
+<ol><li>V = nRT ÷ p = (0.100 × 8.31 × 298) ÷ 100 000 = 2.48 × 10⁻³ m³ = <b>2.48 dm³</b></li></ol></div>
+<h4><span class="sc">3.1.2.5</span>Percentage uncertainty</h4>
+<ul><li>% uncertainty = (uncertainty ÷ measured value) × 100. Doubles when a quantity is a difference of two readings (burette titre, ΔT, mass by difference).</li>
+<li>To reduce it: make the measured quantity bigger (larger titre, larger ΔT) — not more repeats (repeats reduce random error, not % uncertainty of the instrument).</li></ul>
+<div class="tip"><b>Exam tip.</b> Empirical formula questions: divide each element's mass (or %) by its Ar, then divide all by the smallest. Only round at the very end — 1.33 is a ratio of 4:3, not "1".</div>`},
 {c:"--k",t:"Energetics",s:"Enthalpy changes, calorimetry, Hess's law, bond enthalpies",b:`
 <div class="defbox"><b>Standard enthalpy of combustion</b> ΔH°c — enthalpy change when one mole of a substance burns completely in oxygen, all species in standard states, 100 kPa and a stated temperature (298 K).</div>
 <div class="defbox"><b>Standard enthalpy of formation</b> ΔH°f — enthalpy change when one mole of a compound forms from its elements, all in standard states.</div>
@@ -598,7 +661,26 @@ const TOPICS=[
 <h4>Bond enthalpies</h4>
 <ul><li>ΔH ≈ Σ(bonds broken) − Σ(bonds made). Breaking is endothermic (+), making is exothermic (−).</li>
 <li>Values are <b>means</b> over many compounds, so answers differ from Hess-law values — a favourite exam point.</li></ul>
-<p>See the <b>energy profile simulation</b> to connect Ea and ΔH visually.</p>`},
+<p>See the <b>energy profile simulation</b> to connect Ea and ΔH visually.</p>
+<h4><span class="sc">3.1.4.4</span>Hess cycles with combustion data</h4>
+<div class="worked"><b>Worked example — ΔH°f of methane.</b> ΔH°c: C(s) −394, H₂(g) −286, CH₄(g) −890 (kJ mol⁻¹).
+<ol><li>Route via combustion products: ΔH°f = Σ ΔH°c(elements) − ΔH°c(compound)</li>
+<li>= [−394 + 2(−286)] − (−890)</li>
+<li>= −966 + 890 = <b>−76 kJ mol⁻¹</b></li></ol></div>
+<h4><span class="sc">3.1.4.2</span>Calorimetry checklist</h4>
+<ul><li>q = m c ΔT: m is the mass of <b>solution</b> (or water) heated, c = 4.18 J g⁻¹ K⁻¹, ΔT from a cooling-corrected graph.</li>
+<li>Divide by moles of the <b>limiting</b> reagent, then convert J → kJ; sign follows the temperature change (rise → negative ΔH).</li>
+<li>Evaluation points examiners pay for: heat loss to surroundings; incomplete combustion (fuels); assuming the solution has water's density and specific heat capacity; evaporation.</li></ul>
+<div class="tip"><b>Exam tip.</b> Definitions of ΔH°c and ΔH°f must include "one mole", "standard states" and "100 kPa with a stated temperature". Write the equation your definition describes — e.g. for ΔH°f of ethanol: 2C(s) + 3H₂(g) + ½O₂(g) → C₂H₅OH(l). Fractions are fine; scaling to whole numbers is not (it must form ONE mole).</div>
+<h4><span class="sc">3.1.4.5</span>Mean bond enthalpies (AQA-convention values, kJ mol⁻¹)</h4>
+<div class="tblwrap"><table class="notetable"><tr><th>Bond</th><th>kJ mol⁻¹</th><th>Bond</th><th>kJ mol⁻¹</th><th>Bond</th><th>kJ mol⁻¹</th></tr>
+<tr><td>C–H</td><td>413</td><td>C–C</td><td>347</td><td>C=C</td><td>612</td></tr>
+<tr><td>O–H</td><td>464</td><td>O=O</td><td>498</td><td>C=O (in CO₂)</td><td>805</td></tr>
+<tr><td>H–H</td><td>436</td><td>N≡N</td><td>945</td><td>C–Cl</td><td>346</td></tr></table></div>
+<div class="worked"><b>Worked example — combustion of methane by bond enthalpies.</b> CH₄ + 2O₂ → CO₂ + 2H₂O
+<ol><li>Broken: 4 C–H + 2 O=O = 4(413) + 2(498) = 2648 kJ</li>
+<li>Made: 2 C=O + 4 O–H = 2(805) + 4(464) = 3466 kJ</li>
+<li>ΔH ≈ 2648 − 3466 = <b>−818 kJ mol⁻¹</b> (data-book −890: mean values are averages over many compounds).</li></ol></div>`},
 {c:"--bunsen",t:"Kinetics",s:"Collision theory, Maxwell–Boltzmann, rate equations, Arrhenius",b:`
 <div class="defbox"><b>Activation energy</b> E<sub>a</sub> — the minimum energy colliding particles need for a reaction to occur.</div>
 <h4>Maxwell–Boltzmann distribution</h4>
@@ -612,7 +694,20 @@ const TOPICS=[
 <h4>Arrhenius equation</h4>
 <span class="eq">k = A e<sup>−Ea/RT</sup> &nbsp;·&nbsp; ln k = ln A − Ea/(RT)</span>
 <p>A plot of ln k against 1/T is a straight line with gradient −E<sub>a</sub>/R — how E<sub>a</sub> is measured (required practical 3 uses this idea).</p>
-<p>Try the <b>Maxwell–Boltzmann simulation</b> with the temperature slider.</p>`},
+<p>Try the <b>Maxwell–Boltzmann simulation</b> with the temperature slider.</p>
+<h4><span class="sc">3.1.9.1</span>Finding orders from initial-rate data</h4>
+<div class="worked"><b>Worked example.</b> For A + B → products:
+<ol><li>Expt 1→2: [A] doubles ([B] constant), rate doubles → first order in A.</li>
+<li>Expt 2→3: [B] doubles ([A] constant), rate ×4 → second order in B.</li>
+<li>rate = k[A][B]² — overall order 3. Units of k: rate ÷ (mol dm⁻³)³ = <b>dm⁶ mol⁻² s⁻¹</b>.</li>
+<li>Get k by substituting any one experiment's numbers.</li></ol></div>
+<h4><span class="sc">3.1.9.1</span>Concentration–time vs rate–concentration graphs</h4>
+<ul><li>[X]–time: zero order = straight line down; first order = curve with <b>constant half-life</b>; rate at any t = gradient of the tangent.</li>
+<li>rate–[X]: zero order = horizontal line; first order = straight line through the origin; second order = upward curve.</li></ul>
+<h4><span class="sc">3.1.9.2</span>Using the Arrhenius equation</h4>
+<ul><li>ln k = ln A − Ea/(RT): plot ln k (y) against 1/T (x) → gradient = −Ea/R, intercept = ln A.</li>
+<li>Gradient units: K. Multiply by −R (8.31 J K⁻¹ mol⁻¹) → Ea in J mol⁻¹; ÷1000 for kJ mol⁻¹.</li></ul>
+<div class="tip"><b>Exam tip.</b> "Explain how the graph shows first order" wants the constant half-life stated with two successive half-life readings from the graph — not just the word "curve".</div>`},
 {c:"--li",t:"Equilibria",s:"Le Chatelier, Kc and Kp",b:`
 <div class="defbox"><b>Dynamic equilibrium</b> — forward and reverse rates are equal and concentrations are constant, in a closed system.</div>
 <h4>Le Chatelier's principle</h4>
@@ -622,7 +717,21 @@ const TOPICS=[
 <span class="eq">Kc = [C]<sup>c</sup>[D]<sup>d</sup> / [A]<sup>a</sup>[B]<sup>b</sup></span>
 <ul><li>K changes <b>only with temperature</b>. For an exothermic reaction, raising T decreases K.</li>
 <li>Concentration/pressure changes move the <i>position</i> but K is unchanged.</li>
-<li>Kp uses partial pressures: p(X) = mole fraction × total pressure.</li></ul>`},
+<li>Kp uses partial pressures: p(X) = mole fraction × total pressure.</li></ul>
+<h4><span class="sc">3.1.6.2</span>Kc from equilibrium data — the ICE routine</h4>
+<div class="worked"><b>Worked example.</b> 1.00 mol H₂ and 1.00 mol I₂ reach equilibrium in a 1.00 dm³ flask; 0.80 mol of each has reacted. H₂ + I₂ ⇌ 2HI.
+<ol><li>Initial: 1.00 / 1.00 / 0 &nbsp;·&nbsp; Change: −0.80 / −0.80 / +1.60 &nbsp;·&nbsp; Equilibrium: 0.20 / 0.20 / 1.60 mol</li>
+<li>Kc = [HI]² ÷ ([H₂][I₂]) = 1.60² ÷ (0.20 × 0.20) = <b>64</b> (no units — concentrations cancel).</li></ol></div>
+<h4><span class="sc">3.1.10</span>Kp — the same idea with pressures</h4>
+<ul><li>Mole fraction x = moles of gas ÷ total moles; partial pressure p = x × P(total); Kp built exactly like Kc but with partial pressures of gases only.</li>
+<li>Solids and pure liquids never appear in Kp expressions.</li>
+<li>Like Kc, Kp changes with temperature only — pressure shifts the position, not the constant.</li></ul>
+<div class="tip"><b>Exam tip.</b> If asked "explain why the position moves but Kc is unchanged" — the answer is always: Kc is constant at constant temperature; the concentration change alters the reaction quotient, so the system shifts until the ratio equals Kc again.</div>
+<h4><span class="sc">3.1.6.3</span>The three industrial equilibria</h4>
+<div class="tblwrap"><table class="notetable"><tr><th>Process</th><th>Reaction</th><th>Catalyst</th><th>Conditions</th><th>Why the compromise</th></tr>
+<tr><td>Haber</td><td>N₂ + 3H₂ ⇌ 2NH₃ (ΔH −92)</td><td>Fe</td><td>400–450 °C, ~200 atm</td><td>low T = better yield but too slow; ~15% per pass, gases recycled</td></tr>
+<tr><td>Contact</td><td>2SO₂ + O₂ ⇌ 2SO₃</td><td>V₂O₅</td><td>~450 °C, ~2 atm</td><td>yield already ~99.5% near atmospheric pressure — high p not worth it</td></tr>
+<tr><td>Ethanol</td><td>C₂H₄ + H₂O ⇌ C₂H₅OH</td><td>H₃PO₄</td><td>300 °C, 60–70 atm</td><td>~5% per pass; unreacted ethene recycled</td></tr></table></div>`},
 {c:"--na",t:"Acids, bases & buffers",s:"pH, Ka, titration curves, indicators",b:`
 <div class="defbox"><b>Brønsted–Lowry:</b> an acid is a proton donor; a base is a proton acceptor.</div>
 <span class="eq">pH = −log₁₀[H⁺] &nbsp;·&nbsp; Kw = [H⁺][OH⁻] = 1.0 × 10⁻¹⁴ mol² dm⁻⁶ at 298 K</span>
@@ -634,7 +743,24 @@ const TOPICS=[
 <li>Added H⁺ is removed by A⁻ → HA; added OH⁻ is removed by HA → A⁻ + H₂O. The large reservoirs of HA and A⁻ keep the ratio, and hence pH, nearly constant.</li></ul>
 <h4>Choosing an indicator</h4>
 <ul><li>The indicator's range must fall inside the vertical section of the curve. Strong–strong: either works. Weak acid–strong base: <b>phenolphthalein</b> (8.3–10.0). Strong acid–weak base: <b>methyl orange</b> (3.1–4.4). Weak–weak: no sharp section — use a pH meter.</li></ul>
-<p>The <b>titration simulation</b> lets you test all of this live.</p>`},
+<p>The <b>titration simulation</b> lets you test all of this live.</p>
+<h4><span class="sc">3.1.12.3</span>The four pH calculations you must do on demand</h4>
+<div class="tblwrap"><table class="notetable"><tr><th>System</th><th>Method</th></tr>
+<tr><td>Strong acid</td><td>pH = −log[HA] (fully dissociated)</td></tr>
+<tr><td>Strong base</td><td>[OH⁻] → [H⁺] = Kw ÷ [OH⁻] → pH</td></tr>
+<tr><td>Weak acid</td><td>[H⁺] = √(Ka × c) → pH</td></tr>
+<tr><td>Buffer</td><td>[H⁺] = Ka × [HA]/[A⁻] → pH</td></tr></table></div>
+<div class="worked"><b>Worked example — buffer.</b> A buffer contains 0.10 mol ethanoic acid and 0.050 mol sodium ethanoate in 1 dm³ (Ka = 1.74 × 10⁻⁵).
+<ol><li>[H⁺] = Ka × [HA]/[A⁻] = 1.74 × 10⁻⁵ × (0.10 ÷ 0.050) = 3.48 × 10⁻⁵</li>
+<li>pH = −log(3.48 × 10⁻⁵) = <b>4.46</b></li></ol></div>
+<div class="worked"><b>Worked example — strong base.</b> pH of 0.050 mol dm⁻³ NaOH at 298 K:
+<ol><li>[H⁺] = Kw ÷ [OH⁻] = 1.0 × 10⁻¹⁴ ÷ 0.050 = 2.0 × 10⁻¹³</li>
+<li>pH = <b>12.70</b></li></ol></div>
+<h4><span class="sc">3.1.12.5</span>Reading titration curves</h4>
+<ul><li>Four shapes: strong–strong (vertical ~3–11), weak acid–strong base (starts ~3, vertical ~7–11), strong acid–weak base (vertical ~3–7, ends ~11), weak–weak (no vertical section — no indicator works).</li>
+<li>Half-equivalence: pH = pKa (biggest buffering). Equivalence for weak acid–strong base sits <b>above 7</b> because the salt's anion is a base.</li>
+<li>Diprotic acids show two vertical sections — two equivalence points, at V and 2V.</li></ul>
+<div class="tip"><b>Exam tip.</b> Always quote pH to 2 decimal places, and check sanity: a weak acid's pH must sit between the strong-acid value and 7.</div>`},
 {c:"--cu",t:"Redox & electrochemistry",s:"Oxidation states, half-equations, electrode potentials",b:`
 <div class="defbox"><b>Oxidation is loss</b> of electrons (oxidation state increases); <b>reduction is gain</b>. The oxidising agent is itself reduced.</div>
 <h4>Standard electrode potentials (298 K, 100 kPa, 1 mol dm⁻³)</h4>
@@ -645,7 +771,22 @@ const TOPICS=[
 <li>AQA's data booklet contains no E° table — values are always supplied in the question, so learn the method, not the numbers.</li></ul>
 <h4>Balancing half-equations in acid</h4>
 <ol><li>Balance the main atom, then O with H₂O, then H with H⁺, then charge with e⁻.</li>
-<li>Example: MnO₄⁻ + 8H⁺ + 5e⁻ → Mn²⁺ + 4H₂O (purple → colourless: the classic self-indicating titration).</li></ol>`},
+<li>Example: MnO₄⁻ + 8H⁺ + 5e⁻ → Mn²⁺ + 4H₂O (purple → colourless: the classic self-indicating titration).</li></ol>
+<h4><span class="sc">3.1.7</span>Combining half-equations into full redox equations</h4>
+<div class="worked"><b>Worked example — manganate(VII) titrating iron(II).</b>
+<ol><li>Oxidation: Fe²⁺ → Fe³⁺ + e⁻ &nbsp;·&nbsp; Reduction: MnO₄⁻ + 8H⁺ + 5e⁻ → Mn²⁺ + 4H₂O</li>
+<li>Scale electrons equal: ×5 the iron half-equation.</li>
+<li>Add and cancel: <b>5Fe²⁺ + MnO₄⁻ + 8H⁺ → 5Fe³⁺ + Mn²⁺ + 4H₂O</b></li>
+<li>Check: charge +17 both sides ✓</li></ol></div>
+<h4><span class="sc">3.1.11.1</span>Cells — conventional representation</h4>
+<ul><li>Written most-negative half on the left: Zn(s) | Zn²⁺(aq) || Cu²⁺(aq) | Cu(s). Single line = phase boundary, double line = salt bridge; EMF = E°(right) − E°(left).</li>
+<li>Salt bridge (KNO₃-soaked): completes the circuit by ion flow without mixing the solutions.</li>
+<li>Non-standard conditions shift E: increase [Cu²⁺] → its half-equation shifts right → E(cell) rises (Le Chatelier applied to electrodes).</li></ul>
+<h4><span class="sc">3.1.11.2</span>Commercial cells</h4>
+<ul><li>Non-rechargeable (e.g. zinc–carbon): reaction irreversible, EMF falls as reagents deplete.</li>
+<li>Rechargeable (lithium-ion): reactions reversed on charging by an applied potential.</li>
+<li>Hydrogen–oxygen fuel cell (alkaline): H₂ + 2OH⁻ → 2H₂O + 2e⁻ and O₂ + 2H₂O + 4e⁻ → 4OH⁻; overall 2H₂ + O₂ → 2H₂O. Constant EMF while fuel is supplied; water is the only product — but hydrogen is bulky to store and mostly made from fossil fuels.</li></ul>
+<div class="tip"><b>Exam tip.</b> "Feasible" from E° values means EMF &gt; 0 for the direction written — but always add the kinetic caveat: a feasible reaction can be immeasurably slow (high activation energy).</div>`},
 {c:"--k",t:"Organic chemistry",s:"Mechanisms, functional groups, test-tube analysis",b:`
 <h4>The mechanisms to know cold</h4>
 <ul><li><b>Free-radical substitution</b> (alkanes + Cl₂, UV): initiation → propagation → termination.</li>
@@ -660,7 +801,25 @@ const TOPICS=[
 <li><b>Primary/secondary alcohol or aldehyde</b>: acidified potassium dichromate orange → green. Tertiary alcohols: stays orange.</li>
 <li><b>Carboxylic acid</b>: sodium carbonate → effervescence (CO₂ turns limewater milky).</li>
 </ul>
-<p>Distinguish an aldehyde from a ketone: both give orange ppt with 2,4-DNPH, but only the aldehyde gives a silver mirror with Tollens'.</p>`},
+<p>Distinguish an aldehyde from a ketone: both give orange ppt with 2,4-DNPH, but only the aldehyde gives a silver mirror with Tollens'.</p>
+<h4><span class="sc">3.3.1</span>Naming and isomerism rules</h4>
+<ul><li>Longest chain = stem; number from the end giving the lowest locants; substituents alphabetical (di/tri ignored when ordering).</li>
+<li>Structural isomers: chain, position, functional group. Stereoisomers: E/Z (restricted C=C rotation, two different groups per carbon — use CIP priority: higher atomic number wins) and optical (year 2).</li>
+<li>Optical isomerism: a carbon with four different groups is <b>chiral</b>; the two mirror-image enantiomers rotate plane-polarised light in opposite directions. A 50:50 racemic mixture shows no rotation.</li></ul>
+<h4><span class="sc">3.3.4</span>The mechanisms, step by step</h4>
+<ul><li><b>Free-radical substitution</b> (CH₄ + Cl₂, UV): initiation Cl₂ → 2Cl• (homolysis); propagation Cl• + CH₄ → HCl + •CH₃ then •CH₃ + Cl₂ → CH₃Cl + Cl•; termination any two radicals combine.</li>
+<li><b>Electrophilic addition</b> (propene + HBr): π-electrons attack Hδ+; H adds to the CH₂ end giving the <b>secondary carbocation</b>; Br⁻ attacks it → 2-bromopropane (major).</li>
+<li><b>Nucleophilic substitution</b> (haloalkane + OH⁻/CN⁻/NH₃): the nucleophile's lone pair attacks Cδ+; C–X breaks heterolytically. Rate: C–I fastest (weakest bond) — bond enthalpy beats polarity.</li>
+<li><b>Elimination</b> (haloalkane + ethanolic KOH, hot): OH⁻ acts as a base, removing an H from the carbon adjacent to C–X → alkene + water + halide.</li></ul>
+<h4><span class="sc">3.3.3</span>Reaction condition pairs that decide the product</h4>
+<div class="tblwrap"><table class="notetable"><tr><th>Reagents</th><th>Conditions A → product</th><th>Conditions B → product</th></tr>
+<tr><td>Haloalkane + KOH</td><td>aqueous, warm → alcohol (substitution)</td><td>ethanolic, hot → alkene (elimination)</td></tr>
+<tr><td>1° alcohol + K₂Cr₂O₇/H⁺</td><td>distil as it forms → aldehyde</td><td>reflux, excess oxidant → carboxylic acid</td></tr>
+<tr><td>Ethene → ethanol</td><td>steam + H₃PO₄ (industrial)</td><td>— (fermentation is the sugar route)</td></tr></table></div>
+<h4><span class="sc">3.3.5</span>Addition polymers</h4>
+<ul><li>Alkenes join through the C=C; the repeat unit is the monomer with the double bond opened — draw it with brackets and extending bonds.</li>
+<li>Poly(alkene) chains are chemically inert (strong non-polar C–C/C–H) — hence persistence in the environment.</li></ul>
+<div class="tip"><b>Exam tip.</b> Curly arrows start at a bond or a lone pair, never at an atom or a charge. In radical mechanisms no curly arrows at all (AQA uses none for homolysis steps) — just the species and the dots.</div>`},
 {c:"--bunsen",t:"Periodicity & the groups",s:"Period 3 trends, Group 2, Group 7",b:`
 <h4>Period 3 trends</h4>
 <ul><li>Atomic radius decreases (more protons, same shell). Melting points climb Na→Al (stronger metallic bonding), peak at Si (giant covalent), collapse for P₄, S₈, Cl₂, Ar (simple molecular — S₈ &gt; P₄ &gt; Cl₂ by electron count).</li></ul>
@@ -669,7 +828,30 @@ const TOPICS=[
 <h4>Group 7 (halogens)</h4>
 <ul><li>Oxidising power decreases down the group: Cl₂ displaces Br⁻ and I⁻; Br₂ displaces only I⁻.</li>
 <li>Halide test: acidified silver nitrate → AgCl white (dissolves in dilute NH₃), AgBr cream (dissolves in conc. NH₃), AgI yellow (insoluble in NH₃).</li>
-<li>Reducing power of halides increases down the group — with conc. H₂SO₄, Cl⁻ gives HCl only; Br⁻ also gives SO₂; I⁻ gives H₂S, S and I₂.</li></ul>`},
+<li>Reducing power of halides increases down the group — with conc. H₂SO₄, Cl⁻ gives HCl only; Br⁻ also gives SO₂; I⁻ gives H₂S, S and I₂.</li></ul>
+<h4><span class="sc">3.2.1</span>Period 3 metals with water and oxygen</h4>
+<ul><li>Na + cold water: vigorous, floats and fizzes → NaOH(aq) + H₂ (solution pH ~13–14).</li>
+<li>Mg + cold water: extremely slow → Mg(OH)₂; Mg + steam: fast, bright white flame → MgO + H₂.</li>
+<li>All period 3 elements (except Ar, and S needing ignition) burn in O₂ to their oxides: Na₂O, MgO, Al₂O₃, SiO₂, P₄O₁₀, SO₂.</li></ul>
+<h4><span class="sc">3.2.2</span>Group 2 — the applications examiners name</h4>
+<ul><li>Mg(OH)₂ — antacid ("milk of magnesia"); Ca(OH)₂ — neutralising acidic soil; CaO/CaCO₃ — removing SO₂ from flue gases (wet scrubbing).</li>
+<li>BaSO₄ — "barium meal" X-ray contrast (safe because virtually insoluble); acidified BaCl₂ — the test for sulfate ions (white precipitate).</li>
+<li>Mg reduces TiCl₄ to titanium in the extraction of Ti (TiCl₄ + 2Mg → Ti + 2MgCl₂).</li></ul>
+<h4><span class="sc">3.2.3</span>Halogens and halides — the full test logic</h4>
+<ul><li>Displacement order: Cl₂ &gt; Br₂ &gt; I₂ as oxidising agents. Add chlorine water to KBr(aq): solution turns orange (Br₂ formed).</li>
+<li>Halide test: acidify with dilute HNO₃ (kills carbonate false positives), add AgNO₃(aq): AgCl white → dissolves in dilute NH₃; AgBr cream → only in concentrated NH₃; AgI yellow → insoluble even in concentrated NH₃.</li>
+<li>Chlorine in water: Cl₂ + H₂O ⇌ HClO + HCl (HClO kills bacteria); in sunlight 2Cl₂ + 2H₂O → 4HCl + O₂. With cold dilute NaOH: Cl₂ + 2NaOH → NaCl + NaClO + H₂O (bleach) — both are disproportionations.</li></ul>
+<div class="tip"><b>Exam tip.</b> Trends must be explained with the full chain: radius/shielding change → attraction on the relevant electron(s) → the property. "Because it's bigger" scores nothing without the attraction link.</div>
+<h4><span class="sc">3.2.4</span>Period 3 oxides — bonding decides everything</h4>
+<div class="tblwrap"><table class="notetable"><tr><th>Oxide</th><th>Structure</th><th>Character</th><th>In water</th></tr>
+<tr><td>Na₂O</td><td>ionic</td><td>strongly basic</td><td>→ NaOH, pH ~13–14</td></tr>
+<tr><td>MgO</td><td>ionic</td><td>basic</td><td>sparingly soluble → pH ~9–10</td></tr>
+<tr><td>Al₂O₃</td><td>ionic with covalent character</td><td>amphoteric</td><td>insoluble (reacts with both acids and alkalis)</td></tr>
+<tr><td>SiO₂</td><td>giant covalent</td><td>weakly acidic</td><td>insoluble (reacts with hot concentrated NaOH)</td></tr>
+<tr><td>P₄O₁₀</td><td>molecular</td><td>acidic</td><td>→ H₃PO₄, pH ~1</td></tr>
+<tr><td>SO₂ / SO₃</td><td>molecular</td><td>acidic</td><td>→ H₂SO₃ / H₂SO₄, pH ~1</td></tr></table></div>
+<ul><li>Melting points follow structure: MgO (ionic, ~2850 °C) &gt; SiO₂ (giant covalent, ~1700 °C) &gt; P₄O₁₀ &gt; SO₃ (molecular).</li>
+<li>The acid–base equations to know: Na₂O + H₂O → 2NaOH · P₄O₁₀ + 6H₂O → 4H₃PO₄ · Al₂O₃ + 6HCl → 2AlCl₃ + 3H₂O · Al₂O₃ + 2NaOH + 3H₂O → 2NaAl(OH)₄.</li></ul>`},
 {c:"--li",t:"Thermodynamics",s:"Born–Haber cycles, entropy, Gibbs free energy",b:`
 <div class="defbox"><b>Lattice enthalpy of formation</b> — the enthalpy change when one mole of a solid ionic compound is formed from its gaseous ions. Always exothermic (large and negative).</div>
 <h4>Born–Haber cycles</h4>
@@ -680,7 +862,20 @@ const TOPICS=[
 <span class="eq">ΔG = ΔH − TΔS &nbsp;·&nbsp; feasible when ΔG ≤ 0 &nbsp;·&nbsp; switch-over at T = ΔH/ΔS</span>
 <ul><li>Entropy S rises with disorder: solid &lt; liquid &lt; gas, and with more moles of gas.</li>
 <li>Units trap: ΔS is usually J K⁻¹ mol⁻¹ — divide by 1000 before mixing with ΔH in kJ.</li>
-<li>An endothermic reaction can still be feasible if TΔS outweighs ΔH (why ice melts above 0 °C).</li></ul>`},
+<li>An endothermic reaction can still be feasible if TΔS outweighs ΔH (why ice melts above 0 °C).</li></ul>
+<h4><span class="sc">3.1.8.1</span>The NaCl Born–Haber cycle, fully worked</h4>
+<div class="worked"><b>Worked example.</b> Find the lattice enthalpy of formation of NaCl (kJ mol⁻¹): ΔH°f(NaCl) = −411; atomisation Na +107; first ionisation Na +496; atomisation ½Cl₂ +122; electron affinity Cl −349.
+<ol><li>Formation route = atomise both + ionise + electron affinity + lattice formation.</li>
+<li>−411 = 107 + 496 + 122 + (−349) + ΔH(latt)</li>
+<li>ΔH(latt) = −411 − 376 = <b>−787 kJ mol⁻¹</b></li></ol></div>
+<h4><span class="sc">3.1.8.1</span>Dissolving: lattice vs hydration</h4>
+<ul><li>ΔH(solution) = −ΔH(lattice formation) + Σ ΔH(hydration). For NaCl: +787 + (−406 −378) = <b>≈ +3 kJ mol⁻¹</b> — slightly endothermic, so dissolving is driven by the entropy increase.</li>
+<li>Hydration enthalpy is more exothermic for smaller, more highly charged ions (stronger ion–dipole attraction).</li></ul>
+<h4><span class="sc">3.1.8.2</span>ΔG worked example</h4>
+<div class="worked"><b>Worked example — decomposing CaCO₃.</b> ΔH = +178 kJ mol⁻¹, ΔS = +160 J K⁻¹ mol⁻¹.
+<ol><li>Convert: ΔS = 0.160 kJ K⁻¹ mol⁻¹.</li>
+<li>Feasible when ΔG ≤ 0: T ≥ ΔH/ΔS = 178 ÷ 0.160 ≈ <b>1110 K</b> — why limekilns run hot.</li></ol></div>
+<div class="tip"><b>Exam tip.</b> Two classic traps: (1) J vs kJ in ΔS; (2) electron affinity questions — the FIRST is exothermic, the SECOND endothermic (forcing an electron onto an anion), and lattice enthalpy values quoted as "dissociation" flip the sign of everything.</div>`},
 {c:"--na",t:"Transition metals",s:"Complexes, colour, catalysis, reactions of aqueous ions",b:`
 <div class="defbox"><b>Transition metal</b> — a d-block element that forms at least one stable ion with a partially filled d-subshell. Sc (d⁰ ion) and Zn (d¹⁰ ion) don't count.</div>
 <h4>Four characteristic properties</h4>
@@ -693,7 +888,21 @@ const TOPICS=[
 <li class="mono">Hydroxide ppts: Cu(OH)₂ blue · Fe(OH)₂ green (browns on standing in air) · Fe(OH)₃ orange-brown</li>
 <li>Colour arises when d-electrons absorb visible light jumping between split d-levels: ΔE = hν. Change the ligand, oxidation state or co-ordination number and the colour changes.</li></ul>
 <h4>Catalysis</h4>
-<ul><li>Heterogeneous: Fe (Haber), V₂O₅ (Contact process). Homogeneous: Fe²⁺ catalysing S₂O₈²⁻ + I⁻. Autocatalysis: Mn²⁺ in MnO₄⁻/C₂O₄²⁻ — the reaction speeds up as product forms.</li></ul>`},
+<ul><li>Heterogeneous: Fe (Haber), V₂O₅ (Contact process). Homogeneous: Fe²⁺ catalysing S₂O₈²⁻ + I⁻. Autocatalysis: Mn²⁺ in MnO₄⁻/C₂O₄²⁻ — the reaction speeds up as product forms.</li></ul>
+<h4><span class="sc">3.2.5</span>Ligand substitution — the three patterns</h4>
+<ul><li>Similar-size ligands, no change in number: [Cu(H₂O)₆]²⁺ + 4NH₃ ⇌ [Cu(NH₃)₄(H₂O)₂]²⁺ + 4H₂O (pale → deep blue).</li>
+<li>Bigger ligand, co-ordination drops 6 → 4: [Cu(H₂O)₆]²⁺ + 4Cl⁻ ⇌ [CuCl₄]²⁻ + 6H₂O (blue → yellow-green, tetrahedral).</li>
+<li>Multidentate replaces monodentate (chelate effect): [Cu(H₂O)₆]²⁺ + EDTA⁴⁻ → [Cu(EDTA)]²⁻ + 6H₂O — 2 particles become 7, ΔS strongly positive, ΔH ≈ 0 (same number of similar bonds), so ΔG negative.</li></ul>
+<h4><span class="sc">3.2.6</span>Hydroxide precipitates — the observation table</h4>
+<div class="tblwrap"><table class="notetable"><tr><th>Ion</th><th>+ NaOH (little)</th><th>+ NaOH (excess)</th><th>+ NH₃ (excess)</th></tr>
+<tr><td>Fe²⁺</td><td>green ppt</td><td>insoluble (browns in air)</td><td>insoluble</td></tr>
+<tr><td>Fe³⁺</td><td>orange-brown ppt</td><td>insoluble</td><td>insoluble</td></tr>
+<tr><td>Cu²⁺</td><td>blue ppt</td><td>insoluble</td><td><b>dissolves</b> → deep blue solution</td></tr>
+<tr><td>Al³⁺</td><td>white ppt</td><td><b>dissolves</b> (amphoteric) → colourless</td><td>insoluble</td></tr></table></div>
+<h4><span class="sc">3.2.5</span>Vanadium and chromium colour ladders</h4>
+<ul><li>Vanadium reduced by zinc/acid: VO₂⁺ yellow (+5) → VO²⁺ blue (+4) → V³⁺ green (+3) → V²⁺ violet (+2).</li>
+<li>Chromate–dichromate: 2CrO₄²⁻ (yellow) + 2H⁺ ⇌ Cr₂O₇²⁻ (orange) + H₂O — acid pushes right, alkali pulls left.</li></ul>
+<div class="tip"><b>Exam tip.</b> Observation questions want colour + state: "blue precipitate", not "it turns blue". And name the shape/co-ordination change whenever chloride ligands appear.</div>`},
 {c:"--cu",t:"Analysis & spectroscopy",s:"IR, mass spectra, ¹H and ¹³C NMR, chromatography",b:`
 <h4>Infrared</h4>
 <ul><li class="mono">C=O 1680–1750 cm⁻¹ (sharp) · O–H alcohol 3230–3550 (broad) · O–H acid 2500–3000 (very broad) · fingerprint region &lt;1500 identifies the exact compound</li></ul>
@@ -707,7 +916,34 @@ const TOPICS=[
 <li>¹³C NMR: one signal per carbon environment — count them first in any structure question.</li></ul>
 <h4>Chromatography</h4>
 <span class="eq">Rf = distance moved by spot ÷ distance moved by solvent front</span>
-<p>TLC (required practical 12): separation depends on relative affinity for the stationary vs mobile phase. Never let the solvent reach the top of the plate.</p>`}];
+<p>TLC (required practical 12): separation depends on relative affinity for the stationary vs mobile phase. Never let the solvent reach the top of the plate.</p>
+<h4><span class="sc">3.3.15</span>The NMR problem-solving routine</h4>
+<ul><li>1: count ¹³C signals → carbon environments. 2: count ¹H signals → proton environments. 3: integration ratio → how many H in each. 4: splitting (n+1) → H on neighbouring carbons. 5: shift table → which functional groups.</li></ul>
+<div class="worked"><b>Worked example — C₃H₆O.</b> Is it propanal (CH₃CH₂CHO) or propanone (CH₃COCH₃)?
+<ol><li>Propanone: one ¹H environment → a single 6H singlet; two ¹³C environments.</li>
+<li>Propanal: three ¹H environments (triplet 3H, multiplet 2H, triplet 1H near δ 9–10); three ¹³C environments.</li>
+<li>A single singlet spectrum = <b>propanone</b>. One glance settles it.</li></ol></div>
+<h4><span class="sc">3.3.6</span>Combined-technique identification</h4>
+<ul><li>Mass spectrum → Mr (M⁺) and carbon count (M+1 height); fragments confirm pieces (15 CH₃, 29 C₂H₅/CHO, 45 COOH).</li>
+<li>IR → functional group (C=O 1680–1750 cm⁻¹; alcohol O–H 3230–3550; acid O–H 2500–3000, very broad).</li>
+<li>NMR → the skeleton. The exam formula: state the evidence from each spectrum, then the structure.</li></ul>
+<h4><span class="sc">3.3.16</span>Chromatography essentials</h4>
+<ul><li>All chromatography = stationary phase + mobile phase; separation by relative affinity/adsorption.</li>
+<li>TLC: Rf = spot distance ÷ solvent front distance (both from the baseline, measured to spot centre). Same Rf as a pure reference in the same solvent = strong identification evidence.</li>
+<li>Column chromatography scales TLC up: compounds with the greater affinity for the mobile phase elute first.</li></ul>
+<div class="tip"><b>Exam tip.</b> "How many peaks in the ¹³C spectrum?" — draw the molecule, mark symmetry-equivalent carbons, count once per environment. Do this before anything else in every NMR question.</div>
+<h4><span class="sc">Data booklet</span>¹H NMR chemical shifts (AQA Table B)</h4>
+<div class="tblwrap"><table class="notetable"><tr><th>Proton environment</th><th>δ / ppm</th><th>Proton environment</th><th>δ / ppm</th></tr>
+<tr><td>R–CH₃</td><td>0.7–1.2</td><td>RO–C–H (ethers/alcohols)</td><td>3.1–3.9</td></tr>
+<tr><td>R₂–CH₂</td><td>1.2–1.4</td><td>R–CH₂–Cl/Br</td><td>3.1–4.2</td></tr>
+<tr><td>R₃–CH</td><td>1.4–1.6</td><td>ester R–COO–C–H</td><td>3.7–4.1</td></tr>
+<tr><td>H–C–C=O</td><td>2.1–2.6</td><td>alkene C=C–H</td><td>4.5–6.0</td></tr>
+<tr><td>R–OH</td><td>0.5–5.0</td><td>aldehyde R–CHO</td><td>9.0–10.0</td></tr>
+<tr><td>R–NH₂</td><td>1.0–4.5</td><td>acid R–COOH</td><td>10.0–12.0</td></tr></table></div>
+<h4><span class="sc">Data booklet</span>¹³C shifts (Table C) and IR (Table A) — the ranges that decide questions</h4>
+<ul><li>¹³C: C–C 5–40 · C–O 50–90 · C=C 90–150 · aromatic 110–160 · ester/acid C=O 160–185 · aldehyde/ketone C=O 190–220 ppm.</li>
+<li>IR: N–H 3300–3500 · alcohol O–H 3230–3550 · C–H 2850–3300 · acid O–H 2500–3000 (very broad) · C≡N 2220–2260 · C=O 1680–1750 · C=C 1620–1680 · C–O 1000–1300 cm⁻¹.</li>
+<li>These tables are printed in the exam data booklet — practise <i>using</i> them fast, not memorising them.</li></ul>`}];
 
 /* ---------- required practicals ---------- */
 const PRACLIST=[
@@ -1049,6 +1285,7 @@ const SOURCES=[
 ["RSC Titration screen experiment","The RSC's own interactive titration simulator — good companion practice to the simulation here.","https://edu.rsc.org/concentration-of-solutions-and-titration/titration-screen-experiment/2077.article"],
 ["AQA A-level Chemistry (7405) — assessment resources","Past papers, mark schemes and examiner reports: the highest-value practice material there is.","https://www.aqa.org.uk/subjects/chemistry/a-level/chemistry-7405/assessment-resources"],
 ["AQA Required Practical Handbook (7404/7405)","The official methods for all 12 required practicals — the walkthroughs in this app follow its exemplars.","https://filestore.aqa.org.uk/resources/chemistry/AQA-7404-7405-PHBK.PDF"],
+["AQA A-level Chemistry Data Booklet","The exact NMR, IR and periodic-table data printed in your exam — the tables in the Analysis chapter mirror it.","https://filestore.aqa.org.uk/resources/chemistry/AQA-7405-SDB.PDF"],
 ["CLEAPSS Student Safety Sheets","The UK schools' laboratory-safety authority — free hazard and control-measure sheets you can cite in your own risk assessments.","https://science.cleapss.org.uk/resources/student-safety-sheets/"],
 ["RSC Interactive Periodic Table","Verified data, history and podcasts for every element.","https://www.rsc.org/periodic-table"],
 ["NIST Chemistry WebBook","Authoritative boiling points, thermochemistry and spectra — source of the physical constants used in the simulations.","https://webbook.nist.gov/chemistry/"],
