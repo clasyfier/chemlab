@@ -185,7 +185,16 @@ section.view.on{display:block;animation:fadein .25s ease}
 .reader-quiz button.opt.wrong{border-color:var(--danger);background:color-mix(in srgb,var(--danger) 10%,transparent)}
 .reader-quiz .rqexpl{display:none;font-size:13.5px;color:var(--ink-soft);background:var(--panel2);border-radius:8px;padding:9px 12px;margin:4px 0 6px;max-width:70ch}
 .reader-quiz .rqexpl.on{display:block}
-.reader-footnav{display:flex;justify-content:space-between;gap:12px;margin-top:40px;padding-top:20px;border-top:1px solid var(--line)}
+.mood{margin-top:36px;border-top:1px solid var(--line);padding-top:20px;text-align:center;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.mood h3{font-size:16px;margin-bottom:4px}
+.mood p{color:var(--ink-soft);font-size:13px;margin:0 0 12px}
+.moodrow{display:flex;justify-content:center;gap:14px}
+.moodrow button{font-size:30px;background:none;border:0;padding:6px;border-radius:50%;filter:grayscale(1);opacity:.55;transition:transform .12s,filter .12s,opacity .12s}
+.moodrow button:hover{filter:none;opacity:1;transform:scale(1.2)}
+.moodrow button.on{filter:none;opacity:1;transform:scale(1.28);background:var(--bunsen-soft)}
+.mood .moodlbl{font-size:12.5px;color:var(--ink-soft);min-height:18px;margin-top:8px;font-weight:600}
+.mood-dot{font-size:17px}
+.reader-footnav{display:flex;justify-content:space-between;gap:12px;margin-top:28px;padding-top:20px;border-top:1px solid var(--line)}
 .reader-footnav .rarrow{max-width:46%;text-align:left}
 .ext-head{color:var(--k)!important;border-top-color:var(--k)!important}
 @media (max-width:760px){.fsbtn{right:46px;top:12px;padding:4px 10px;font-size:11.5px}.reader-bar .rtitle{font-size:14px}}
@@ -490,6 +499,7 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
     </div>
     <div class="reader-body" id="r-body"></div>
     <div class="reader-quiz" id="r-quiz"></div>
+    <div class="mood" id="r-mood"></div>
     <div class="reader-footnav">
       <button class="rarrow" id="r-prev2">◀ Previous chapter</button>
       <button class="rarrow" id="r-next2">Next chapter ▶</button>
@@ -1553,6 +1563,7 @@ $("#topics").innerHTML=TOPICS.map((t,i)=>`<button class="chapcard" data-ch="${i}
     <span class="sub">${t.s}</span>
   </span>
   <span class="chapmeta">
+    <span class="mood-dot" id="md${i}"></span>
     <span class="mastered-badge" id="mb${i}" hidden>✓ mastered</span>
     <span class="chapgo">Study ▸</span>
   </span>
@@ -1583,6 +1594,8 @@ function openReader(i){
   }
   const rmw=$("#r-master-wrap");
   if(rmw){rmw.style.display=topicLocked(i)?"none":""; $("#r-master").dataset.i=i; refreshMaster();}
+  $("#r-mood").style.display=topicLocked(i)?"none":"";
+  if(!topicLocked(i))renderMood(i);
   $("#r-prev").disabled=$("#r-prev2").disabled=(i===0);
   $("#r-next").disabled=$("#r-next2").disabled=(i===TOPICS.length-1);
   $("#r-prev2").textContent=i>0?"◀ "+TOPICS[i-1].t:"◀";
@@ -1627,6 +1640,26 @@ function renderReaderQuiz(t){
   }));
 }
 
+const MOODS=[["😫","really struggling"],["😕","a bit shaky"],["😐","okay"],["🙂","feeling confident"],["🤩","nailed it"]];
+function refreshMoods(){
+  const m=load("chemlab-mood",{});
+  TOPICS.forEach((_,i)=>{const d=document.querySelector("#md"+i); if(d)d.textContent=m[i]?MOODS[m[i]-1][0]:"";});
+}
+function renderMood(i){
+  const cur=load("chemlab-mood",{})[i]||0;
+  $("#r-mood").innerHTML=`<h3 class="serif">How do you feel about this chapter?</h3>
+    <p>Be honest — it helps you pick what to revise next.</p>
+    <div class="moodrow">${MOODS.map((mo,k)=>`<button data-mood="${k+1}" class="${cur===k+1?"on":""}" aria-label="${mo[1]}">${mo[0]}</button>`).join("")}</div>
+    <div class="moodlbl">${cur?MOODS[cur-1][1]:""}</div>`;
+  $("#r-mood").querySelectorAll("[data-mood]").forEach(b=>b.addEventListener("click",()=>{
+    const m=load("chemlab-mood",{});
+    const v=+b.dataset.mood;
+    if(m[i]===v)delete m[i]; else m[i]=v;
+    store("chemlab-mood",m);
+    renderMood(i); refreshMoods();
+    if(m[i]&&v>=4)burstFrom(b);
+  }));
+}
 function refreshMaster(){
   const m=load("chemlab-mastered",[]);
   $$(".master").forEach(b=>{const on=m.includes(+b.dataset.i);b.classList.toggle("on",on);b.textContent=on?"✓ Mastered":"✓ Mark as mastered";});
@@ -2396,6 +2429,7 @@ window.addEventListener("resize",redrawAll);
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",redrawAll);
 new MutationObserver(redrawAll).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
 renderDash();
+refreshMoods();
 redrawAll();
 if(!reduced){gasLoop();}
 </script>
@@ -2422,7 +2456,7 @@ const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
 const sb=createClient(CFG.url,CFG.anon);
 window.chemPremium=false; window.applyPracLocks(); if(typeof renderQuiz==="function")renderQuiz();
 
-const KEYS=["chemlab-mastered","chemlab-quiz","chemlab-prac","chemlab-hunt-best","chemlab-quiz-beststreak"];
+const KEYS=["chemlab-mastered","chemlab-quiz","chemlab-prac","chemlab-hunt-best","chemlab-quiz-beststreak","chemlab-mood"];
 const lget=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}};
 const lset=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 function snapshot(){const o={};KEYS.forEach(k=>o[k]=lget(k,null));return o;}
@@ -2438,35 +2472,11 @@ function merge(cloud,local){
   out["chemlab-prac"]=pr;
   out["chemlab-hunt-best"]=Math.max(cloud?.["chemlab-hunt-best"]||0,local?.["chemlab-hunt-best"]||0);
   out["chemlab-quiz-beststreak"]=Math.max(cloud?.["chemlab-quiz-beststreak"]||0,local?.["chemlab-quiz-beststreak"]||0);
+  out["chemlab-mood"]={...(cloud?.["chemlab-mood"]||{}),...(local?.["chemlab-mood"]||{})};
   return out;
 }
 function applyLocal(o){KEYS.forEach(k=>{if(o[k]!=null)lset(k,o[k])});
-  try{refreshMaster();PRACS.forEach((_,i)=>refreshPrac(i));
-$$(".spot li").forEach(li=>li.addEventListener("click",()=>{
-  if(li.closest(".spot").classList.contains("checked"))return;
-  li.classList.toggle("pick");
-}));
-$$(".spot-check").forEach(b=>b.addEventListener("click",()=>{
-  const i=+b.dataset.p, ul=document.querySelector(`.spot[data-p="${i}"]`);
-  if(ul.classList.contains("checked")){
-    ul.classList.remove("checked");
-    ul.querySelectorAll("li").forEach(li=>{li.className="";const w=li.querySelector(".why");if(w)w.remove();});
-    b.textContent="Check my answers"; document.querySelector("#spotres"+i).textContent="";
-    return;
-  }
-  ul.classList.add("checked");
-  let found=0,total=0;
-  ul.querySelectorAll("li").forEach(li=>{
-    const st=SPOT[i][+li.dataset.j], wrong=!!st[1], picked=li.classList.contains("pick");
-    if(wrong){total++;
-      if(picked){found++;li.classList.add("hit");}else li.classList.add("miss");
-      li.insertAdjacentHTML("beforeend",`<div class="why">${st[2]}</div>`);
-    } else if(picked) li.classList.add("false");
-  });
-  document.querySelector("#spotres"+i).textContent=`You found ${found}/${total}`+(found===total?" — perfect! 🎉":"");
-  if(found===total)burstFrom(b);
-  b.textContent="Try again";
-}));renderDash();}catch(e){}}
+  try{refreshMaster();refreshMoods();PRACS.forEach((_,i)=>refreshPrac(i));renderDash();}catch(e){}}
 
 let user=null, premium=false, prof={}, pushTimer=null;
 async function pushProgress(){
@@ -2798,7 +2808,7 @@ function render(){
     $("#a-delgo").innerHTML='<span class="spin"></span>Erasing…';
     const r=await fetch("/api/account",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+session.access_token},body:JSON.stringify({action:"delete"})});
     if((await r.json()).deleted){
-      ["chemlab-mastered","chemlab-quiz","chemlab-prac","chemlab-hunt-best","chemlab-quiz-beststreak"].forEach(k=>localStorage.removeItem(k));
+      ["chemlab-mastered","chemlab-quiz","chemlab-prac","chemlab-hunt-best","chemlab-quiz-beststreak","chemlab-mood"].forEach(k=>localStorage.removeItem(k));
       await sb.auth.signOut();
       acct.innerHTML='<div class="card acct-card"><h3>Account deleted</h3><p>Everything we stored about you is gone. Thanks for trying ChemLab.</p></div>';
       window.chemPremium=false; window.applyPracLocks();
