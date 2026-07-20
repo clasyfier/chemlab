@@ -227,6 +227,13 @@ ul.chk{list-style:none;padding-left:0!important;margin:8px 0}
 @keyframes flok{0%{box-shadow:0 0 0 3px var(--ok)}100%{box-shadow:0 0 0 0 transparent}}
 @keyframes flno{0%,100%{transform:none}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 .confetti-bit{position:fixed;width:8px;height:8px;border-radius:2px;pointer-events:none;z-index:99}
+.modal{position:fixed;inset:0;background:rgba(8,14,18,.55);display:grid;place-items:center;z-index:50;padding:18px;backdrop-filter:blur(3px)}
+.modal[hidden]{display:none}
+.modal-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);max-width:600px;width:100%;max-height:85vh;overflow:auto;position:relative;animation:pop .18s ease}
+@keyframes pop{from{transform:scale(.94);opacity:0}to{transform:none;opacity:1}}
+.modal-x{position:absolute;top:12px;right:12px;border:0;background:var(--panel2);border-radius:50%;width:34px;height:34px;font-size:18px;line-height:1;color:var(--ink-soft);z-index:2}
+.modal-x:hover{color:var(--ink)}
+.modal-card #eldetail .card{border:0;box-shadow:none;margin:0}
 
 @media (max-width:760px){
   .app{flex-direction:column}
@@ -296,7 +303,12 @@ ul.chk{list-style:none;padding-left:0!important;margin:8px 0}
   </div>
   <div class="pt-wrap"><div class="pt" id="pt"></div></div>
   <div id="trendinfo" class="grid cols2" style="display:none;margin-top:16px"></div>
-  <div id="eldetail"></div>
+  <div class="modal" id="elmodal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-label="Element details">
+      <button class="modal-x" id="elmodal-x" aria-label="Close">×</button>
+      <div id="eldetail"></div>
+    </div>
+  </div>
 </section>
 
 <section class="view" id="v-prac">
@@ -865,6 +877,12 @@ $("#hunt-btn").addEventListener("click",()=>{
   $("#hunt-btn").textContent="🎯 Playing…";
   huntNext();
 });
+let lastEl=null;
+function openElModal(){ $("#elmodal").hidden=false; $("#elmodal-x").focus(); }
+function closeElModal(){ $("#elmodal").hidden=true; if(lastEl)lastEl.focus(); }
+$("#elmodal-x").addEventListener("click",closeElModal);
+$("#elmodal").addEventListener("click",e=>{ if(e.target===$("#elmodal"))closeElModal(); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&!$("#elmodal").hidden)closeElModal(); });
 function onElClick(z,btn){
   if(hunt){
     const want=hunt.qs[hunt.i][1];
@@ -872,8 +890,12 @@ function onElClick(z,btn){
     else{btn.classList.add("flash-no"); const w=document.querySelector(`#pt .el[data-z="${want}"]`); if(w)w.classList.add("flash-ok");}
     setTimeout(()=>$$("#pt .el").forEach(e=>e.classList.remove("flash-ok","flash-no")),600);
     hunt.i++; setTimeout(huntNext,650);
+    showElement(z);   // fills the card silently — no popup mid-game
+    return;
   }
+  lastEl=btn;
   showElement(z);
+  openElModal();
 }
 $$("#pt .el").forEach(b=>b.addEventListener("click",()=>onElClick(+b.dataset.z,b)));
 showElement(6);
