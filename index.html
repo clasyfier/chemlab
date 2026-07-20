@@ -373,6 +373,9 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
 .chips button{border:1px solid var(--line);background:var(--panel);border-radius:99px;padding:8px 17px;font-size:14.5px;font-variant-numeric:tabular-nums;cursor:pointer;font-family:inherit;color:inherit}
 .chips button:hover{border-color:var(--bunsen)}
 .chips button.on{background:var(--bunsen);color:#fff;border-color:var(--bunsen);font-weight:700}
+.topicchips button{display:flex;align-items:center;gap:7px;font-size:13.5px}
+.topicchips i{width:9px;height:9px;border-radius:50%;display:inline-block;flex:0 0 9px}
+.topicchips button.on i{background:#fff!important}
 .expalette{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0 4px}
 .expalette button{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--panel);font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums;cursor:pointer;color:inherit}
 .expalette button.done{background:var(--cu);color:#fff;border-color:var(--cu)}
@@ -665,8 +668,8 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
   <div class="eyebrow">Quick-fire</div>
   <h1>Quick-fire quiz</h1>
   <p class="lede">One question at a time with instant marking, explanations and streaks — shuffled every session. Protect your streak. 🔥</p>
-  <div class="controls" style="margin:0 0 12px"><div class="ctrl"><label for="q-topic">Practise</label>
-    <select id="q-topic"></select></div></div>
+  <div class="setlbl" style="margin-bottom:8px">Practise a chapter</div>
+  <div class="chips topicchips" id="q-topics" style="margin:0 0 16px"></div>
   <div class="qf-strip" id="qfstrip"></div>
   <div class="quiz-card" id="quizcard"></div>
 </section>
@@ -674,7 +677,7 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
 <section class="view" id="v-exam">
   <div class="eyebrow">Exam practice</div>
   <h1>Exam-like questions</h1>
-  <p class="lede">Original questions in real exam formats, on a real exam clock — 2 minutes per mark. Written answers are marked by an AI examiner who explains exactly where the marks were lost.</p>
+  <p class="lede">Original questions in real exam formats, on a real exam clock — 1 minute per mark. Written answers are marked by an AI examiner who explains exactly where the marks were lost.</p>
   <div class="sim" id="examcard">
     <div style="display:flex;flex-direction:column;gap:16px;margin-bottom:6px">
       <div><div class="setlbl" style="margin-bottom:8px">Paper type</div>
@@ -2062,13 +2065,20 @@ $("#srclist").innerHTML=SOURCES.map(s=>`<div class="card"><h3>${s[0]}</h3><p>${s
 let qi=0, qstreak=0;
 let qscore=load("chemlab-quiz",{score:0,n:0}).score, qanswered=load("chemlab-quiz",{score:0,n:0}).n;
 let QPOOL=[...QUIZ.keys()].sort(()=>Math.random()-.5);
-$("#q-topic").innerHTML='<option value="-1">All topics — mixed</option>'+TOPICS.map((t,i)=>`<option value="${i}">${t.t}</option>`).join("");
-$("#q-topic").addEventListener("input",()=>{
-  const t=+$("#q-topic").value;
-  if(t>=0&&!window.chemPremium){$("#q-topic").value="-1";openAccount();return;}
-  QPOOL=[...QUIZ.keys()].filter(i=>t<0||QTOPIC[i]===t).sort(()=>Math.random()-.5);
-  qi=0; qstreak=0; renderQuiz();
-});
+let qTopicSel=-1;
+function renderTopicChips(){
+  const el=$("#q-topics"); if(!el)return;
+  el.innerHTML=`<button data-t="-1" class="${qTopicSel===-1?"on":""}">🎲 All topics</button>`+
+    TOPICS.map((t,i)=>`<button data-t="${i}" class="${qTopicSel===i?"on":""}"><i style="background:var(${t.c})"></i>${t.t}${window.chemPremium?"":" ★"}</button>`).join("");
+  $$("#q-topics button").forEach(b=>b.addEventListener("click",()=>{
+    const t=+b.dataset.t;
+    if(t>=0&&!window.chemPremium){openAccount();return;}
+    qTopicSel=t;
+    QPOOL=[...QUIZ.keys()].filter(i=>t<0||QTOPIC[i]===t).sort(()=>Math.random()-.5);
+    qi=0; qstreak=0; renderTopicChips(); renderQuiz();
+  }));
+}
+renderTopicChips();
 function toast(msg){
   const t=document.createElement("div"); t.className="toast"; t.textContent=msg;
   document.body.appendChild(t); setTimeout(()=>t.remove(),1900);
@@ -2635,8 +2645,8 @@ let EX=null, exTimer=null, exTypeSel="mcq", exCountSel=5;
 function exEst(){
   const el=$("#ex-est"); if(!el)return;
   el.textContent=exTypeSel==="mcq"
-    ?`${exCountSel} marks · ${exCountSel*2} min on the clock`
-    :`2 min per mark · marked by the AI examiner`;
+    ?`${exCountSel} marks · ${exCountSel} min on the clock`
+    :`1 min per mark · marked by the AI examiner`;
 }
 $$("#ex-typeseg button").forEach(b=>b.addEventListener("click",()=>{
   exTypeSel=b.dataset.t;
@@ -2681,7 +2691,7 @@ function exStart(){
   if(qs.length<want)$("#ex-note").textContent=`Bank has ${qs.length} ${type==="written"?"written":"practical"} questions — using all of them.`;
   else $("#ex-note").textContent="";
   const totalMarks=qs.reduce((a,q)=>a+q.marks,0);
-  EX={type,qs,i:0,ans:qs.map(()=>null),t0:Date.now(),limit:totalMarks*2*60,marks:totalMarks,done:false};
+  EX={type,qs,i:0,ans:qs.map(()=>null),t0:Date.now(),limit:totalMarks*60,marks:totalMarks,done:false};
   $("#ex-start").disabled=true;
   clearInterval(exTimer);
   exTimer=setInterval(exTick,1000);
@@ -2718,7 +2728,7 @@ function exRender(){
       <div style="font-weight:600;margin-bottom:10px">${Q.q}</div>
       <div>${Q.o.map((o,k)=>`<button class="opt exopt ${EX.ans[EX.i]===k?"right":""}" data-k="${k}" style="border:1px solid ${EX.ans[EX.i]===k?"var(--bunsen)":"var(--line)"};background:var(--panel);border-radius:9px;padding:8px 14px;margin:0 8px 8px 0;font-size:14.5px">${o}</button>`).join("")}</div></div>`;
   } else {
-    body=`<div class="ex-q"><div class="meta"><span>${EX.type==="written"?"WRITTEN ANSWER":"PRACTICAL"}</span><span>${q.marks} marks</span><span>~${q.marks*2} min</span></div>
+    body=`<div class="ex-q"><div class="meta"><span>${EX.type==="written"?"WRITTEN ANSWER":"PRACTICAL"}</span><span>${q.marks} marks</span><span>~${q.marks} min</span></div>
       <div style="font-weight:600;margin-bottom:10px;max-width:75ch">${q.src.q}</div>
       <textarea id="ex-ta" placeholder="Write your answer as you would in the exam — full sentences, working shown.">${EX.ans[EX.i]||""}</textarea></div>`;
   }
