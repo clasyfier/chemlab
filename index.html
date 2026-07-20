@@ -287,6 +287,33 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
 .price-row{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}
 .price-box{border:1px solid var(--line);border-radius:10px;padding:12px 18px;background:var(--panel2)}
 .price-box:hover{border-color:var(--bunsen)}
+.avatar{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:22px;flex:0 0 52px;font-family:"Iowan Old Style",Palatino,Georgia,serif}
+.acct-head{display:flex;gap:14px;align-items:center;margin-bottom:14px}
+.minibar{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+.ministat{background:var(--panel2);border-radius:8px;padding:8px 16px;text-align:center;min-width:86px}
+.ministat b{display:block;font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:16px;font-variant-numeric:tabular-nums}
+.ministat span{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft)}
+.premium-hero{border:1px solid color-mix(in srgb,var(--na) 45%,var(--line));border-radius:12px;padding:16px;background:linear-gradient(135deg,color-mix(in srgb,var(--na) 9%,var(--panel)),var(--panel));position:relative;overflow:hidden}
+.premium-hero::after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;pointer-events:none;background:linear-gradient(105deg,transparent,rgba(255,255,255,.18),transparent);animation:shine 4s infinite}
+@keyframes shine{to{left:130%}}
+.plan-toggle{display:inline-flex;border:1px solid var(--line);border-radius:99px;overflow:hidden;background:var(--panel)}
+.plan-toggle button{border:0;background:none;padding:8px 16px;font-size:13.5px;color:var(--ink-soft)}
+.plan-toggle button.on{background:var(--bunsen);color:#fff;font-weight:600}
+.featcmp{width:100%;border-collapse:collapse;font-size:13.5px;margin:10px 0}
+.featcmp td,.featcmp th{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left}
+.featcmp tr:last-child td{border-bottom:0}
+.featcmp .y{color:var(--ok);font-weight:700}.featcmp .n{color:var(--ink-soft)}
+.pwwrap{position:relative}
+.pwwrap input{width:100%;padding-right:40px}
+.eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:0;color:var(--ink-soft);font-size:15px;padding:6px}
+.strength{height:5px;border-radius:99px;background:var(--panel2);overflow:hidden;margin-top:7px}
+.strength i{display:block;height:100%;width:0;border-radius:99px;transition:width .25s,background .25s}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:rot .7s linear infinite;vertical-align:-2px;margin-right:7px}
+@keyframes rot{to{transform:rotate(360deg)}}
+.shake{animation:flno .4s}
+.btn[disabled]{opacity:.45;cursor:default}
+.danger-zone{border:1px dashed var(--danger);border-radius:10px;padding:12px 14px;margin-top:10px;display:none}
+.danger-zone.open{display:block}
 .price-box b{font-size:20px;font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
 .price-box span{display:block;font-size:12px;color:var(--ink-soft)}
 
@@ -1742,7 +1769,12 @@ function checkoutUrl(base){
   if(user.email)u.searchParams.set("prefilled_email",user.email);
   return u.toString();
 }
-let tab="in";
+let tab="in", plan="m";
+const pwScore=v=>{let c=0;if(v.length>=8)c++;if(v.length>=12)c++;if(/[A-Z]/.test(v)&&/[a-z]/.test(v))c++;if(/\d/.test(v))c++;if(/[^A-Za-z0-9]/.test(v))c++;return Math.min(c,4);};
+const avatarFor=email=>{
+  const hue=[...email].reduce((a,ch)=>a+ch.charCodeAt(0)*7,0)%360;
+  return `<span class="avatar" style="background:hsl(${hue},48%,44%)">${email[0].toUpperCase()}</span>`;
+};
 function render(){
   if(!user){
     acct.innerHTML=`<div class="card acct-card">
@@ -1750,46 +1782,96 @@ function render(){
         <button id="t-in" class="${tab==="in"?"on":""}">Sign in</button>
         <button id="t-up" class="${tab==="up"?"on":""}">Create account</button>
       </div>
-      <div class="field"><label for="a-email">Email</label><input id="a-email" type="email" autocomplete="email"></div>
-      <div class="field"><label for="a-pass">Password</label><input id="a-pass" type="password" autocomplete="${tab==="in"?"current":"new"}-password"></div>
+      <div class="field"><label for="a-email">Email</label><input id="a-email" type="email" autocomplete="email" placeholder="you@example.com"></div>
+      <div class="field"><label for="a-pass">Password</label>
+        <div class="pwwrap"><input id="a-pass" type="password" autocomplete="${tab==="in"?"current":"new"}-password" placeholder="${tab==="up"?"8+ characters":"••••••••"}"><button class="eye" id="a-eye" type="button" aria-label="Show password">👁</button></div>
+        ${tab==="up"?'<div class="strength"><i id="a-str"></i></div>':""}
+      </div>
       <div class="aerr" id="a-err"></div>
       <button class="btn" id="a-go">${tab==="in"?"Sign in":"Create account"}</button>
-      <p style="font-size:12.5px;color:var(--ink-soft);margin:12px 0 0">No tracking, no ads, EU-hosted, delete anytime — <a href="/privacy.html">privacy policy</a>.</p>
+      <div class="minibar" style="margin-top:18px">
+        <div class="ministat"><b>⚗️</b><span>progress syncs</span></div>
+        <div class="ministat"><b>🔥</b><span>streaks saved</span></div>
+        <div class="ministat"><b>★</b><span>premium unlocks</span></div>
+      </div>
+      <p style="font-size:12.5px;color:var(--ink-soft);margin:8px 0 0">No tracking, no ads, EU-hosted, delete anytime — <a href="/privacy.html">privacy policy</a>.</p>
     </div>`;
     $("#t-in").onclick=()=>{tab="in";render();};
     $("#t-up").onclick=()=>{tab="up";render();};
-    $("#a-go").onclick=async()=>{
+    $("#a-eye").onclick=()=>{const f=$("#a-pass");f.type=f.type==="password"?"text":"password";};
+    $("#a-pass").addEventListener("input",()=>{
+      const bar=$("#a-str"); if(!bar)return;
+      const sc=pwScore($("#a-pass").value);
+      bar.style.width=(sc*25)+"%";
+      bar.style.background=["var(--danger)","var(--danger)","var(--warn)","var(--cu)","var(--ok)"][sc];
+    });
+    const go=async()=>{
       const email=$("#a-email").value.trim(), password=$("#a-pass").value;
-      $("#a-err").textContent="";
-      const fn=tab==="in"?sb.auth.signInWithPassword({email,password}):sb.auth.signUp({email,password});
-      const {data,error}=await fn;
-      if(error){$("#a-err").textContent=error.message;return;}
-      if(tab==="up"&&!data.session){acct.innerHTML=`<div class="card acct-card"><h3>Check your email 📬</h3><p>We sent a confirmation link to <b>${email}</b>. Click it, then come back and sign in.</p></div>`;return;}
+      const btn=$("#a-go"); $("#a-err").textContent="";
+      btn.innerHTML='<span class="spin"></span>'+(tab==="in"?"Signing in…":"Creating account…"); btn.disabled=true;
+      const {data,error}=await (tab==="in"?sb.auth.signInWithPassword({email,password}):sb.auth.signUp({email,password}));
+      if(error){
+        btn.disabled=false; btn.textContent=tab==="in"?"Sign in":"Create account";
+        $("#a-err").textContent=error.message;
+        const card=acct.querySelector(".card"); card.classList.remove("shake"); void card.offsetWidth; card.classList.add("shake");
+        return;
+      }
+      if(tab==="up")burstFrom(btn);
       refresh();
     };
+    $("#a-go").onclick=go;
+    $("#a-pass").addEventListener("keydown",e=>{if(e.key==="Enter")go();});
     return;
   }
+  const since=new Date(user.created_at).toLocaleDateString("en-GB",{month:"short",year:"numeric"});
+  const mast=load("chemlab-mastered",[]).length, qz=load("chemlab-quiz",{score:0,n:0});
+  const acc=qz.n?Math.round(qz.score/qz.n*100)+"%":"—";
+  const hb=load("chemlab-hunt-best",0);
   acct.innerHTML=`<div class="card acct-card">
-    <p style="margin:0 0 10px">Signed in as <b>${user.email}</b>
-    ${premium?'<span class="premium-pill">★ Premium</span>':""}</p>
-    ${premium?`<p>Everything is unlocked and your progress syncs to the cloud automatically. Manage or cancel your subscription any time from the receipt email Lemon Squeezy sent you.</p>`
-    :`<h3>Go Premium</h3>
-      <p>Unlock all 5 practical walkthroughs, the full ${typeof QUIZ!=="undefined"?QUIZ.length:24}-question bank with streaks, and cloud-synced progress.</p>
-      <p style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:14px 0 6px">
-        <a class="btn" style="text-decoration:none;font-size:15.5px;padding:11px 22px" href="${checkoutUrl(CFG.checkout)}">Get Premium — £4.99/month</a>
-        <a href="${checkoutUrl(CFG.checkoutYear)}" style="font-weight:600">or £29/year (save 51%)</a></p>
-      <p style="color:var(--ink-soft);font-size:13px;max-width:52ch">You'll go to a secure Stripe checkout and come straight back here — Premium unlocks automatically. While we're in test mode, use card 4242 4242 4242 4242, any future date, any CVC.</p>
-      <p><button class="btn ghost" id="a-refresh">Refresh status</button></p>`}
-    <p style="margin-top:14px"><button class="btn ghost" id="a-out">Sign out</button></p>
+    <div class="acct-head">${avatarFor(user.email||"?")}
+      <div><b>${user.email}</b>${premium?' <span class="premium-pill">★ Premium</span>':""}
+      <div style="font-size:12.5px;color:var(--ink-soft)">studying since ${since}</div></div></div>
+    <div class="minibar">
+      <div class="ministat"><b>${mast}/${TOPICS.length}</b><span>topics mastered</span></div>
+      <div class="ministat"><b>${acc}</b><span>quiz accuracy</span></div>
+      <div class="ministat"><b>${hb}/8</b><span>hunt best</span></div>
+    </div>
+    ${premium?`<div class="premium-hero"><b style="font-size:17px">★ Everything unlocked</b>
+      <p style="margin:6px 0 0;font-size:14px">All 5 practicals, all ${QUIZ.length} questions, progress synced to the cloud. Manage or cancel any time from your Stripe receipt email.</p></div>`
+    :`<div class="premium-hero">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+        <b style="font-size:17px">Go Premium</b>
+        <span class="plan-toggle"><button id="pl-m" class="${plan==="m"?"on":""}">Monthly</button><button id="pl-y" class="${plan==="y"?"on":""}">Yearly · save 51%</button></span>
+      </div>
+      <div style="font-size:30px;font-family:ui-monospace,Menlo,monospace;margin:10px 0 2px">${plan==="m"?"£4.99":"£29"}<span style="font-size:14px;color:var(--ink-soft)">/${plan==="m"?"month":"year"}</span></div>
+      <table class="featcmp">
+        <tr><th></th><th>Free</th><th>Premium</th></tr>
+        <tr><td>Notes, simulations, periodic table</td><td class="y">✓</td><td class="y">✓</td></tr>
+        <tr><td>Practical walkthroughs</td><td class="n">1 of 5</td><td class="y">all 5</td></tr>
+        <tr><td>Quiz bank</td><td class="n">6 per session</td><td class="y">${QUIZ.length} + topic practice</td></tr>
+        <tr><td>Progress synced across devices</td><td class="n">—</td><td class="y">✓</td></tr>
+      </table>
+      <p style="display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 0">
+        <a class="btn" style="text-decoration:none;font-size:15px;padding:11px 22px" href="${checkoutUrl(plan==="m"?CFG.checkout:CFG.checkoutYear)}">Get Premium</a>
+        <button class="btn ghost" id="a-refresh">Refresh status</button></p>
+      <p style="color:var(--ink-soft);font-size:12.5px;margin:8px 0 0">Secure Stripe checkout — you come straight back and unlock automatically. Test mode: card 4242 4242 4242 4242.</p>
+    </div>`}
     <div style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">
       <h4 style="margin:0 0 6px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft)">Your data &amp; privacy</h4>
-      <p style="font-size:13.5px;color:var(--ink-soft);max-width:52ch">Everything ChemLab stores about you is yours — read the <a href="/privacy.html">privacy policy</a>.</p>
-      <p style="display:flex;gap:10px;flex-wrap:wrap">
-        <button class="btn ghost" id="a-export">Download my data</button>
-        <button class="btn ghost" id="a-delete" style="color:var(--danger)">Delete my account</button></p>
+      <p style="display:flex;gap:10px;flex-wrap:wrap;margin:8px 0">
+        <button class="btn ghost" id="a-export">⬇ Download my data</button>
+        <button class="btn ghost" id="a-out">Sign out</button>
+        <button class="btn ghost" id="a-delbtn" style="color:var(--danger)">Delete my account…</button></p>
+      <div class="danger-zone" id="dz">
+        <p style="margin:0 0 8px;font-size:13.5px">This permanently erases your account, progress and any subscription. Type <b>DELETE</b> to arm the button.</p>
+        <p style="display:flex;gap:8px;flex-wrap:wrap;margin:0"><input id="a-delc" style="font:inherit;padding:8px 10px;border-radius:7px;border:1px solid var(--line);background:var(--panel2);color:var(--ink)" placeholder="DELETE" aria-label="Type DELETE to confirm">
+        <button class="btn" id="a-delgo" disabled style="background:var(--danger)">Erase everything</button></p>
+      </div>
+      <p style="font-size:12px;color:var(--ink-soft);margin:10px 0 0"><a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a></p>
     </div>
   </div>`;
   const rb=$("#a-refresh"); if(rb)rb.onclick=refresh;
+  const plm=$("#pl-m"); if(plm){plm.onclick=()=>{plan="m";render();}; $("#pl-y").onclick=()=>{plan="y";render();};}
   $("#a-out").onclick=async()=>{await sb.auth.signOut();refresh();};
   $("#a-export").onclick=async()=>{
     const {data:{session}}=await sb.auth.getSession(); if(!session)return;
@@ -1797,16 +1879,18 @@ function render(){
     const blob=new Blob([JSON.stringify(await r.json(),null,2)],{type:"application/json"});
     const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="chemlab-data.json"; a.click(); URL.revokeObjectURL(a.href);
   };
-  $("#a-delete").onclick=async()=>{
-    if(prompt("This permanently erases your account, progress and any subscription. Type DELETE to confirm.")!=="DELETE")return;
+  $("#a-delbtn").onclick=()=>{$("#dz").classList.toggle("open");};
+  $("#a-delc").addEventListener("input",()=>{$("#a-delgo").disabled=$("#a-delc").value!=="DELETE";});
+  $("#a-delgo").onclick=async()=>{
     const {data:{session}}=await sb.auth.getSession(); if(!session)return;
+    $("#a-delgo").innerHTML='<span class="spin"></span>Erasing…';
     const r=await fetch("/api/account",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+session.access_token},body:JSON.stringify({action:"delete"})});
     if((await r.json()).deleted){
       ["chemlab-mastered","chemlab-quiz","chemlab-prac","chemlab-hunt-best","chemlab-quiz-beststreak"].forEach(k=>localStorage.removeItem(k));
       await sb.auth.signOut();
       acct.innerHTML='<div class="card acct-card"><h3>Account deleted</h3><p>Everything we stored about you is gone. Thanks for trying ChemLab.</p></div>';
       window.chemPremium=false; window.applyPracLocks();
-    } else alert("Deletion failed — please email us and we will erase it manually.");
+    } else { $("#a-delgo").textContent="Erase everything"; alert("Deletion failed — please email us and we will erase it manually."); }
   };
 }
 sb.auth.onAuthStateChange(()=>refresh());
