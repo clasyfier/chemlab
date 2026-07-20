@@ -354,6 +354,36 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
 .pickcard b{font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;font-size:17px}
 .pickcard .sub{font-size:13px;color:var(--ink-soft)}
 @media (max-width:560px){.pickrow{grid-template-columns:1fr}}
+.qf-strip{display:flex;gap:12px;flex-wrap:wrap;margin:0 0 16px}
+.qf-tile{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:10px 18px;text-align:center;box-shadow:var(--shadow);min-width:96px}
+.qf-tile b{display:block;font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:18px;font-variant-numeric:tabular-nums}
+.qf-tile span{font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-soft);font-weight:700}
+.qf-flame{display:inline-block;transition:font-size .25s}
+.qf-flame.hot{animation:flick .7s infinite}
+@keyframes flick{0%,100%{transform:scale(1) rotate(-3deg)}50%{transform:scale(1.15) rotate(3deg)}}
+.optletter{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:7px;background:var(--bunsen-soft);color:var(--bunsen);font-weight:800;font-size:12.5px;margin-right:10px;flex:0 0 24px}
+.quiz-card .opts button{display:flex;align-items:center;text-align:left}
+.toast{position:fixed;top:74px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--ground);padding:11px 26px;border-radius:99px;font-weight:800;font-size:16px;z-index:130;box-shadow:var(--shadow);animation:toastin 1.8s ease forwards;white-space:nowrap}
+@keyframes toastin{0%{opacity:0;transform:translate(-50%,-18px)}12%,80%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,-12px)}}
+.seg{display:flex;gap:10px;flex-wrap:wrap}
+.seg button{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:12px 18px;font-size:14px;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:130px;cursor:pointer;transition:transform .12s,border-color .12s;font-family:inherit;color:inherit}
+.seg button:hover{transform:translateY(-2px);border-color:var(--bunsen)}
+.seg button.on{border-color:var(--bunsen);background:var(--bunsen-soft);color:var(--bunsen);font-weight:700}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chips button{border:1px solid var(--line);background:var(--panel);border-radius:99px;padding:8px 17px;font-size:14.5px;font-variant-numeric:tabular-nums;cursor:pointer;font-family:inherit;color:inherit}
+.chips button:hover{border-color:var(--bunsen)}
+.chips button.on{background:var(--bunsen);color:#fff;border-color:var(--bunsen);font-weight:700}
+.expalette{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0 4px}
+.expalette button{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--panel);font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums;cursor:pointer;color:inherit}
+.expalette button.done{background:var(--cu);color:#fff;border-color:var(--cu)}
+.expalette button.cur{outline:2px solid var(--bunsen);outline-offset:1px}
+.ex-q{animation:slidein .22s ease}
+@keyframes slidein{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:none}}
+.ex-timer.low #ex-clock{color:var(--danger);animation:tpulse 1s infinite}
+@keyframes tpulse{50%{opacity:.45}}
+.scorering{--p:0;width:136px;height:136px;border-radius:50%;background:conic-gradient(var(--cu) calc(var(--p)*1%),var(--panel2) 0);display:grid;place-items:center;margin:16px auto 6px}
+.scorering>div{width:108px;height:108px;border-radius:50%;background:var(--panel);display:grid;place-items:center;text-align:center}
+.gradechip{display:inline-block;font-family:"Iowan Old Style",Palatino,Georgia,serif;font-weight:800;font-size:22px;background:color-mix(in srgb,var(--na) 18%,transparent);color:var(--na);border-radius:10px;padding:2px 16px}
 .planbox{white-space:pre-wrap;font-size:14.5px;line-height:1.6;background:var(--panel2);border-radius:10px;padding:16px 18px;margin-top:12px;max-width:78ch}
 @media (max-width:760px){.prog-row .nm{flex-basis:130px;font-size:13px}}
 .topic.locked h3{opacity:.55}
@@ -637,6 +667,7 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
   <p class="lede">One question at a time with instant marking, explanations and streaks — shuffled every session. Protect your streak. 🔥</p>
   <div class="controls" style="margin:0 0 12px"><div class="ctrl"><label for="q-topic">Practise</label>
     <select id="q-topic"></select></div></div>
+  <div class="qf-strip" id="qfstrip"></div>
   <div class="quiz-card" id="quizcard"></div>
 </section>
 
@@ -645,15 +676,21 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
   <h1>Exam-like questions</h1>
   <p class="lede">Original questions in real exam formats, on a real exam clock — 2 minutes per mark. Written answers are marked by an AI examiner who explains exactly where the marks were lost.</p>
   <div class="sim" id="examcard">
-    <div class="controls">
-      <div class="ctrl"><label for="ex-type">Question type</label><select id="ex-type">
-        <option value="mcq">Multiple choice</option>
-        <option value="written">Written answers</option>
-        <option value="atp">Alternative to practical</option></select></div>
-      <div class="ctrl"><label for="ex-count">Questions</label><select id="ex-count">
-        <option>5</option><option>10</option><option>15</option><option>20</option><option>25</option><option>30</option></select></div>
-      <button class="btn" id="ex-start">Start exam</button>
-      <span class="streak" id="ex-note"></span>
+    <div style="display:flex;flex-direction:column;gap:16px;margin-bottom:6px">
+      <div><div class="setlbl" style="margin-bottom:8px">Paper type</div>
+        <div class="seg" id="ex-typeseg">
+          <button data-t="mcq" class="on"><span style="font-size:22px">🔘</span><b>Multiple choice</b><span style="font-size:11px;color:var(--ink-soft)">1 mark each · instant marking</span></button>
+          <button data-t="written"><span style="font-size:22px">✍️</span><b>Written answers</b><span style="font-size:11px;color:var(--ink-soft)">3–6 marks · AI examiner</span></button>
+          <button data-t="atp"><span style="font-size:22px">🧪</span><b>Practical</b><span style="font-size:11px;color:var(--ink-soft)">2–4 marks · AI examiner</span></button>
+        </div></div>
+      <div><div class="setlbl" style="margin-bottom:8px">How many questions</div>
+        <div class="chips" id="ex-countchips">
+          <button class="on">5</button><button>10</button><button>15</button><button>20</button><button>25</button><button>30</button>
+        </div></div>
+      <p style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:0">
+        <button class="btn" id="ex-start" style="font-size:15.5px;padding:12px 26px">Start exam ▶</button>
+        <span class="streak" id="ex-est"></span>
+        <span class="streak" id="ex-note"></span></p>
     </div>
     <div id="ex-area"></div>
   </div>
@@ -2032,7 +2069,23 @@ $("#q-topic").addEventListener("input",()=>{
   QPOOL=[...QUIZ.keys()].filter(i=>t<0||QTOPIC[i]===t).sort(()=>Math.random()-.5);
   qi=0; qstreak=0; renderQuiz();
 });
+function toast(msg){
+  const t=document.createElement("div"); t.className="toast"; t.textContent=msg;
+  document.body.appendChild(t); setTimeout(()=>t.remove(),1900);
+}
+function updateQFStrip(){
+  const el=$("#qfstrip"); if(!el)return;
+  const acc=qanswered?Math.round(qscore/qanswered*100)+"%":"—";
+  const bs=load("chemlab-quiz-beststreak",0);
+  const fs=Math.min(34,16+qstreak*2);
+  el.innerHTML=`
+   <div class="qf-tile"><b><span class="qf-flame${qstreak>=3?" hot":""}" style="font-size:${fs}px">🔥</span> ${qstreak}</b><span>streak</span></div>
+   <div class="qf-tile"><b>${bs}</b><span>best streak</span></div>
+   <div class="qf-tile"><b>${qscore}/${qanswered}</b><span>session</span></div>
+   <div class="qf-tile"><b>${acc}</b><span>accuracy</span></div>`;
+}
 function renderQuiz(){
+  updateQFStrip();
   if(!window.chemPremium && qi>=6){
     $("#quizcard").innerHTML=`
       <span class="tagline" style="background:color-mix(in srgb,var(--na) 16%,transparent);color:var(--na)">Free preview finished</span>
@@ -2046,12 +2099,12 @@ function renderQuiz(){
   const beststreak=load("chemlab-quiz-beststreak",0);
   $("#quizcard").innerHTML=`
     <span class="tagline" style="background:var(--bunsen-soft);color:var(--bunsen)">Question ${qi%QPOOL.length+1} of ${QPOOL.length}</span>
+    <span class="code-chip" style="margin-left:8px">${TOPICS[QTOPIC[QPOOL[qi%QPOOL.length]]]?.t||""}</span>
     <div style="display:flex;align-items:center;gap:12px;margin:10px 0 2px">
       <div class="pbar"><i style="width:${(qi%QPOOL.length)/QPOOL.length*100}%"></i></div>
-      <span class="streak" id="qstreak">🔥 ${qstreak}${beststreak?` · best ${beststreak}`:""}</span>
     </div>
     <div class="qtext">${q.q}</div>
-    <div class="opts">${q.o.map((o,j)=>`<button data-j="${j}">${o}</button>`).join("")}</div>
+    <div class="opts">${q.o.map((o,j)=>`<button data-j="${j}"><span class="optletter">${"ABCD"[j]}</span><span>${o}</span></button>`).join("")}</div>
     <div class="expl" id="qexpl">${q.e}</div>
     <div class="quiz-foot">
       <button class="btn" id="qnext" style="display:none">Next question</button>
@@ -2065,7 +2118,11 @@ function renderQuiz(){
     if(j===q.a){
       qscore++; qstreak++; burstFrom(b);
       if(qstreak>load("chemlab-quiz-beststreak",0))store("chemlab-quiz-beststreak",qstreak);
-    } else qstreak=0;
+      if([3,5,10,15,20,25,30].includes(qstreak)){toast(`🔥 ${qstreak} in a row!`);burstFrom($("#qfstrip")||b);}
+    } else {
+      qstreak=0;
+      const card=$("#quizcard"); card.classList.remove("shake"); void card.offsetWidth; card.classList.add("shake");
+    }
     store("chemlab-quiz",{score:qscore,n:qanswered});
     $$("#quizcard .opts button").forEach((ob,oj)=>{
       if(oj===q.a) ob.classList.add("right");
@@ -2075,8 +2132,7 @@ function renderQuiz(){
     $("#qexpl").classList.add("on");
     $("#qnext").style.display="inline-block";
     $("#quizcard .score").textContent=`Session score: ${qscore}/${qanswered}`;
-    const bs=load("chemlab-quiz-beststreak",0);
-    $("#qstreak").textContent=`🔥 ${qstreak}${bs?` · best ${bs}`:""}`;
+    updateQFStrip();
   }));
   $("#qnext").addEventListener("click",()=>{qi++;renderQuiz();});
 }
@@ -2575,7 +2631,42 @@ function recTopic(t,got,max){
 }
 
 /* ---------- exam engine ---------- */
-let EX=null, exTimer=null;
+let EX=null, exTimer=null, exTypeSel="mcq", exCountSel=5;
+function exEst(){
+  const el=$("#ex-est"); if(!el)return;
+  el.textContent=exTypeSel==="mcq"
+    ?`${exCountSel} marks · ${exCountSel*2} min on the clock`
+    :`2 min per mark · marked by the AI examiner`;
+}
+$$("#ex-typeseg button").forEach(b=>b.addEventListener("click",()=>{
+  exTypeSel=b.dataset.t;
+  $$("#ex-typeseg button").forEach(x=>x.classList.toggle("on",x===b));
+  exEst();
+}));
+$$("#ex-countchips button").forEach(b=>b.addEventListener("click",()=>{
+  exCountSel=+b.textContent;
+  $$("#ex-countchips button").forEach(x=>x.classList.toggle("on",x===b));
+  exEst();
+}));
+exEst();
+function gradeOf(p){return p>=80?"A*":p>=70?"A":p>=60?"B":p>=50?"C":p>=40?"D":p>=30?"E":"U";}
+function scoreHTML(got,max){
+  const p=max?Math.round(got/max*100):0;
+  return `<div class="scorering" id="exring"><div><div><b class="mono" id="exp" style="font-size:27px">0%</b><div style="font-size:11.5px;color:var(--ink-soft)">${got}/${max} marks</div></div></div></div>
+  <p style="text-align:center;margin:0 0 14px"><span class="gradechip">${gradeOf(p)}</span> <span style="font-size:12px;color:var(--ink-soft)">indicative grade</span></p>`;
+}
+function animateScore(got,max){
+  const p=max?Math.round(got/max*100):0;
+  const ring=$("#exring"), num=$("#exp"); if(!ring)return;
+  let cur=0;
+  const step=()=>{
+    cur=Math.min(p,cur+Math.max(1,Math.round(p/28)));
+    ring.style.setProperty("--p",cur); num.textContent=cur+"%";
+    if(cur<p)requestAnimationFrame(step);
+    else if(p>=70)burstFrom(ring);
+  };
+  requestAnimationFrame(step);
+}
 function exPool(type,n){
   if(type==="mcq") return [...QUIZ.keys()].sort(()=>Math.random()-.5).slice(0,n)
     .map(i=>({kind:"mcq",qi:i,marks:1,t:QTOPIC[i]}));
@@ -2584,7 +2675,7 @@ function exPool(type,n){
   return picks.map(i=>({kind:"open",src:bank[i],marks:bank[i].marks,t:bank[i].t}));
 }
 function exStart(){
-  const type=$("#ex-type").value, want=+$("#ex-count").value;
+  const type=exTypeSel, want=exCountSel;
   if(!window.chemPremium && (type!=="mcq" || want>5)){openAccount();return;}
   const qs=exPool(type,want);
   if(qs.length<want)$("#ex-note").textContent=`Bank has ${qs.length} ${type==="written"?"written":"practical"} questions — using all of them.`;
@@ -2615,7 +2706,11 @@ function exSaveCurrent(){
 function exRender(){
   const q=EX.qs[EX.i];
   const head=`<div class="ex-timer" id="ex-twrap"><b class="mono" id="ex-clock">--:--</b><div class="pbar"><i id="ex-tbar" style="width:100%"></i></div>
-    <span class="streak">question ${EX.i+1}/${EX.qs.length} · ${EX.marks} marks total</span></div>`;
+    <span class="streak">question ${EX.i+1}/${EX.qs.length} · ${EX.marks} marks total</span></div>
+    <div class="expalette">${EX.qs.map((qq,k)=>{
+      const done=qq.kind==="mcq"?EX.ans[k]!=null:!!(EX.ans[k]&&String(EX.ans[k]).trim());
+      return `<button data-pj="${k}" class="${done?"done":""}${k===EX.i?" cur":""}" title="Question ${k+1}">${k+1}</button>`;
+    }).join("")}</div>`;
   let body;
   if(q.kind==="mcq"){
     const Q=QUIZ[q.qi];
@@ -2633,6 +2728,7 @@ function exRender(){
     <button class="btn" id="ex-fin" style="background:var(--cu)">Finish &amp; mark</button></p>`;
   $("#ex-area").innerHTML=head+body+nav;
   $$("#ex-area .exopt").forEach(b=>b.addEventListener("click",()=>{EX.ans[EX.i]=+b.dataset.k;exRender();}));
+  $$("#ex-area .expalette button").forEach(b=>b.addEventListener("click",()=>{exSaveCurrent();EX.i=+b.dataset.pj;exRender();}));
   const pv=$("#ex-prev"); if(pv)pv.addEventListener("click",()=>{exSaveCurrent();EX.i--;exRender();});
   const nx=$("#ex-next"); if(nx)nx.addEventListener("click",()=>{exSaveCurrent();EX.i++;exRender();});
   $("#ex-fin").addEventListener("click",()=>{exSaveCurrent();exFinish();});
@@ -2652,8 +2748,8 @@ async function exFinish(){
         ${ok?"":`<div class="fb">Correct answer: <b>${Q.o[Q.a]}</b>. ${Q.e}</div>`}</div>`;
     }).join("");
     exRecord(got);
-    $("#ex-area").innerHTML=`<h3 class="serif" style="font-size:20px;margin:14px 0 4px">Result: ${got}/${EX.marks}</h3>${rows}`;
-    if(got===EX.marks)burstFrom($("#ex-area"));
+    $("#ex-area").innerHTML=scoreHTML(got,EX.marks)+rows;
+    animateScore(got,EX.marks);
     return;
   }
   $("#ex-area").innerHTML=`<p class="hint" style="margin:16px 0"><span class="spin" style="border-color:rgba(0,0,0,.15);border-top-color:var(--bunsen)"></span> The AI examiner is marking your paper — this takes up to a minute for a full set…</p>`;
@@ -2675,8 +2771,8 @@ async function exFinish(){
         ${res.points_missed.length?`<ul>${res.points_missed.map(p=>`<li>Missed: ${p}</li>`).join("")}</ul>`:""}</div>`;
     }).join("");
     exRecord(got);
-    $("#ex-area").innerHTML=`<h3 class="serif" style="font-size:20px;margin:14px 0 4px">Result: ${got}/${EX.marks}</h3>
-      <p style="font-size:14.5px;max-width:75ch;color:var(--ink-soft)">${ai.overall||""}</p>${rows}`;
+    $("#ex-area").innerHTML=scoreHTML(got,EX.marks)+`<p style="font-size:14.5px;max-width:75ch;color:var(--ink-soft);margin:0 auto 10px;text-align:center">${ai.overall||""}</p>`+rows;
+    animateScore(got,EX.marks);
     return;
   }
   // fallback: self-marking against the schemes
@@ -2694,7 +2790,8 @@ async function exFinish(){
       const aw=Math.min(q.marks,ticked); got+=aw; recTopic(q.t,aw,q.marks);
     });
     exRecord(got);
-    $("#ex-selfdone").outerHTML=`<h3 class="serif" style="font-size:20px">Result: ${got}/${EX.marks}</h3>`;
+    $("#ex-selfdone").outerHTML=scoreHTML(got,EX.marks);
+    animateScore(got,EX.marks);
   });
 }
 function exRecord(got){
