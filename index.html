@@ -314,6 +314,22 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
 .btn[disabled]{opacity:.45;cursor:default}
 .danger-zone{border:1px dashed var(--danger);border-radius:10px;padding:12px 14px;margin-top:10px;display:none}
 .danger-zone.open{display:block}
+.topbar{position:sticky;top:0;z-index:35;display:flex;justify-content:flex-end;align-items:center;gap:8px;
+  padding:6px 0 10px;background:linear-gradient(var(--ground) 75%,transparent);min-height:46px}
+.avatar.sm{width:36px;height:36px;font-size:15px;flex:0 0 36px;cursor:pointer;transition:transform .12s}
+.avatar.sm:hover{transform:scale(1.08)}
+.corner{position:relative}
+.corner-menu{position:absolute;right:0;top:44px;background:var(--panel);border:1px solid var(--line);
+  border-radius:12px;box-shadow:var(--shadow);min-width:240px;padding:6px;display:none;z-index:60}
+.corner-menu.open{display:block;animation:pop .15s ease}
+.cm-head{padding:10px 12px;border-bottom:1px solid var(--line);margin-bottom:4px;font-size:13.5px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cm-item{display:block;width:100%;text-align:left;background:none;border:0;padding:9px 12px;
+  border-radius:8px;font-size:14px;color:var(--ink)}
+.cm-item:hover{background:var(--panel2)}
+.setlbl{margin:0 0 6px;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft)}
+.setcard{margin-bottom:14px}
+.setcard h3{font-size:16px;margin-bottom:12px}
 .price-box b{font-size:20px;font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
 .price-box span{display:block;font-size:12px;color:var(--ink-soft)}
 
@@ -350,13 +366,13 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
   <button data-v="prac"><span class="dot" style="background:var(--k)"></span>Practicals</button>
   <button data-v="quiz"><span class="dot" style="background:var(--bunsen)"></span>Quiz</button>
   <button data-v="sources"><span class="dot" style="background:var(--ink-soft)"></span>Sources</button>
-  <button data-v="account"><span class="dot" style="background:var(--cu)"></span>Account</button>
   <div class="spacer"></div>
   <div style="padding:10px;font-size:11.5px;color:var(--ink-soft)">
     <a href="/privacy.html" style="color:inherit">Privacy</a> · <a href="/terms.html" style="color:inherit">Terms</a>
   </div>
 </nav>
 <main>
+<div class="topbar"><div id="acct-corner"></div></div>
 
 <section class="view on" id="v-home">
   <div class="eyebrow">Free to start · AQA · OCR · Edexcel</div>
@@ -429,9 +445,9 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
 </section>
 
 <section class="view" id="v-account">
-  <div class="eyebrow">Account</div>
-  <h1>Your ChemLab account</h1>
-  <p class="lede">Sign in to sync your progress across devices — and unlock everything with Premium.</p>
+  <div class="eyebrow">Settings</div>
+  <h1>Account settings</h1>
+  <p class="lede">Your profile, subscription and data — all in one place.</p>
   <div id="acct"></div>
 </section>
 
@@ -1688,6 +1704,9 @@ const acct=$("#acct");
 if(!CFG.url||!CFG.anon){
   acct.innerHTML=`<div class="card acct-card"><h3>Accounts are almost here</h3>
   <p>Cloud accounts, synced progress and Premium are being wired up. Until then everything is free and your progress lives on this device.</p></div>`;
+  const c=document.querySelector("#acct-corner");
+  if(c){c.innerHTML='<button class="btn ghost" style="padding:7px 16px;font-size:13.5px">Log in</button>';
+    c.querySelector("button").onclick=()=>showView("account");}
 }else{
 (async()=>{
 const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
@@ -1761,7 +1780,7 @@ async function refresh(){
   }else premium=false;
   window.chemPremium=!!(user&&premium);
   window.applyPracLocks(); try{renderQuiz()}catch(e){}
-  render();
+  render(); renderCorner();
 }
 function checkoutUrl(base){
   const u=new URL(base);
@@ -1771,10 +1790,40 @@ function checkoutUrl(base){
 }
 let tab="in", plan="m";
 const pwScore=v=>{let c=0;if(v.length>=8)c++;if(v.length>=12)c++;if(/[A-Z]/.test(v)&&/[a-z]/.test(v))c++;if(/\d/.test(v))c++;if(/[^A-Za-z0-9]/.test(v))c++;return Math.min(c,4);};
-const avatarFor=email=>{
+const avatarFor=(email,sm)=>{
   const hue=[...email].reduce((a,ch)=>a+ch.charCodeAt(0)*7,0)%360;
-  return `<span class="avatar" style="background:hsl(${hue},48%,44%)">${email[0].toUpperCase()}</span>`;
+  return `<span class="avatar${sm?" sm":""}" style="background:hsl(${hue},48%,44%)">${email[0].toUpperCase()}</span>`;
 };
+document.addEventListener("click",e=>{
+  const m=document.querySelector("#corner-menu");
+  if(m&&!e.target.closest(".corner"))m.classList.remove("open");
+});
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"){const m=document.querySelector("#corner-menu");if(m)m.classList.remove("open");}
+});
+function renderCorner(){
+  const c=document.querySelector("#acct-corner"); if(!c)return;
+  if(!user){
+    c.innerHTML=`<button class="btn ghost" id="corner-in" style="padding:7px 16px;font-size:13.5px">Log in</button>
+      <button class="btn" id="corner-up" style="padding:7px 16px;font-size:13.5px">Sign up free</button>`;
+    $("#corner-in").onclick=()=>{tab="in";render();showView("account");};
+    $("#corner-up").onclick=()=>{tab="up";render();showView("account");};
+    return;
+  }
+  c.innerHTML=`<div class="corner">
+    <button id="corner-av" aria-haspopup="true" aria-label="Account menu" style="background:none;border:0;padding:0">${avatarFor(user.email||"?",true)}</button>
+    <div class="corner-menu" id="corner-menu">
+      <div class="cm-head"><b>${user.email}</b>${premium?' <span class="premium-pill" style="padding:2px 8px;font-size:11px">★ Premium</span>':""}</div>
+      <button class="cm-item" id="cm-settings">⚙️&nbsp; Account settings</button>
+      ${premium?"":'<button class="cm-item" id="cm-upgrade" style="color:var(--na);font-weight:600">★&nbsp; Upgrade to Premium</button>'}
+      <button class="cm-item" id="cm-out">↩&nbsp; Sign out</button>
+    </div></div>`;
+  const menu=$("#corner-menu");
+  $("#corner-av").onclick=e=>{e.stopPropagation();menu.classList.toggle("open");};
+  $("#cm-settings").onclick=()=>{menu.classList.remove("open");showView("account");};
+  const up=$("#cm-upgrade"); if(up)up.onclick=()=>{menu.classList.remove("open");showView("account");};
+  $("#cm-out").onclick=async()=>{await sb.auth.signOut();refresh();};
+}
 function render(){
   if(!user){
     acct.innerHTML=`<div class="card acct-card">
@@ -1827,16 +1876,29 @@ function render(){
   const mast=load("chemlab-mastered",[]).length, qz=load("chemlab-quiz",{score:0,n:0});
   const acc=qz.n?Math.round(qz.score/qz.n*100)+"%":"—";
   const hb=load("chemlab-hunt-best",0);
-  acct.innerHTML=`<div class="card acct-card">
+  acct.innerHTML=`
+  <div class="card acct-card setcard">
+    <h3>Profile</h3>
     <div class="acct-head">${avatarFor(user.email||"?")}
-      <div><b>${user.email}</b>${premium?' <span class="premium-pill">★ Premium</span>':""}
-      <div style="font-size:12.5px;color:var(--ink-soft)">studying since ${since}</div></div></div>
+      <div><b>${user.email}</b>${premium?' <span class="premium-pill">★ Premium</span>':' <span style="font-size:12px;color:var(--ink-soft)">· Free plan</span>'}
+      <div style="font-size:12.5px;color:var(--ink-soft)">Member since ${since}</div></div></div>
     <div class="minibar">
       <div class="ministat"><b>${mast}/${TOPICS.length}</b><span>topics mastered</span></div>
       <div class="ministat"><b>${acc}</b><span>quiz accuracy</span></div>
       <div class="ministat"><b>${hb}/8</b><span>hunt best</span></div>
     </div>
-    ${premium?`<div class="premium-hero"><b style="font-size:17px">★ Everything unlocked</b>
+    <div style="border-top:1px solid var(--line);padding-top:12px;margin-top:6px">
+      <h4 class="setlbl">Change password</h4>
+      <p style="display:flex;gap:8px;flex-wrap:wrap;margin:6px 0">
+        <input id="pw-new" type="password" autocomplete="new-password" placeholder="New password (8+ characters)"
+          style="font:inherit;padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);min-width:230px">
+        <button class="btn ghost" id="pw-save">Update password</button></p>
+      <div class="aerr" id="pw-msg"></div>
+    </div>
+  </div>
+  <div class="card acct-card setcard">
+    <h3>Subscription</h3>
+    ${premium?`<div class="premium-hero"><b style="font-size:17px">★ Premium — everything unlocked</b>
       <p style="margin:6px 0 0;font-size:14px">All 5 practicals, all ${QUIZ.length} questions, progress synced to the cloud. Manage or cancel any time from your Stripe receipt email.</p></div>`
     :`<div class="premium-hero">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
@@ -1856,22 +1918,31 @@ function render(){
         <button class="btn ghost" id="a-refresh">Refresh status</button></p>
       <p style="color:var(--ink-soft);font-size:12.5px;margin:8px 0 0">Secure Stripe checkout — you come straight back and unlock automatically. Test mode: card 4242 4242 4242 4242.</p>
     </div>`}
-    <div style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">
-      <h4 style="margin:0 0 6px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft)">Your data &amp; privacy</h4>
-      <p style="display:flex;gap:10px;flex-wrap:wrap;margin:8px 0">
-        <button class="btn ghost" id="a-export">⬇ Download my data</button>
-        <button class="btn ghost" id="a-out">Sign out</button>
-        <button class="btn ghost" id="a-delbtn" style="color:var(--danger)">Delete my account…</button></p>
-      <div class="danger-zone" id="dz">
-        <p style="margin:0 0 8px;font-size:13.5px">This permanently erases your account, progress and any subscription. Type <b>DELETE</b> to arm the button.</p>
-        <p style="display:flex;gap:8px;flex-wrap:wrap;margin:0"><input id="a-delc" style="font:inherit;padding:8px 10px;border-radius:7px;border:1px solid var(--line);background:var(--panel2);color:var(--ink)" placeholder="DELETE" aria-label="Type DELETE to confirm">
-        <button class="btn" id="a-delgo" disabled style="background:var(--danger)">Erase everything</button></p>
-      </div>
-      <p style="font-size:12px;color:var(--ink-soft);margin:10px 0 0"><a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a></p>
+  </div>
+  <div class="card acct-card setcard">
+    <h3>Data &amp; privacy</h3>
+    <p style="display:flex;gap:10px;flex-wrap:wrap;margin:4px 0">
+      <button class="btn ghost" id="a-export">⬇ Download my data</button>
+      <button class="btn ghost" id="a-out">Sign out</button>
+      <button class="btn ghost" id="a-delbtn" style="color:var(--danger)">Delete my account…</button></p>
+    <div class="danger-zone" id="dz">
+      <p style="margin:0 0 8px;font-size:13.5px">This permanently erases your account, progress and any subscription. Type <b>DELETE</b> to arm the button.</p>
+      <p style="display:flex;gap:8px;flex-wrap:wrap;margin:0"><input id="a-delc" style="font:inherit;padding:8px 10px;border-radius:7px;border:1px solid var(--line);background:var(--panel2);color:var(--ink)" placeholder="DELETE" aria-label="Type DELETE to confirm">
+      <button class="btn" id="a-delgo" disabled style="background:var(--danger)">Erase everything</button></p>
     </div>
+    <p style="font-size:12px;color:var(--ink-soft);margin:10px 0 0"><a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a></p>
   </div>`;
   const rb=$("#a-refresh"); if(rb)rb.onclick=refresh;
   const plm=$("#pl-m"); if(plm){plm.onclick=()=>{plan="m";render();}; $("#pl-y").onclick=()=>{plan="y";render();};}
+  $("#pw-save").onclick=async()=>{
+    const v=$("#pw-new").value;
+    if(v.length<8){$("#pw-msg").textContent="Use at least 8 characters.";return;}
+    $("#pw-save").disabled=true; $("#pw-msg").textContent="";
+    const {error}=await sb.auth.updateUser({password:v});
+    $("#pw-save").disabled=false;
+    $("#pw-msg").textContent=error?error.message:"Password updated ✓";
+    if(!error){$("#pw-msg").style.color="var(--ok)";$("#pw-new").value="";}
+  };
   $("#a-out").onclick=async()=>{await sb.auth.signOut();refresh();};
   $("#a-export").onclick=async()=>{
     const {data:{session}}=await sb.auth.getSession(); if(!session)return;
