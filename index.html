@@ -137,6 +137,44 @@ section.view.on{display:block;animation:fadein .25s ease}
 .notetable th,.notetable td{border:1px solid var(--line);padding:6px 10px;text-align:left}
 .notetable th{background:var(--panel2);font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft)}
 .tblwrap{overflow-x:auto}
+.topic{position:relative}
+.fsbtn{position:absolute;right:54px;top:14px;z-index:2;border:1px solid var(--line);background:var(--panel2);
+  border-radius:99px;padding:5px 13px;font-size:12.5px;color:var(--ink-soft);font-weight:600}
+.fsbtn:hover{border-color:var(--bunsen);color:var(--bunsen)}
+.reader{position:fixed;inset:0;background:var(--ground);z-index:70;overflow-y:auto}
+.reader[hidden]{display:none}
+.reader-bar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;padding:12px clamp(16px,4vw,40px);
+  background:color-mix(in srgb,var(--ground) 92%,transparent);backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+.reader-bar .rtitle{font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;font-weight:600;font-size:17px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.reader-bar .rnav{margin-left:auto;display:flex;gap:8px;align-items:center}
+.rarrow{border:1px solid var(--line);background:var(--panel);border-radius:9px;padding:7px 14px;font-size:14px;color:var(--ink)}
+.rarrow:hover:not(:disabled){border-color:var(--bunsen)}
+.rarrow:disabled{opacity:.35;cursor:default}
+.reader-inner{max-width:760px;margin:0 auto;padding:34px clamp(16px,4vw,40px) 90px}
+.reader-inner .rhead{margin-bottom:22px;padding-bottom:16px;border-bottom:2px solid var(--line)}
+.reader-inner .rhead h1{font-size:clamp(28px,4vw,38px);margin:6px 0 4px}
+.reader-inner .rhead .sub{color:var(--ink-soft);font-size:15px}
+.reader-body{font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;font-size:17px;line-height:1.72}
+.reader-body h4{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:14px;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--ink-soft);margin:30px 0 10px;padding-top:18px;border-top:1px solid var(--line)}
+.reader-body .defbox,.reader-body .tip,.reader-body .worked{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:14.5px;line-height:1.6}
+.reader-body .eq{font-size:14.5px}
+.reader-body ul{padding-left:22px}
+.reader-body li{margin-bottom:7px}
+.reader-quiz{margin-top:44px;border-top:2px solid var(--line);padding-top:24px}
+.reader-quiz h2{font-size:22px;margin-bottom:4px}
+.reader-quiz .q{margin:18px 0 8px;font-weight:600;font-size:16px}
+.reader-quiz button.opt{border:1px solid var(--line);background:var(--panel);border-radius:9px;padding:8px 14px;margin:0 8px 8px 0;font-size:14.5px}
+.reader-quiz button.opt:hover{border-color:var(--bunsen)}
+.reader-quiz button.opt.right{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 13%,transparent);font-weight:700}
+.reader-quiz button.opt.wrong{border-color:var(--danger);background:color-mix(in srgb,var(--danger) 10%,transparent)}
+.reader-quiz .rqexpl{display:none;font-size:13.5px;color:var(--ink-soft);background:var(--panel2);border-radius:8px;padding:9px 12px;margin:4px 0 6px;max-width:70ch}
+.reader-quiz .rqexpl.on{display:block}
+.reader-footnav{display:flex;justify-content:space-between;gap:12px;margin-top:40px;padding-top:20px;border-top:1px solid var(--line)}
+.reader-footnav .rarrow{max-width:46%;text-align:left}
+.ext-head{color:var(--k)!important;border-top-color:var(--k)!important}
+@media (max-width:760px){.fsbtn{right:46px;top:12px;padding:4px 10px;font-size:11.5px}.reader-bar .rtitle{font-size:14px}}
 .defbox{background:var(--panel2);border-radius:8px;padding:10px 14px;margin:10px 0;font-size:14.5px;max-width:72ch}
 .defbox b{color:var(--bunsen)}
 .eq{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:14px;background:var(--panel2);
@@ -420,6 +458,29 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
 </nav>
 <main>
 <div class="topbar"><div id="acct-corner"></div></div>
+<div class="reader" id="reader" hidden>
+  <div class="reader-bar">
+    <button class="rarrow" id="r-close">✕ Close</button>
+    <span class="rtitle" id="r-title"></span>
+    <div class="rnav">
+      <button class="rarrow" id="r-prev" aria-label="Previous chapter">◀</button>
+      <button class="rarrow" id="r-next" aria-label="Next chapter">▶</button>
+    </div>
+  </div>
+  <div class="reader-inner">
+    <div class="rhead">
+      <span class="code-chip" id="r-code"></span>
+      <h1 id="r-h1"></h1>
+      <div class="sub" id="r-sub"></div>
+    </div>
+    <div class="reader-body" id="r-body"></div>
+    <div class="reader-quiz" id="r-quiz"></div>
+    <div class="reader-footnav">
+      <button class="rarrow" id="r-prev2">◀ Previous chapter</button>
+      <button class="rarrow" id="r-next2">Next chapter ▶</button>
+    </div>
+  </div>
+</div>
 <div class="modal" id="acctmodal" hidden>
   <div class="modal-card" role="dialog" aria-modal="true" aria-label="Account settings" style="max-width:640px">
     <button class="modal-x" id="acctmodal-x" aria-label="Close">×</button>
@@ -453,7 +514,7 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
 <section class="view" id="v-learn">
   <div class="eyebrow">Theory</div>
   <h1>Learn</h1>
-  <p class="lede">The core A-level topics, condensed to what examiners actually ask, tagged with their AQA spec codes. Answer the quick checks, then mark each topic mastered to build your progress ring.</p>
+  <p class="lede">Every A-level topic in depth — core, worked examples, exam tips and 🎓 extended material beyond the syllabus. Open a chapter in ⤢ Study Mode for a distraction-free read with a 5-question check at the end.</p>
   <div id="topics"></div>
 </section>
 
@@ -602,7 +663,12 @@ const TOPICS=[
 <li>Three easily-removed outer electrons → group 3. (It is aluminium.)</li></ol></div>
 <div class="worked"><b>Worked example — Ar from a mass spectrum.</b> A sample of chlorine shows peaks at m/z 35 (abundance 75%) and 37 (25%).
 <ol><li>Ar = (35 × 75 + 37 × 25) ÷ 100 = <b>35.5</b></li></ol></div>
-<div class="tip"><b>Exam tip.</b> The ionisation energy definition needs all three markers: <i>one mole</i> of electrons, from <i>gaseous</i> atoms, forming <i>gaseous</i> 1+ ions. Missing "gaseous" loses the mark every time.</div>`},
+<div class="tip"><b>Exam tip.</b> The ionisation energy definition needs all three markers: <i>one mole</i> of electrons, from <i>gaseous</i> atoms, forming <i>gaseous</i> 1+ ions. Missing "gaseous" loses the mark every time.</div><h4 class="ext-head"><span class="sc" style="background:color-mix(in srgb,var(--k) 15%,transparent);color:var(--k)">Extended</span>🎓 Beyond the standard course</h4>
+<ul><li><b>Orbital shapes:</b> s orbitals are spherical; the three p orbitals are dumbbells along x, y and z. An orbital is a region of 95% electron probability — not a track.</li>
+<li><b>Why 4s fills before 3d:</b> the 4s orbital penetrates closer to the nucleus than 3d, so in K and Ca it is lower in energy. Once 3d is occupied, the order flips — 3d electrons shield 4s poorly — which is exactly why 4s electrons are also <i>lost first</i> on ionisation.</li>
+<li><b>Why Cr and Cu break Aufbau:</b> half-filled (d⁵) and filled (d¹⁰) subshells maximise exchange energy — electrons with parallel spins in separate d orbitals repel less and are quantum-mechanically stabilised.</li>
+<li><b>Log plots of successive IEs</b> compress the huge range and make shell breaks unmistakable — a favourite of harder data questions.</li>
+<li><b>EI vs ESI:</b> electron-impact ionisation fragments molecules (rich fingerprint, weak M⁺); electrospray is "soft", preserving [M+H]⁺ — which is why it's used for proteins in TOF instruments.</li></ul>`},
 {c:"--na",t:"Bonding & structure",s:"Ionic, covalent, metallic · shapes of molecules · intermolecular forces",b:`
 <h4>Shapes of molecules (electron-pair repulsion)</h4>
 <ul><li>Pairs of electrons repel to maximum separation; <b>lone pairs repel more</b> than bonding pairs, closing bond angles by ≈2.5° each.</li>
@@ -637,7 +703,12 @@ const TOPICS=[
 <div class="worked"><b>Worked example.</b> Predict the shape and bond angle of NH₄⁺.
 <ol><li>N has 5 outer electrons; 4 bonds (one dative) use all of them: 4 bonding pairs, 0 lone pairs.</li>
 <li>Maximum separation of 4 pairs → <b>tetrahedral, 109.5°</b>.</li></ol></div>
-<div class="tip"><b>Exam tip.</b> Explaining a shape is a 3-step ritual: count electron pairs → state that pairs repel to maximise separation → note lone pairs repel more than bonding pairs (each lone pair −2.5°). State all three.</div>`},
+<div class="tip"><b>Exam tip.</b> Explaining a shape is a 3-step ritual: count electron pairs → state that pairs repel to maximise separation → note lone pairs repel more than bonding pairs (each lone pair −2.5°). State all three.</div><h4 class="ext-head"><span class="sc" style="background:color-mix(in srgb,var(--k) 15%,transparent);color:var(--k)">Extended</span>🎓 Beyond the standard course</h4>
+<ul><li><b>Dipoles add as vectors.</b> CO₂'s two large bond dipoles cancel; CHCl₃'s don't. cis/trans isomers can differ in polarity — trans-1,2-dichloroethene is non-polar, the cis isomer polar.</li>
+<li><b>Bond order sets length and strength:</b> C–C ≈ 154 pm, C=C ≈ 134 pm, C≡C ≈ 120 pm. Benzene's six equal 140 pm bonds — between single and double — are the structural evidence for delocalisation.</li>
+<li><b>Polarisability:</b> big, soft anions (I⁻) are easily distorted by small, highly-charged cations — the origin of covalent character in "ionic" solids like AgI, and the deeper reason London forces grow with electron count.</li>
+<li><b>Hydrogen bonds are ~20 kJ mol⁻¹</b> — an order of magnitude weaker than covalent bonds (~350) but decisive in bulk: water's boiling point sits ~200 °C above the group trend. Water out-boils HF because each H₂O averages more hydrogen bonds per molecule (two donors, two acceptors).</li>
+<li><b>Ice's density anomaly</b> is a lattice constraint: the tetrahedral H-bond network enforces open hexagonal channels that collapse on melting.</li></ul>`},
 {c:"--cu",t:"Amount of substance",s:"Moles, gases, titrations, yield",b:`
 <div class="defbox"><b>Avogadro constant</b> N<sub>A</sub> = 6.022 × 10²³ mol⁻¹ — the number of particles in one mole.</div>
 <span class="eq">n = m / M &nbsp;&nbsp;·&nbsp;&nbsp; n = c × V(dm³) &nbsp;&nbsp;·&nbsp;&nbsp; pV = nRT (R = 8.314 J K⁻¹ mol⁻¹)</span>
@@ -660,7 +731,13 @@ const TOPICS=[
 <h4><span class="sc">3.1.2.5</span>Percentage uncertainty</h4>
 <ul><li>% uncertainty = (uncertainty ÷ measured value) × 100. Doubles when a quantity is a difference of two readings (burette titre, ΔT, mass by difference).</li>
 <li>To reduce it: make the measured quantity bigger (larger titre, larger ΔT) — not more repeats (repeats reduce random error, not % uncertainty of the instrument).</li></ul>
-<div class="tip"><b>Exam tip.</b> Empirical formula questions: divide each element's mass (or %) by its Ar, then divide all by the smallest. Only round at the very end — 1.33 is a ratio of 4:3, not "1".</div>`},
+<div class="tip"><b>Exam tip.</b> Empirical formula questions: divide each element's mass (or %) by its Ar, then divide all by the smallest. Only round at the very end — 1.33 is a ratio of 4:3, not "1".</div><h4 class="ext-head"><span class="sc" style="background:color-mix(in srgb,var(--k) 15%,transparent);color:var(--k)">Extended</span>🎓 Beyond the standard course</h4>
+<ul><li><b>Where the ideal gas model fails:</b> pV = nRT assumes point molecules with no attractions. At high pressure, molecular volume matters (real V &gt; ideal); at low temperature, attractions bite (real p &lt; ideal). Gases are most ideal hot and dilute.</li>
+<li><b>Combining uncertainties:</b> for multiplied/divided quantities, <i>add the percentage</i> uncertainties. A titration's total = balance % + pipette % + burette % — the dominant term tells you which instrument to upgrade.</li>
+<li><b>Back-titration:</b> react an insoluble sample (e.g. CaCO₃) with a measured <i>excess</i> of acid, then titrate the leftover acid. Sample moles = acid added − acid left. Used whenever the substance won't titrate directly.</li></ul>
+<div class="worked"><b>Extended worked example — back-titration.</b> 1.00 g of impure CaCO₃ is treated with 50.0 cm³ of 1.00 mol dm⁻³ HCl; the excess needs 24.0 cm³ of 1.00 mol dm⁻³ NaOH.
+<ol><li>Acid added 0.0500 mol; acid left 0.0240 mol → acid used 0.0260 mol.</li>
+<li>CaCO₃ + 2HCl: n(CaCO₃) = 0.0130 mol → mass 1.30 g?? Greater than the sample — so recheck: 0.0130 × 100.1 = 1.30 g means the sample can't be pure… and indeed the question's numbers force purity = impossible → always sanity-check. With 40.0 cm³ NaOH instead: acid used 0.0100 mol → 0.500 g → <b>50.0% pure</b>.</li></ol></div>`},
 {c:"--k",t:"Energetics",s:"Enthalpy changes, calorimetry, Hess's law, bond enthalpies",b:`
 <div class="defbox"><b>Standard enthalpy of combustion</b> ΔH°c — enthalpy change when one mole of a substance burns completely in oxygen, all species in standard states, 100 kPa and a stated temperature (298 K).</div>
 <div class="defbox"><b>Standard enthalpy of formation</b> ΔH°f — enthalpy change when one mole of a compound forms from its elements, all in standard states.</div>
@@ -691,7 +768,11 @@ const TOPICS=[
 <div class="worked"><b>Worked example — combustion of methane by bond enthalpies.</b> CH₄ + 2O₂ → CO₂ + 2H₂O
 <ol><li>Broken: 4 C–H + 2 O=O = 4(413) + 2(498) = 2648 kJ</li>
 <li>Made: 2 C=O + 4 O–H = 2(805) + 4(464) = 3466 kJ</li>
-<li>ΔH ≈ 2648 − 3466 = <b>−818 kJ mol⁻¹</b> (data-book −890: mean values are averages over many compounds).</li></ol></div>`},
+<li>ΔH ≈ 2648 − 3466 = <b>−818 kJ mol⁻¹</b> (data-book −890: mean values are averages over many compounds).</li></ol></div><h4 class="ext-head"><span class="sc" style="background:color-mix(in srgb,var(--k) 15%,transparent);color:var(--k)">Extended</span>🎓 Beyond the standard course</h4>
+<ul><li><b>ΔH vs ΔU:</b> enthalpy is heat at constant <i>pressure</i>; internal energy at constant <i>volume</i>. They differ by the expansion work pΔV = Δn(gas)·RT — small but real when gas moles change.</li>
+<li><b>Standard states matter:</b> carbon's is graphite, not diamond — diamond sits 1.9 kJ mol⁻¹ above it, so ΔH°f(diamond) ≠ 0.</li>
+<li><b>Hess's law is the first law of thermodynamics</b> in disguise: if enthalpy depended on route you could run a cycle and create energy.</li>
+<li><b>Real calorimetry</b> calibrates the whole apparatus (its "heat capacity" in J K⁻¹) with an electrical heater or standard reaction, sidestepping the water-only assumption schools make.</li></ul>`},
 {c:"--bunsen",t:"Kinetics",s:"Collision theory, Maxwell–Boltzmann, rate equations, Arrhenius",b:`
 <div class="defbox"><b>Activation energy</b> E<sub>a</sub> — the minimum energy colliding particles need for a reaction to occur.</div>
 <h4>Maxwell–Boltzmann distribution</h4>
@@ -718,7 +799,12 @@ const TOPICS=[
 <h4><span class="sc">3.1.9.2</span>Using the Arrhenius equation</h4>
 <ul><li>ln k = ln A − Ea/(RT): plot ln k (y) against 1/T (x) → gradient = −Ea/R, intercept = ln A.</li>
 <li>Gradient units: K. Multiply by −R (8.31 J K⁻¹ mol⁻¹) → Ea in J mol⁻¹; ÷1000 for kJ mol⁻¹.</li></ul>
-<div class="tip"><b>Exam tip.</b> "Explain how the graph shows first order" wants the constant half-life stated with two successive half-life readings from the graph — not just the word "curve".</div>`},
+<div class="tip"><b>Exam tip.</b> "Explain how the graph shows first order" wants the constant half-life stated with two successive half-life readings from the graph — not just the word "curve".</div><h4 class="ext-head"><span class="sc" style="background:color-mix(in srgb,var(--k) 15%,transparent);color:var(--k)">Extended</span>🎓 Beyond the standard course</h4>
+<ul><li><b>Molecularity ≠ order.</b> Molecularity counts particles in one elementary step (always whole); order is experimental and can be zero or fractional. They coincide only for single-step reactions.</li>
+<li><b>Mechanism consistency test:</b> NO₂ + CO → NO + CO₂ has rate = k[NO₂]². The slow step must use two NO₂ (NO₂ + NO₂ → NO₃ + NO), with CO mopping up NO₃ fast — CO absent from the rate law because it enters after the rate-determining step.</li>
+<li><b>Intermediates vs transition states:</b> an intermediate sits in an energy dip (isolable in principle); a transition state is the summit — a bond-breaking/forming instant with no lifetime.</li>
+<li><b>Heterogeneous catalysis in three verbs:</b> adsorb (reactants bond to surface, bonds weaken) → react (lower-Ea pathway) → desorb. Catalyst poisoning (Pb on catalytic converters) blocks the adsorption sites permanently.</li>
+<li><b>Autocatalysis</b> (MnO₄⁻/C₂O₄²⁻) gives an S-shaped concentration–time curve: slow start, acceleration as the catalytic product accumulates, then substrate exhaustion.</li></ul>`},
 {c:"--li",t:"Equilibria",s:"Le Chatelier, Kc and Kp",b:`
 <div class="defbox"><b>Dynamic equilibrium</b> — forward and reverse rates are equal and concentrations are constant, in a closed system.</div>
 <h4>Le Chatelier's principle</h4>
@@ -742,7 +828,11 @@ const TOPICS=[
 <div class="tblwrap"><table class="notetable"><tr><th>Process</th><th>Reaction</th><th>Catalyst</th><th>Conditions</th><th>Why the compromise</th></tr>
 <tr><td>Haber</td><td>N₂ + 3H₂ ⇌ 2NH₃ (ΔH −92)</td><td>Fe</td><td>400–450 °C, ~200 atm</td><td>low T = better yield but too slow; ~15% per pass, gases recycled</td></tr>
 <tr><td>Contact</td><td>2SO₂ + O₂ ⇌ 2SO₃</td><td>V₂O₅</td><td>~450 °C, ~2 atm</td><td>yield already ~99.5% near atmospheric pressure — high p not worth it</td></tr>
-<tr><td>Ethanol</td><td>C₂H₄ + H₂O ⇌ C₂H₅OH</td><td>H₃PO₄</td><td>300 °C, 60–70 atm</td><td>~5% per pass; unreacted ethene recycled</td></tr></table></div>`},
+<tr><td>Ethanol</td><td>C₂H₄ + H₂O ⇌ C₂H₅OH</td><td>H₃PO₄</td><td>300 °C, 60–70 atm</td><td>~5% per pass; unreacted ethene recycled</td></tr></table></div><h4 class="ext-head"><span class="sc" style="background:color-mix(in srgb,var(--k) 15%,transparent);color:var(--k)">Extended</span>🎓 Beyond the standard course</h4>
+<ul><li><b>The reaction quotient Q</b> is Kc's expression evaluated with <i>current</i> concentrations. Q &lt; K → forward shift; Q &gt; K → reverse; Q = K → equilibrium. This single comparison replaces all hand-waving about "position".</li>
+<li><b>van 't Hoff:</b> a plot of ln K against 1/T is linear with gradient −ΔH°/R — the quantitative version of "heating an exothermic equilibrium lowers K", and the exact mirror of Arrhenius for kinetics.</li>
+<li><b>Why solids never appear in K:</b> their concentration (density ÷ molar mass) is fixed — formally, their activity is 1. CaCO₃(s) ⇌ CaO(s) + CO₂(g) reduces to Kp = p(CO₂): one gas controls the whole equilibrium.</li>
+<li><b>Small-K approximation:</b> when K is tiny, "x is negligible against c" turns quadratics into one-liners — the same 5% rule you use for weak acids.</li></ul>`},
 {c:"--na",t:"Acids, bases & buffers",s:"pH, Ka, titration curves, indicators",b:`
 <div class="defbox"><b>Brønsted–Lowry:</b> an acid is a proton donor; a base is a proton acceptor.</div>
 <span class="eq">pH = −log₁₀[H⁺] &nbsp;·&nbsp; Kw = [H⁺][OH⁻] = 1.0 × 10⁻¹⁴ mol² dm⁻⁶ at 298 K</span>
@@ -771,7 +861,12 @@ const TOPICS=[
 <ul><li>Four shapes: strong–strong (vertical ~3–11), weak acid–strong base (starts ~3, vertical ~7–11), strong acid–weak base (vertical ~3–7, ends ~11), weak–weak (no vertical section — no indicator works).</li>
 <li>Half-equivalence: pH = pKa (biggest buffering). Equivalence for weak acid–strong base sits <b>above 7</b> because the salt's anion is a base.</li>
 <li>Diprotic acids show two vertical sections — two equivalence points, at V and 2V.</li></ul>
-<div class="tip"><b>Exam tip.</b> Always quote pH to 2 decimal places, and check sanity: a weak acid's pH must sit between the strong-acid value and 7.</div>`},
+<div class="tip"><b>Exam tip.</b> Always quote pH to 2 decimal places, and check sanity: a weak acid's pH must sit between the strong-acid value and 7.</div><h4 class="ext-head"><span class="sc" style="background:color-mix(in srgb,var(--k) 15%,transparent);color:var(--k)">Extended</span>🎓 Beyond the standard course</h4>
+<ul><li><b>When √(Ka·c) fails:</b> the approximation assumes dissociation is small. If x is more than ~5% of c (very dilute, or Ka not so weak), solve the quadratic x² + Ka·x − Ka·c = 0 properly.</li>
+<li><b>Ultra-dilute traps:</b> 10⁻⁸ mol dm⁻³ HCl is NOT pH 8 — water's own ionisation dominates and the answer is just under 7. Charge balance beats formulas.</li>
+<li><b>Polyprotic acids:</b> H₂SO₄'s first proton is fully dissociated, the second only partially (Ka2 ≈ 0.01). For most polyprotic calculations the first ionisation dominates the pH.</li>
+<li><b>Your blood is a buffer</b> (pH 7.35–7.45): CO₂/HCO₃⁻ with the lungs controlling [CO₂] and kidneys [HCO₃⁻]. Hyperventilation expels CO₂ → pH rises → alkalosis — Le Chatelier in your bloodstream.</li>
+<li><b>Indicators are acids too:</b> colour changes when [HInd] ≈ [Ind⁻], i.e. around pH = pKind. That's why an indicator's range is ~2 units centred on its pKind, and why you pick pKind ≈ equivalence pH.</li></ul>`},
 {c:"--cu",t:"Redox & electrochemistry",s:"Oxidation states, half-equations, electrode potentials",b:`
 <div class="defbox"><b>Oxidation is loss</b> of electrons (oxidation state increases); <b>reduction is gain</b>. The oxidising agent is itself reduced.</div>
 <h4>Standard electrode potentials (298 K, 100 kPa, 1 mol dm⁻³)</h4>
@@ -797,7 +892,11 @@ const TOPICS=[
 <ul><li>Non-rechargeable (e.g. zinc–carbon): reaction irreversible, EMF falls as reagents deplete.</li>
 <li>Rechargeable (lithium-ion): reactions reversed on charging by an applied potential.</li>
 <li>Hydrogen–oxygen fuel cell (alkaline): H₂ + 2OH⁻ → 2H₂O + 2e⁻ and O₂ + 2H₂O + 4e⁻ → 4OH⁻; overall 2H₂ + O₂ → 2H₂O. Constant EMF while fuel is supplied; water is the only product — but hydrogen is bulky to store and mostly made from fossil fuels.</li></ul>
-<div class="tip"><b>Exam tip.</b> "Feasible" from E° values means EMF &gt; 0 for the direction written — but always add the kinetic caveat: a feasible reaction can be immeasurably slow (high activation energy).</div>`},
+<div class="tip"><b>Exam tip.</b> "Feasible" from E° values means EMF &gt; 0 for the direction written — but always add the kinetic caveat: a feasible reaction can be immeasurably slow (high activation energy).</div><h4 class="ext-head"><span class="sc" style="background:color-mix(in srgb,var(--k) 15%,transparent);color:var(--k)">Extended</span>🎓 Beyond the standard course</h4>
+<ul><li><b>The Nernst equation</b> (beyond the spec, explains everything): E = E° − (0.059/z)·log Q at 298 K. Concentrations away from 1 mol dm⁻³ shift electrode potentials — the quantitative version of "Le Chatelier at the electrode", and why cell EMF drops as a battery discharges.</li>
+<li><b>Galvanic vs electrolytic:</b> a cell runs its spontaneous reaction (chemical → electrical); electrolysis forces the reverse with an external supply. Same half-equations, opposite direction, anode/cathode labels swap.</li>
+<li><b>Inside lithium-ion cells:</b> discharge moves Li⁺ from graphite (LiC₆ → C₆ + Li⁺ + e⁻) into the metal oxide (Li₁₋ₓCoO₂ + xLi⁺ + xe⁻ → LiCoO₂) through a non-aqueous electrolyte — water would be reduced by the electrode potentials involved.</li>
+<li><b>Rust is a cell:</b> iron anodes dissolve where oxygen is scarce, O₂ is reduced at the water line, and the circuit runs through the metal. Sacrificial zinc works by being the more negative electrode — corrosion redirected, not prevented.</li></ul>`},
 {c:"--k",t:"Organic chemistry",s:"Mechanisms, functional groups, test-tube analysis",b:`
 <h4>The mechanisms to know cold</h4>
 <ul><li><b>Free-radical substitution</b> (alkanes + Cl₂, UV): initiation → propagation → termination.</li>
@@ -830,7 +929,11 @@ const TOPICS=[
 <h4><span class="sc">3.3.5</span>Addition polymers</h4>
 <ul><li>Alkenes join through the C=C; the repeat unit is the monomer with the double bond opened — draw it with brackets and extending bonds.</li>
 <li>Poly(alkene) chains are chemically inert (strong non-polar C–C/C–H) — hence persistence in the environment.</li></ul>
-<div class="tip"><b>Exam tip.</b> Curly arrows start at a bond or a lone pair, never at an atom or a charge. In radical mechanisms no curly arrows at all (AQA uses none for homolysis steps) — just the species and the dots.</div>`},
+<div class="tip"><b>Exam tip.</b> Curly arrows start at a bond or a lone pair, never at an atom or a charge. In radical mechanisms no curly arrows at all (AQA uses none for homolysis steps) — just the species and the dots.</div><h4 class="ext-head"><span class="sc" style="background:color-mix(in srgb,var(--k) 15%,transparent);color:var(--k)">Extended</span>🎓 Beyond the standard course</h4>
+<ul><li><b>SN2 vs SN1</b> (the mechanism behind "nucleophilic substitution"): primary haloalkanes react in one concerted step — rate = k[RX][Nu⁻], and the nucleophile attacks backside, inverting the carbon like an umbrella. Tertiary haloalkanes ionise first — rate = k[RX] only, via a planar carbocation that gives racemised products.</li>
+<li><b>Carbocation stability</b> (3° &gt; 2° &gt; 1°) comes from electron-donating alkyl groups: induction plus hyperconjugation (σ C–H electrons leaking into the empty p orbital). This one ladder explains Markovnikov, SN1 rates and elimination regiochemistry.</li>
+<li><b>Zaitsev's rule:</b> elimination favours the more substituted (more stable) alkene — 2-bromobutane gives mainly but-2-ene, not but-1-ene.</li>
+<li><b>Think in maps, not reactions:</b> A* organic synthesis is pathfinding — alkene ⇄ haloalkane ⇄ alcohol ⇄ carbonyl ⇄ acid, plus nitrile as the chain-extender. Two-step conversions ("propene → propanoic acid") fall out instantly once the map is automatic.</li></ul>`},
 {c:"--bunsen",t:"Periodicity & the groups",s:"Period 3 trends, Group 2, Group 7",b:`
 <h4>Period 3 trends</h4>
 <ul><li>Atomic radius decreases (more protons, same shell). Melting points climb Na→Al (stronger metallic bonding), peak at Si (giant covalent), collapse for P₄, S₈, Cl₂, Ar (simple molecular — S₈ &gt; P₄ &gt; Cl₂ by electron count).</li></ul>
@@ -862,7 +965,11 @@ const TOPICS=[
 <tr><td>P₄O₁₀</td><td>molecular</td><td>acidic</td><td>→ H₃PO₄, pH ~1</td></tr>
 <tr><td>SO₂ / SO₃</td><td>molecular</td><td>acidic</td><td>→ H₂SO₃ / H₂SO₄, pH ~1</td></tr></table></div>
 <ul><li>Melting points follow structure: MgO (ionic, ~2850 °C) &gt; SiO₂ (giant covalent, ~1700 °C) &gt; P₄O₁₀ &gt; SO₃ (molecular).</li>
-<li>The acid–base equations to know: Na₂O + H₂O → 2NaOH · P₄O₁₀ + 6H₂O → 4H₃PO₄ · Al₂O₃ + 6HCl → 2AlCl₃ + 3H₂O · Al₂O₃ + 2NaOH + 3H₂O → 2NaAl(OH)₄.</li></ul>`},
+<li>The acid–base equations to know: Na₂O + H₂O → 2NaOH · P₄O₁₀ + 6H₂O → 4H₃PO₄ · Al₂O₃ + 6HCl → 2AlCl₃ + 3H₂O · Al₂O₃ + 2NaOH + 3H₂O → 2NaAl(OH)₄.</li></ul><h4 class="ext-head"><span class="sc" style="background:color-mix(in srgb,var(--k) 15%,transparent);color:var(--k)">Extended</span>🎓 Beyond the standard course</h4>
+<ul><li><b>Diagonal relationships:</b> Li resembles Mg (carbonates decompose on heating, nitrides form) and Be resembles Al (amphoteric oxides) — charge density, not group number, drives chemistry.</li>
+<li><b>Charge density is the master variable:</b> small 2+/3+ cations polarise water ligands enough to make their solutions acidic ([Al(H₂O)₆]³⁺ has pH ≈ 3) and their carbonates unstable.</li>
+<li><b>Why S₈ melts above P₄:</b> both molecular, but S₈'s bigger electron cloud (128 e⁻ vs 60) gives stronger London forces — melting points within a period are a structure question first, an electron-count question second.</li>
+<li><b>Thermal decomposition trend:</b> group 2 carbonates decompose more easily up the group — the smaller cation polarises the carbonate ion more, weakening its internal C–O bonds. Same logic as nitrate stability.</li></ul>`},
 {c:"--li",t:"Thermodynamics",s:"Born–Haber cycles, entropy, Gibbs free energy",b:`
 <div class="defbox"><b>Lattice enthalpy of formation</b> — the enthalpy change when one mole of a solid ionic compound is formed from its gaseous ions. Always exothermic (large and negative).</div>
 <h4>Born–Haber cycles</h4>
@@ -886,7 +993,11 @@ const TOPICS=[
 <div class="worked"><b>Worked example — decomposing CaCO₃.</b> ΔH = +178 kJ mol⁻¹, ΔS = +160 J K⁻¹ mol⁻¹.
 <ol><li>Convert: ΔS = 0.160 kJ K⁻¹ mol⁻¹.</li>
 <li>Feasible when ΔG ≤ 0: T ≥ ΔH/ΔS = 178 ÷ 0.160 ≈ <b>1110 K</b> — why limekilns run hot.</li></ol></div>
-<div class="tip"><b>Exam tip.</b> Two classic traps: (1) J vs kJ in ΔS; (2) electron affinity questions — the FIRST is exothermic, the SECOND endothermic (forcing an electron onto an anion), and lattice enthalpy values quoted as "dissociation" flip the sign of everything.</div>`},
+<div class="tip"><b>Exam tip.</b> Two classic traps: (1) J vs kJ in ΔS; (2) electron affinity questions — the FIRST is exothermic, the SECOND endothermic (forcing an electron onto an anion), and lattice enthalpy values quoted as "dissociation" flip the sign of everything.</div><h4 class="ext-head"><span class="sc" style="background:color-mix(in srgb,var(--k) 15%,transparent);color:var(--k)">Extended</span>🎓 Beyond the standard course</h4>
+<ul><li><b>Entropy counts arrangements:</b> S = k·lnW (Boltzmann) — more microstates, more entropy. Gases beat liquids beat solids because particles have vastly more ways to be arranged in space and energy.</li>
+<li><b>Lattice enthalpy scales as z⁺z⁻/(r⁺+r⁻)</b> — the electrostatic core of the Born–Landé/Kapustinskii treatments. Doubling both charges (NaCl → MgO) roughly quadruples the lattice enthalpy before size effects.</li>
+<li><b>Ellingham logic</b> (why blast furnaces work): plot ΔG vs T for oxide formation. Carbon's line (C → CO, ΔS &gt; 0) slopes down while metals' slope up — above the crossing temperature, carbon reduces the metal oxide for free. Extraction chemistry is one diagram.</li>
+<li><b>Entropy-driven dissolving:</b> NH₄NO₃ dissolves endothermically yet spontaneously — TΔS wins. Cold packs are ΔG = ΔH − TΔS in a plastic bag.</li></ul>`},
 {c:"--na",t:"Transition metals",s:"Complexes, colour, catalysis, reactions of aqueous ions",b:`
 <div class="defbox"><b>Transition metal</b> — a d-block element that forms at least one stable ion with a partially filled d-subshell. Sc (d⁰ ion) and Zn (d¹⁰ ion) don't count.</div>
 <h4>Four characteristic properties</h4>
@@ -913,7 +1024,11 @@ const TOPICS=[
 <h4><span class="sc">3.2.5</span>Vanadium and chromium colour ladders</h4>
 <ul><li>Vanadium reduced by zinc/acid: VO₂⁺ yellow (+5) → VO²⁺ blue (+4) → V³⁺ green (+3) → V²⁺ violet (+2).</li>
 <li>Chromate–dichromate: 2CrO₄²⁻ (yellow) + 2H⁺ ⇌ Cr₂O₇²⁻ (orange) + H₂O — acid pushes right, alkali pulls left.</li></ul>
-<div class="tip"><b>Exam tip.</b> Observation questions want colour + state: "blue precipitate", not "it turns blue". And name the shape/co-ordination change whenever chloride ligands appear.</div>`},
+<div class="tip"><b>Exam tip.</b> Observation questions want colour + state: "blue precipitate", not "it turns blue". And name the shape/co-ordination change whenever chloride ligands appear.</div><h4 class="ext-head"><span class="sc" style="background:color-mix(in srgb,var(--k) 15%,transparent);color:var(--k)">Extended</span>🎓 Beyond the standard course</h4>
+<ul><li><b>Where the colours really come from:</b> in an octahedral field the five d orbitals split into three lower (t₂g) and two upper (eg) sets, gap Δ. Absorbing a photon with E = Δ = hν promotes a d electron; you see the complementary colour. Change ligand/oxidation state/geometry → change Δ → change colour.</li>
+<li><b>The spectrochemical series</b> ranks ligands by the Δ they produce: I⁻ &lt; Br⁻ &lt; Cl⁻ &lt; F⁻ &lt; H₂O &lt; NH₃ &lt; CN⁻. Swapping H₂O for NH₃ around Cu²⁺ widens Δ — hence the deeper blue.</li>
+<li><b>Why some ions are colourless or pale:</b> d⁰ (Sc³⁺) and d¹⁰ (Cu⁺, Zn²⁺) have no d–d transition; high-spin d⁵ (Mn²⁺) transitions are spin-forbidden, so it's barely pink.</li>
+<li><b>Magnetism counts electrons:</b> unpaired d electrons make complexes paramagnetic (drawn into fields) — measuring the moment reveals how many are unpaired, an experimental window into the d configuration.</li></ul>`},
 {c:"--cu",t:"Analysis & spectroscopy",s:"IR, mass spectra, ¹H and ¹³C NMR, chromatography",b:`
 <h4>Infrared</h4>
 <ul><li class="mono">C=O 1680–1750 cm⁻¹ (sharp) · O–H alcohol 3230–3550 (broad) · O–H acid 2500–3000 (very broad) · fingerprint region &lt;1500 identifies the exact compound</li></ul>
@@ -954,7 +1069,13 @@ const TOPICS=[
 <h4><span class="sc">Data booklet</span>¹³C shifts (Table C) and IR (Table A) — the ranges that decide questions</h4>
 <ul><li>¹³C: C–C 5–40 · C–O 50–90 · C=C 90–150 · aromatic 110–160 · ester/acid C=O 160–185 · aldehyde/ketone C=O 190–220 ppm.</li>
 <li>IR: N–H 3300–3500 · alcohol O–H 3230–3550 · C–H 2850–3300 · acid O–H 2500–3000 (very broad) · C≡N 2220–2260 · C=O 1680–1750 · C=C 1620–1680 · C–O 1000–1300 cm⁻¹.</li>
-<li>These tables are printed in the exam data booklet — practise <i>using</i> them fast, not memorising them.</li></ul>`}];
+<li>These tables are printed in the exam data booklet — practise <i>using</i> them fast, not memorising them.</li></ul><h4 class="ext-head"><span class="sc" style="background:color-mix(in srgb,var(--k) 15%,transparent);color:var(--k)">Extended</span>🎓 Beyond the standard course</h4>
+<ul><li><b>Coupling constants:</b> the spacing (J, in Hz) within a multiplet is identical for coupled partners — matching J values pair up neighbours in complex spectra. Non-equivalent neighbours give doublets-of-doublets, not clean n+1 patterns.</li>
+<li><b>The D₂O shake:</b> O–H and N–H protons exchange with D₂O and vanish from the spectrum — the standard trick for spotting them, and why their shifts are quoted as unreliable ranges.</li>
+<li><b>Why ¹³C spectra are all singlets:</b> instruments broadband-decouple the protons; and at 1.1% abundance two ¹³C neighbours in one molecule are too rare to couple. One clean line per environment.</li>
+<li><b>Isotope patterns beyond one halogen:</b> Cl₂ in a molecule gives M : M+2 : M+4 = 9 : 6 : 1; Br₂ gives 1 : 2 : 1. The pattern is a halogen head-count.</li>
+<li><b>High-resolution MS:</b> propan-2-ol (C₃H₈O, 60.0575) and ethanoic acid (C₂H₄O₂, 60.0211) both "weigh 60" — until four decimal places tell them apart. Exact masses identify molecular formulae outright.</li>
+<li><b>GC–MS:</b> chromatography separates the mixture, the spectrometer identifies each peak — the forensic and anti-doping workhorse.</li></ul>`}];
 
 /* ---------- required practicals ---------- */
 const PRACLIST=[
@@ -1413,7 +1534,8 @@ const QC=[
 $("#topics").innerHTML=TOPICS.map((t,i)=>{
   const qc=QC[i].map((q,j)=>`<div class="q">${q.q}</div><div>${q.o.map((o,k)=>`<button data-t="${i}" data-j="${j}" data-k="${k}">${o}</button>`).join("")}</div>`).join("");
   return `<div class="topic" id="topic${i}">
-  <button class="head" aria-expanded="false"><span class="swatch" style="background:var(${t.c})"></span>
+  <button class="fsbtn" data-fs="${i}">⤢ Study mode</button>
+  <button class="head" aria-expanded="false" style="padding-right:150px"><span class="swatch" style="background:var(${t.c})"></span>
   <span><h3>${t.t} <span class="code-chip">AQA ${TCODES[i]}</span></h3><span class="sub">${t.s}</span></span>
   <span class="chev">▸</span></button>
   <div class="body">${t.b}
@@ -1425,6 +1547,74 @@ $$(".topic>button.head").forEach(b=>b.addEventListener("click",()=>{
   if(t.classList.contains("locked")){openAccount();return;}
   const open=t.classList.toggle("open");
   b.setAttribute("aria-expanded",open);
+}));
+let readerI=0;
+const topicLocked=i=>!window.chemPremium && i>=6;
+function openReader(i){
+  readerI=i;
+  const t=TOPICS[i];
+  $("#r-title").textContent=t.t;
+  $("#r-code").textContent="AQA "+TCODES[i];
+  $("#r-h1").textContent=t.t;
+  $("#r-sub").textContent=t.s+" · chapter "+(i+1)+" of "+TOPICS.length;
+  if(topicLocked(i)){
+    $("#r-body").innerHTML=`<div class="card" style="text-align:center;padding:40px 24px;font-family:-apple-system,sans-serif">
+      <div style="font-size:34px">🔒</div><h3 style="margin:8px 0 6px">This chapter is Premium</h3>
+      <p style="color:var(--ink-soft);font-size:14.5px;max-width:44ch;margin:0 auto 16px">Unlock all ${TOPICS.length} chapters, every simulation and practical, and the full quiz bank.</p>
+      <button class="btn" onclick="openAccount()">See Premium</button></div>`;
+    $("#r-quiz").innerHTML="";
+  } else {
+    $("#r-body").innerHTML=t.b;
+    renderReaderQuiz(i);
+  }
+  $("#r-prev").disabled=$("#r-prev2").disabled=(i===0);
+  $("#r-next").disabled=$("#r-next2").disabled=(i===TOPICS.length-1);
+  $("#r-prev2").textContent=i>0?"◀ "+TOPICS[i-1].t:"◀";
+  $("#r-next2").textContent=i<TOPICS.length-1?TOPICS[i+1].t+" ▶":"▶";
+  const rd=$("#reader"); rd.hidden=false; rd.scrollTop=0;
+  document.body.style.overflow="hidden";
+}
+function closeReader(){ $("#reader").hidden=true; document.body.style.overflow=""; }
+$("#r-close").addEventListener("click",closeReader);
+document.addEventListener("keydown",e=>{
+  if($("#reader").hidden)return;
+  if(e.key==="Escape")closeReader();
+  if(e.key==="ArrowLeft"&&readerI>0)openReader(readerI-1);
+  if(e.key==="ArrowRight"&&readerI<TOPICS.length-1)openReader(readerI+1);
+});
+[["r-prev",-1],["r-next",1],["r-prev2",-1],["r-next2",1]].forEach(([id,d])=>
+  $("#"+id).addEventListener("click",()=>{const n=readerI+d;if(n>=0&&n<TOPICS.length)openReader(n);}));
+function renderReaderQuiz(t){
+  const pool=[...QUIZ.keys()].filter(i=>QTOPIC[i]===t).sort(()=>Math.random()-.5).slice(0,5);
+  let got=0, done=0;
+  $("#r-quiz").innerHTML=`<h2 class="serif">Check your knowledge</h2>
+    <p style="color:var(--ink-soft);font-size:14px;margin:0 0 4px">Five quick questions on this chapter. No pressure — wrong answers explain themselves.</p>
+    ${pool.map((qi2,j)=>{
+      const q=QUIZ[qi2];
+      return `<div class="q">${j+1}. ${q.q}</div>
+      <div data-rq="${j}">${q.o.map((o,k)=>`<button class="opt" data-q="${qi2}" data-k="${k}">${o}</button>`).join("")}</div>
+      <div class="rqexpl" id="rqe${j}">${q.e}</div>`;
+    }).join("")}
+    <div class="streak" id="rq-score" style="margin-top:16px;font-size:15px"></div>`;
+  $("#r-quiz").querySelectorAll(".opt").forEach(b=>b.addEventListener("click",()=>{
+    const wrap=b.parentElement, q=QUIZ[+b.dataset.q];
+    if(wrap.dataset.done)return;
+    wrap.dataset.done="1"; done++;
+    [...wrap.children].forEach((ob,k)=>{ if(k===q.a)ob.classList.add("right"); ob.disabled=true; });
+    if(+b.dataset.k===q.a){got++; burstFrom(b);} else b.classList.add("wrong");
+    document.querySelector("#rqe"+wrap.dataset.rq).classList.add("on");
+    if(done===5){
+      const sc=$("#rq-score");
+      sc.textContent=`Score: ${got}/5 ${got===5?"— perfect, on to the next chapter! 🎉":got>=3?"— solid. Reread the sections you missed.":"— worth another pass through this chapter."}`;
+      if(got===5)burstFrom(sc);
+    }
+  }));
+}
+$$(".fsbtn").forEach(b=>b.addEventListener("click",e=>{
+  e.stopPropagation();
+  const i=+b.dataset.fs;
+  if(topicLocked(i)){openAccount();return;}
+  openReader(i);
 }));
 function refreshMaster(){
   const m=load("chemlab-mastered",[]);
