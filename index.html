@@ -78,9 +78,7 @@ nav.rail{
   position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:4px;
 }
 .brand{display:flex;align-items:center;gap:10px;margin:0 8px 20px}
-.brand .flame{width:26px;height:34px;position:relative}
-.brand .flame::before{content:"";position:absolute;inset:0;border-radius:50% 50% 46% 46%/62% 62% 38% 38%;
-  background:linear-gradient(180deg,var(--bunsen) 0%,var(--cu) 85%);opacity:.9}
+.brand .logo{width:30px;height:34px;flex:0 0 30px;color:var(--ink-soft)}
 .brand b{font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;font-size:20px;font-weight:600;letter-spacing:.01em}
 .brand small{display:block;color:var(--ink-soft);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
 nav.rail button{
@@ -394,7 +392,20 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
 <body>
 <div class="app">
 <nav class="rail" aria-label="Sections">
-  <div class="brand"><div class="flame" aria-hidden="true"></div><div><b>ChemLab</b><small>A-Level Chemistry</small></div></div>
+  <div class="brand"><svg class="logo" viewBox="0 0 64 64" aria-hidden="true">
+    <defs>
+      <linearGradient id="lg-lq" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--bunsen)"/><stop offset="1" stop-color="var(--cu)"/></linearGradient>
+      <clipPath id="lg-body"><path d="M27.5 20 L13 48 A6 6 0 0 0 18.5 57 H45.5 A6 6 0 0 0 51 48 L36.5 20 Z"/></clipPath>
+    </defs>
+    <g clip-path="url(#lg-body)">
+      <rect x="10" y="38" width="44" height="22" fill="url(#lg-lq)"/>
+      <circle cx="26" cy="33" r="2.2" fill="var(--cu)" opacity=".75"/>
+      <circle cx="34" cy="27" r="1.6" fill="var(--bunsen)" opacity=".65"/>
+      <circle cx="38" cy="34" r="1.9" fill="var(--cu)" opacity=".7"/>
+    </g>
+    <path d="M27.5 20 L13 48 A6 6 0 0 0 18.5 57 H45.5 A6 6 0 0 0 51 48 L36.5 20 Z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M27.5 21 V7 M36.5 21 V7 M24.5 7 H39.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+  </svg><div><b>ChemLab</b><small>A-Level Chemistry</small></div></div>
   <button data-v="home" class="on"><span class="dot" style="background:var(--bunsen)"></span>Overview</button>
   <button data-v="learn"><span class="dot" style="background:var(--li)"></span>Learn</button>
   <button data-v="lab"><span class="dot" style="background:var(--cu)"></span>Simulations</button>

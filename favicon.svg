@@ -1,5 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-<defs><linearGradient id="f" x1="0" y1="0" x2="0" y2="1">
-<stop offset="0" stop-color="#2456A6"/><stop offset="1" stop-color="#2E9E7B"/></linearGradient></defs>
-<path fill="url(#f)" d="M32 4c6 10 18 16 18 32a18 18 0 1 1-36 0C14 20 26 14 32 4z"/>
+<defs>
+<linearGradient id="lq" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2456A6"/><stop offset="1" stop-color="#2E9E7B"/></linearGradient>
+<clipPath id="body"><path d="M27.5 20 L13 48 A6 6 0 0 0 18.5 57 H45.5 A6 6 0 0 0 51 48 L36.5 20 Z"/></clipPath>
+</defs>
+<g clip-path="url(#body)">
+<rect x="10" y="38" width="44" height="22" fill="url(#lq)"/>
+<circle cx="26" cy="33" r="2.2" fill="#2E9E7B" opacity=".75"/>
+<circle cx="34" cy="27" r="1.6" fill="#2456A6" opacity=".65"/>
+<circle cx="38" cy="34" r="1.9" fill="#2E9E7B" opacity=".7"/>
+</g>
+<path d="M27.5 20 L13 48 A6 6 0 0 0 18.5 57 H45.5 A6 6 0 0 0 51 48 L36.5 20 Z" fill="none" stroke="#5b6b77" stroke-width="3" stroke-linejoin="round"/>
+<path d="M27.5 21 V7 M36.5 21 V7 M24.5 7 H39.5" fill="none" stroke="#5b6b77" stroke-width="3" stroke-linecap="round"/>
 </svg>
