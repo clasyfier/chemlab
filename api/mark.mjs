@@ -68,9 +68,8 @@ export default async function handler(req, res) {
       if (!items.length) return res.status(400).json({ error: 'no items' });
 
       const msg = await client.messages.create({
-        model: 'claude-opus-4-8',
+        model: 'claude-haiku-4-5',
         max_tokens: 16000,
-        thinking: { type: 'adaptive' },
         system: MARK_SYSTEM,
         output_config: { format: { type: 'json_schema', schema: MARK_SCHEMA } },
         messages: [{ role: 'user', content: JSON.stringify({ answers_to_mark: items }) }],
@@ -81,9 +80,8 @@ export default async function handler(req, res) {
 
     if (body.action === 'plan') {
       const msg = await client.messages.create({
-        model: 'claude-opus-4-8',
+        model: 'claude-haiku-4-5',
         max_tokens: 4000,
-        thinking: { type: 'adaptive' },
         system: PLAN_SYSTEM,
         messages: [{ role: 'user', content: JSON.stringify(body.stats || {}).slice(0, 20000) }],
       });
