@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://chemlab-ten.vercel.app/sitemap.xml

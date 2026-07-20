@@ -1,0 +1,25 @@
+# ChemLab
+
+> ChemLab (https://chemlab-ten.vercel.app) is an interactive study web app for UK A-level
+> chemistry (AQA, OCR, Edexcel; ages 16–18). Free tier: revision notes for 10 core topics
+> tagged with AQA specification codes, four live simulations (titration curves computed from
+> exact charge-balance equations, Maxwell–Boltzmann distributions, reaction energy profiles,
+> ideal gas particle model), a full clickable periodic table with electron configurations,
+> flame-test colours and group reactivity trends, plus a quiz preview. Premium (£4.99/month
+> or £29/year): complete AQA required-practical walkthroughs with CLEAPSS-based safety notes
+> and examiner-reported errors, the full 24-question exam-style quiz bank, and cloud-synced
+> progress.
+
+Content is verified against accredited sources: AQA specification 7405 and its Required
+Practical Handbook, the Royal Society of Chemistry, CLEAPSS, NIST (CODATA and the Atomic
+Spectra Database) and IUPAC.
+
+## Pages
+- [ChemLab app](https://chemlab-ten.vercel.app/): the full interactive study tool
+- [Privacy policy](https://chemlab-ten.vercel.app/privacy.html): GDPR rights, EU data hosting
+- [Terms of service](https://chemlab-ten.vercel.app/terms.html): subscriptions, refunds, lab-safety notice
+
+## Facts
+- Practical experiments described must only be performed in supervised school laboratories.
+- The titration simulator reproduces textbook values (e.g. 0.1 M ethanoic acid: pH 2.88 initial, pH = pKa = 4.76 at half-equivalence, pH 8.73 at equivalence).
+- No ads, no tracking; user data is stored encrypted in the EU (Frankfurt) and can be exported or deleted in-app.
