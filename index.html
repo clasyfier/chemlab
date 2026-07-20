@@ -1647,6 +1647,7 @@ $$("nav.rail button[data-v]").forEach(b=>b.addEventListener("click",()=>{
   showView(b.dataset.v);
 }));
 function showView(v){
+  if((v==="quiz"||v==="exam")&&!window.chemPremium){openAccount();return;}
   $$("nav.rail button[data-v]").forEach(b=>b.classList.toggle("on",b.dataset.v===v||(v==="exam"&&b.dataset.v==="quiz")));
   $$("section.view").forEach(s=>s.classList.toggle("on",s.id==="v-"+v));
   window.scrollTo({top:0});
@@ -1999,13 +2000,13 @@ window.applyPracLocks=function(){
     const go=el.querySelector(".chapgo");
     if(go)go.textContent=locked?"🔒 Premium":"Study ▸";
   });
-  ["sim-titr","sim-mb","sim-shape"].forEach(id=>{
+  ["sim-atom","sim-bal","sim-titr","sim-mb","sim-shape"].forEach(id=>{
     const el=document.getElementById(id); if(!el)return;
     el.classList.toggle("locked",!prem);
     let ov=el.querySelector(".simlock");
     if(!prem&&!ov){
       ov=document.createElement("div"); ov.className="simlock";
-      ov.innerHTML=`<div class="simlock-card"><div style="font-size:26px">🔒</div><b>Premium simulation</b><p>Unlock all seven simulations, every topic and practical, and the full ${QUIZ.length}-question bank.</p><button class="btn">See Premium</button></div>`;
+      ov.innerHTML=`<div class="simlock-card"><div style="font-size:26px">🔒</div><b>Premium simulation</b><p>Unlock all seven simulations, every topic and practical, and the full Test your knowledge section.</p><button class="btn">See Premium</button></div>`;
       ov.querySelector("button").onclick=()=>openAccount();
       el.appendChild(ov);
     }
@@ -2013,6 +2014,8 @@ window.applyPracLocks=function(){
   });
   const hardOpt=document.querySelector('#hunt-diff option[value="hard"]');
   if(hardOpt)hardOpt.textContent=prem?"Hard":"Hard · ★ Premium";
+  const qnav=document.querySelector('nav.rail button[data-v="quiz"]');
+  if(qnav)qnav.innerHTML=`<span class="dot" style="background:var(--bunsen)"></span>Test your knowledge${prem?"":" 🔒"}`;
 };
 function refreshPrac(i){
   const a=(load("chemlab-prac",{})[i])||[];
@@ -2627,6 +2630,7 @@ $$("#testpick .pickcard").forEach(b=>b.addEventListener("click",()=>{
   showView(b.dataset.pick==="exam"?"exam":"quiz");
 }));
 function openTestPick(){
+  if(!window.chemPremium){openAccount();return;}
   if(typeof EX!=="undefined"&&EX&&!EX.done){showView("exam");return;}
   showTestPick();
 }
