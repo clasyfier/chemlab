@@ -262,6 +262,14 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
 .spot li.false{border-color:var(--danger);background:color-mix(in srgb,var(--danger) 8%,var(--panel2))}
 .spot .why{font-size:13px;color:var(--ink-soft);margin-top:6px;border-top:1px dashed var(--line);padding-top:6px}
 .spot.checked li{cursor:default}
+.topic.locked h3{opacity:.55}
+.topic.locked .swatch{opacity:.35}
+.topic.locked .sub{opacity:.6}
+.sim{position:relative}
+.sim.locked .controls,.sim.locked canvas.plot,.sim.locked .readout,.sim.locked .hint{filter:blur(6px);pointer-events:none;user-select:none}
+.simlock{position:absolute;inset:0;display:grid;place-items:center;z-index:5}
+.simlock-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:20px 26px;text-align:center;max-width:300px}
+.simlock-card p{font-size:13.5px;color:var(--ink-soft);margin:6px 0 12px}
 .modal{position:fixed;inset:0;background:rgba(8,14,18,.55);display:grid;place-items:center;z-index:50;padding:18px;backdrop-filter:blur(3px)}
 .modal[hidden]{display:none}
 .modal-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);max-width:600px;width:100%;max-height:85vh;overflow:auto;position:relative;animation:pop .18s ease}
@@ -1152,7 +1160,9 @@ $("#topics").innerHTML=TOPICS.map((t,i)=>{
     <p style="margin:16px 0 4px"><button class="master" data-i="${i}">✓ Mark as mastered</button></p>
   </div></div>`;}).join("");
 $$(".topic>button.head").forEach(b=>b.addEventListener("click",()=>{
-  const t=b.parentElement, open=t.classList.toggle("open");
+  const t=b.parentElement;
+  if(t.classList.contains("locked")){showView("account");return;}
+  const open=t.classList.toggle("open");
   b.setAttribute("aria-expanded",open);
 }));
 function refreshMaster(){
@@ -1231,6 +1241,7 @@ function huntNext(){
 }
 $("#hunt-btn").addEventListener("click",()=>{
   const diff=$("#hunt-diff").value;
+  if(diff==="hard"&&!window.chemPremium){showView("account");return;}
   hunt={qs:[...HUNT_POOLS[diff]].sort(()=>Math.random()-.5).slice(0,8),i:0,score:0,t0:performance.now(),diff};
   $("#hunt-btn").textContent="🎯 Playing…";
   huntNext();
@@ -1315,13 +1326,35 @@ $$(".prac>button").forEach(b=>b.addEventListener("click",()=>{
 }));
 window.chemPremium=true; // local mode: everything open; the auth module flips this for free accounts
 window.applyPracLocks=function(){
+  const prem=window.chemPremium;
   $$(".prac").forEach((el,i)=>{
-    const locked=!window.chemPremium && i>0; // RP1 stays free as the taster
+    const locked=!prem && i>0; // RP1 stays free as the taster
     el.classList.toggle("locked",locked);
     if(locked)el.classList.remove("open");
     const ch=el.querySelector(".chev");
     if(ch){ch.textContent=locked?"🔒":"▸";ch.style.transform="";}
   });
+  $$(".topic").forEach((el,i)=>{
+    const locked=!prem && i>=6; // year-1 core free, the rest Premium
+    el.classList.toggle("locked",locked);
+    if(locked)el.classList.remove("open");
+    const ch=el.querySelector(".chev");
+    if(ch){ch.textContent=locked?"🔒":"▸";ch.style.transform="";}
+  });
+  ["sim-titr","sim-mb"].forEach(id=>{
+    const el=document.getElementById(id); if(!el)return;
+    el.classList.toggle("locked",!prem);
+    let ov=el.querySelector(".simlock");
+    if(!prem&&!ov){
+      ov=document.createElement("div"); ov.className="simlock";
+      ov.innerHTML=`<div class="simlock-card"><div style="font-size:26px">🔒</div><b>Premium simulation</b><p>Unlock all four simulations, every topic and practical, and the full ${QUIZ.length}-question bank.</p><button class="btn">See Premium</button></div>`;
+      ov.querySelector("button").onclick=()=>showView("account");
+      el.appendChild(ov);
+    }
+    if(prem&&ov)ov.remove();
+  });
+  const hardOpt=document.querySelector('#hunt-diff option[value="hard"]');
+  if(hardOpt)hardOpt.textContent=prem?"Hard":"Hard · ★ Premium";
 };
 function refreshPrac(i){
   const a=(load("chemlab-prac",{})[i])||[];
@@ -1377,6 +1410,7 @@ let QPOOL=[...QUIZ.keys()].sort(()=>Math.random()-.5);
 $("#q-topic").innerHTML='<option value="-1">All topics — mixed</option>'+TOPICS.map((t,i)=>`<option value="${i}">${t.t}</option>`).join("");
 $("#q-topic").addEventListener("input",()=>{
   const t=+$("#q-topic").value;
+  if(t>=0&&!window.chemPremium){$("#q-topic").value="-1";showView("account");return;}
   QPOOL=[...QUIZ.keys()].filter(i=>t<0||QTOPIC[i]===t).sort(()=>Math.random()-.5);
   qi=0; qstreak=0; renderQuiz();
 });
@@ -1964,9 +1998,11 @@ function render(){
       <div style="font-size:30px;font-family:ui-monospace,Menlo,monospace;margin:10px 0 2px">${plan==="m"?"£4.99":"£29"}<span style="font-size:14px;color:var(--ink-soft)">/${plan==="m"?"month":"year"}</span></div>
       <table class="featcmp">
         <tr><th></th><th>Free</th><th>Premium</th></tr>
-        <tr><td>Notes, simulations, periodic table</td><td class="y">✓</td><td class="y">✓</td></tr>
+        <tr><td>Topic guides</td><td class="n">6 of 13</td><td class="y">all 13</td></tr>
+        <tr><td>Live simulations</td><td class="n">2 of 4</td><td class="y">all 4</td></tr>
         <tr><td>Practical walkthroughs</td><td class="n">1 of 5</td><td class="y">all 5</td></tr>
-        <tr><td>Quiz bank</td><td class="n">6 per session</td><td class="y">${QUIZ.length} + topic practice</td></tr>
+        <tr><td>Quiz bank</td><td class="n">6 per session, mixed only</td><td class="y">${QUIZ.length} + topic practice</td></tr>
+        <tr><td>Element Hunt hard mode</td><td class="n">—</td><td class="y">✓</td></tr>
         <tr><td>Progress synced across devices</td><td class="n">—</td><td class="y">✓</td></tr>
       </table>
       <p style="display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 0">

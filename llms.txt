@@ -1,14 +1,12 @@
 # ChemLab
 
 > ChemLab (https://chemlab-ten.vercel.app) is an interactive study web app for UK A-level
-> chemistry (AQA, OCR, Edexcel; ages 16–18). Free tier: revision notes for 13 topics (including year-2 thermodynamics, transition metals and NMR spectroscopy)
-> tagged with AQA specification codes, four live simulations (titration curves computed from
-> exact charge-balance equations, Maxwell–Boltzmann distributions, reaction energy profiles,
-> ideal gas particle model), a full clickable periodic table with electron configurations,
-> flame-test colours and group reactivity trends, plus a quiz preview, an Element Hunt game with two difficulty levels, and spot-the-mistake practical challenges. Premium (£4.99/month
-> or £29/year): complete AQA required-practical walkthroughs with CLEAPSS-based safety notes
-> and examiner-reported errors, the full 195-question (15 per chapter) exam-style quiz bank with per-topic practice, and cloud-synced
-> progress.
+> chemistry (AQA, OCR, Edexcel; ages 16–18). Free tier: revision notes for the 6 core year-1 topics
+> tagged with AQA specification codes, two live simulations (reaction energy profiles and an ideal-gas particle model), a full clickable periodic table with electron configurations,
+> flame-test colours and group reactivity trends, plus a quiz preview, an Element Hunt game with two difficulty levels, and spot-the-mistake practical challenges. Premium (£4.99/month or £29/year): all 13 topics including year-2
+> thermodynamics, transition metals and NMR, the titration-curve and Maxwell–Boltzmann simulations,
+> complete AQA required-practical walkthroughs, the full 195-question quiz bank with per-topic
+> practice, Element Hunt hard mode, and cloud-synced progress.
 
 Content is verified against accredited sources: AQA specification 7405 and its Required
 Practical Handbook, the Royal Society of Chemistry, CLEAPSS, NIST (CODATA and the Atomic
