@@ -230,6 +230,25 @@ ul.chk{list-style:none;padding-left:0!important;margin:8px 0}
 .modal-x{position:absolute;top:12px;right:12px;border:0;background:var(--panel2);border-radius:50%;width:34px;height:34px;font-size:18px;line-height:1;color:var(--ink-soft);z-index:2}
 .modal-x:hover{color:var(--ink)}
 .modal-card #eldetail .card{border:0;box-shadow:none;margin:0}
+/* accounts + paywall */
+.acct-card{max-width:540px}
+.field{display:flex;flex-direction:column;gap:5px;margin:10px 0}
+.field label{font-size:12.5px;font-weight:600;color:var(--ink-soft);letter-spacing:.03em}
+.field input{font:inherit;padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--ink)}
+.field input:focus-visible{outline:2px solid var(--bunsen);outline-offset:1px}
+.aerr{color:var(--danger);font-size:13.5px;min-height:18px;margin:4px 0}
+.anote{color:var(--ok);font-size:13.5px;margin:4px 0}
+.acct-tabs{display:flex;gap:8px;margin-bottom:14px}
+.acct-tabs button{border:1px solid var(--line);background:var(--panel2);border-radius:99px;padding:6px 16px;font-size:14px;color:var(--ink-soft)}
+.acct-tabs button.on{background:var(--bunsen-soft);border-color:var(--bunsen);color:var(--bunsen);font-weight:600}
+.premium-pill{display:inline-flex;align-items:center;gap:6px;background:color-mix(in srgb,var(--na) 16%,transparent);color:var(--na);border-radius:99px;padding:4px 12px;font-size:13px;font-weight:700}
+.prac.locked>button{cursor:pointer}
+.prac.locked h3{opacity:.6}
+.prac.locked .num{border-color:var(--ink-soft);color:var(--ink-soft);opacity:.6}
+.price-row{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}
+.price-box{border:1px solid var(--line);border-radius:10px;padding:12px 18px;background:var(--panel2)}
+.price-box b{font-size:20px;font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.price-box span{display:block;font-size:12px;color:var(--ink-soft)}
 
 @media (max-width:760px){
   .app{flex-direction:column}
@@ -254,6 +273,7 @@ ul.chk{list-style:none;padding-left:0!important;margin:8px 0}
   <button data-v="prac"><span class="dot" style="background:var(--k)"></span>Practicals</button>
   <button data-v="quiz"><span class="dot" style="background:var(--bunsen)"></span>Quiz</button>
   <button data-v="sources"><span class="dot" style="background:var(--ink-soft)"></span>Sources</button>
+  <button data-v="account"><span class="dot" style="background:var(--cu)"></span>Account</button>
   <div class="spacer"></div>
 </nav>
 <main>
@@ -316,6 +336,13 @@ ul.chk{list-style:none;padding-left:0!important;margin:8px 0}
   <h1>Quiz</h1>
   <p class="lede">Exam-style multiple choice with explanations, shuffled every session. Protect your streak. 🔥</p>
   <div class="quiz-card" id="quizcard"></div>
+</section>
+
+<section class="view" id="v-account">
+  <div class="eyebrow">Account</div>
+  <h1>Your ChemLab account</h1>
+  <p class="lede">Sign in to sync your progress across devices — and unlock everything with Premium.</p>
+  <div id="acct"></div>
 </section>
 
 <section class="view" id="v-sources">
@@ -646,7 +673,7 @@ function setupCanvas(c){
   const ctx=c.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0);
   return [ctx,w,h];
 }
-const store=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+const store=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));window.dispatchEvent(new CustomEvent("chemlab:changed"))}catch(e){}};
 const load=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}};
 function burst(x,y,n=14){
   if(reduced)return;
@@ -889,10 +916,22 @@ $("#pracs").innerHTML=PRACS.map((p,i)=>`<div class="prac" id="prac${i}">
     <div class="expected">${p.exp}</div>
   </div></div>`).join("");
 $$(".prac>button").forEach(b=>b.addEventListener("click",()=>{
-  const t=b.parentElement,open=t.classList.toggle("open");
+  const t=b.parentElement;
+  if(t.classList.contains("locked")){showView("account");return;}
+  const open=t.classList.toggle("open");
   b.setAttribute("aria-expanded",open);
   b.querySelector(".chev").style.transform=open?"rotate(90deg)":"";
 }));
+window.chemPremium=true; // local mode: everything open; the auth module flips this for free accounts
+window.applyPracLocks=function(){
+  $$(".prac").forEach((el,i)=>{
+    const locked=!window.chemPremium && i>0; // RP1 stays free as the taster
+    el.classList.toggle("locked",locked);
+    if(locked)el.classList.remove("open");
+    const ch=el.querySelector(".chev");
+    if(ch){ch.textContent=locked?"🔒":"▸";ch.style.transform="";}
+  });
+};
 function refreshPrac(i){
   const a=(load("chemlab-prac",{})[i])||[];
   const n=PRACS[i].steps.length, done=a.filter(Boolean).length;
@@ -920,6 +959,15 @@ let qi=0, qstreak=0;
 let qscore=load("chemlab-quiz",{score:0,n:0}).score, qanswered=load("chemlab-quiz",{score:0,n:0}).n;
 const QORDER=[...QUIZ.keys()].sort(()=>Math.random()-.5);
 function renderQuiz(){
+  if(!window.chemPremium && (qi%QUIZ.length)>=6){
+    $("#quizcard").innerHTML=`
+      <span class="tagline" style="background:color-mix(in srgb,var(--na) 16%,transparent);color:var(--na)">Free preview finished</span>
+      <div class="qtext">That's the 6 free questions — nice work 🎉</div>
+      <p style="color:var(--ink-soft);font-size:14.5px;max-width:52ch;margin:0 0 6px">Premium unlocks all ${QUIZ.length} questions with streaks and explanations, every practical walkthrough, and progress that syncs across your devices.</p>
+      <div class="quiz-foot"><button class="btn" onclick="showView('account')">See Premium</button>
+      <span class="score">Session score: ${qscore}/${qanswered}</span></div>`;
+    return;
+  }
   const q=QUIZ[QORDER[qi%QUIZ.length]];
   const beststreak=load("chemlab-quiz-beststreak",0);
   $("#quizcard").innerHTML=`
@@ -1236,5 +1284,120 @@ redrawAll();
 if(!reduced){gasLoop();}
 </script>
 
+
+<script>
+/* Fill these three after creating your Supabase project + Lemon Squeezy store (see SETUP.md).
+   All three are safe to be public. Empty = local mode: no accounts, everything unlocked. */
+window.CHEMLAB_CONFIG={ url:"", anon:"", checkout:"" };
+</script>
+<script type="module">
+const CFG=window.CHEMLAB_CONFIG;
+const $=s=>document.querySelector(s);
+const acct=$("#acct");
+if(!CFG.url||!CFG.anon){
+  acct.innerHTML=`<div class="card acct-card"><h3>Accounts are almost here</h3>
+  <p>Cloud accounts, synced progress and Premium are being wired up. Until then everything is free and your progress lives on this device.</p></div>`;
+}else{
+(async()=>{
+const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
+const sb=createClient(CFG.url,CFG.anon);
+window.chemPremium=false; window.applyPracLocks(); if(typeof renderQuiz==="function")renderQuiz();
+
+const KEYS=["chemlab-mastered","chemlab-quiz","chemlab-prac","chemlab-hunt-best","chemlab-quiz-beststreak"];
+const lget=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}};
+const lset=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+function snapshot(){const o={};KEYS.forEach(k=>o[k]=lget(k,null));return o;}
+function merge(cloud,local){
+  const out={};
+  out["chemlab-mastered"]=[...new Set([...(cloud?.["chemlab-mastered"]||[]),...(local?.["chemlab-mastered"]||[])])];
+  const cq=cloud?.["chemlab-quiz"]||{score:0,n:0}, lq=local?.["chemlab-quiz"]||{score:0,n:0};
+  out["chemlab-quiz"]=(lq.n>=cq.n)?lq:cq;
+  const cp=cloud?.["chemlab-prac"]||{}, lp=local?.["chemlab-prac"]||{};
+  const pr={}; new Set([...Object.keys(cp),...Object.keys(lp)]).forEach(i=>{
+    const a=cp[i]||[],b=lp[i]||[],n=Math.max(a.length,b.length),m=[];
+    for(let j=0;j<n;j++)m[j]=!!(a[j]||b[j]); pr[i]=m;});
+  out["chemlab-prac"]=pr;
+  out["chemlab-hunt-best"]=Math.max(cloud?.["chemlab-hunt-best"]||0,local?.["chemlab-hunt-best"]||0);
+  out["chemlab-quiz-beststreak"]=Math.max(cloud?.["chemlab-quiz-beststreak"]||0,local?.["chemlab-quiz-beststreak"]||0);
+  return out;
+}
+function applyLocal(o){KEYS.forEach(k=>{if(o[k]!=null)lset(k,o[k])});
+  try{refreshMaster();PRACS.forEach((_,i)=>refreshPrac(i));renderDash();}catch(e){}}
+
+let user=null, premium=false, pushTimer=null;
+async function pushProgress(){
+  if(!user)return;
+  await sb.from("profiles").update({progress:snapshot(),updated_at:new Date().toISOString()}).eq("id",user.id);
+}
+window.addEventListener("chemlab:changed",()=>{
+  if(!user)return;
+  clearTimeout(pushTimer); pushTimer=setTimeout(pushProgress,2500);
+});
+
+async function refresh(){
+  const {data:{session}}=await sb.auth.getSession();
+  user=session?.user||null;
+  if(user){
+    const {data:p}=await sb.from("profiles").select("premium,progress").eq("id",user.id).maybeSingle();
+    premium=!!p?.premium;
+    const merged=merge(p?.progress||{},snapshot());
+    applyLocal(merged); pushProgress();
+  }else premium=false;
+  window.chemPremium=!!(user&&premium);
+  window.applyPracLocks(); try{renderQuiz()}catch(e){}
+  render();
+}
+function checkoutUrl(){
+  const u=new URL(CFG.checkout);
+  u.searchParams.set("checkout[custom][user_id]",user.id);
+  if(user.email)u.searchParams.set("checkout[email]",user.email);
+  return u.toString();
+}
+let tab="in";
+function render(){
+  if(!user){
+    acct.innerHTML=`<div class="card acct-card">
+      <div class="acct-tabs">
+        <button id="t-in" class="${tab==="in"?"on":""}">Sign in</button>
+        <button id="t-up" class="${tab==="up"?"on":""}">Create account</button>
+      </div>
+      <div class="field"><label for="a-email">Email</label><input id="a-email" type="email" autocomplete="email"></div>
+      <div class="field"><label for="a-pass">Password</label><input id="a-pass" type="password" autocomplete="${tab==="in"?"current":"new"}-password"></div>
+      <div class="aerr" id="a-err"></div>
+      <button class="btn" id="a-go">${tab==="in"?"Sign in":"Create account"}</button>
+    </div>`;
+    $("#t-in").onclick=()=>{tab="in";render();};
+    $("#t-up").onclick=()=>{tab="up";render();};
+    $("#a-go").onclick=async()=>{
+      const email=$("#a-email").value.trim(), password=$("#a-pass").value;
+      $("#a-err").textContent="";
+      const fn=tab==="in"?sb.auth.signInWithPassword({email,password}):sb.auth.signUp({email,password});
+      const {data,error}=await fn;
+      if(error){$("#a-err").textContent=error.message;return;}
+      if(tab==="up"&&!data.session){acct.innerHTML=`<div class="card acct-card"><h3>Check your email 📬</h3><p>We sent a confirmation link to <b>${email}</b>. Click it, then come back and sign in.</p></div>`;return;}
+      refresh();
+    };
+    return;
+  }
+  acct.innerHTML=`<div class="card acct-card">
+    <p style="margin:0 0 10px">Signed in as <b>${user.email}</b>
+    ${premium?'<span class="premium-pill">★ Premium</span>':""}</p>
+    ${premium?`<p>Everything is unlocked and your progress syncs to the cloud automatically. Manage or cancel your subscription any time from the receipt email Lemon Squeezy sent you.</p>`
+    :`<h3>Go Premium</h3>
+      <p>Unlock all 5 practical walkthroughs, the full ${typeof QUIZ!=="undefined"?QUIZ.length:24}-question bank with streaks, and cloud-synced progress.</p>
+      <div class="price-row"><div class="price-box"><b>£4.99</b><span>per month</span></div><div class="price-box"><b>£29</b><span>per year — save 51%</span></div></div>
+      <p style="display:flex;gap:10px;flex-wrap:wrap">
+        <a class="btn" style="text-decoration:none" href="${CFG.checkout?checkoutUrl():"#"}" target="_blank" rel="noopener">Get Premium</a>
+        <button class="btn ghost" id="a-refresh">I've subscribed — refresh</button></p>`}
+    <p style="margin-top:14px"><button class="btn ghost" id="a-out">Sign out</button></p>
+  </div>`;
+  const rb=$("#a-refresh"); if(rb)rb.onclick=refresh;
+  $("#a-out").onclick=async()=>{await sb.auth.signOut();refresh();};
+}
+sb.auth.onAuthStateChange(()=>refresh());
+refresh();
+})();
+}
+</script>
 </body>
 </html>
