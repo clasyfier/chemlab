@@ -363,6 +363,8 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
 @keyframes flick{0%,100%{transform:scale(1) rotate(-3deg)}50%{transform:scale(1.15) rotate(3deg)}}
 .optletter{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:7px;background:var(--bunsen-soft);color:var(--bunsen);font-weight:800;font-size:12.5px;margin-right:10px;flex:0 0 24px}
 .quiz-card .opts button{display:flex;align-items:center;text-align:left}
+.updatebar{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--ground);padding:11px 12px 11px 20px;border-radius:99px;font-size:14px;font-weight:600;z-index:140;box-shadow:var(--shadow);display:flex;align-items:center;gap:12px;white-space:nowrap}
+.updatebar button{background:var(--bunsen);color:#fff;border:0;border-radius:99px;padding:7px 16px;font:inherit;font-weight:700;cursor:pointer}
 .toast{position:fixed;top:74px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--ground);padding:11px 26px;border-radius:99px;font-weight:800;font-size:16px;z-index:130;box-shadow:var(--shadow);animation:toastin 1.8s ease forwards;white-space:nowrap}
 @keyframes toastin{0%{opacity:0;transform:translate(-50%,-18px)}12%,80%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,-12px)}}
 .seg{display:flex;gap:10px;flex-wrap:wrap}
@@ -2653,6 +2655,29 @@ function updateProgressNav(){
 }
 updateProgressNav();
 window.addEventListener("chemlab:changed",updateProgressNav);
+
+/* ---------- update watchdog: an open tab notices new deploys ---------- */
+(()=>{
+  let tag=null,shown=false;
+  async function check(){
+    try{
+      const r=await fetch(location.href,{method:"HEAD",cache:"no-store"});
+      const t=r.headers.get("etag"); if(!t)return;
+      if(tag===null){tag=t;return;}
+      if(t!==tag&&!shown){
+        shown=true;
+        const bar=document.createElement("div");
+        bar.className="updatebar";
+        bar.innerHTML='✨ ChemLab has been updated <button>Refresh</button>';
+        bar.querySelector("button").onclick=()=>location.reload();
+        document.body.appendChild(bar);
+      }
+    }catch(e){}
+  }
+  check();
+  document.addEventListener("visibilitychange",()=>{if(!document.hidden)check();});
+  setInterval(check,5*60*1000);
+})();
 function recTopic(t,got,max){
   if(t==null)return;
   const st=load("chemlab-topicstats",{});
