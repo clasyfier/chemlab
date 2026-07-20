@@ -1293,6 +1293,7 @@ QUIZ3.forEach(x=>{QUIZ.push({q:x.q,o:x.o,a:x.a,e:x.e});QTOPIC.push(x.t);});
 /* ---------- sources (accredited) ---------- */
 const SOURCES=[
 ["RSC Practical videos (16–18)","Royal Society of Chemistry demonstration videos covering every A-level technique, including all the practicals in this app.","https://edu.rsc.org/practical/practical-videos-16-18-years/4012343.article"],
+["PhET Interactive Simulations (University of Colorado Boulder)","Free research-based science simulations — the inspiration for ChemLab's Build-an-Atom, equation balancer and molecule-shapes sims.","https://phet.colorado.edu/en/simulations/filter?subjects=chemistry"],
 ["RSC Titration screen experiment","The RSC's own interactive titration simulator — good companion practice to the simulation here.","https://edu.rsc.org/concentration-of-solutions-and-titration/titration-screen-experiment/2077.article"],
 ["AQA A-level Chemistry (7405) — assessment resources","Past papers, mark schemes and examiner reports: the highest-value practice material there is.","https://www.aqa.org.uk/subjects/chemistry/a-level/chemistry-7405/assessment-resources"],
 ["AQA Required Practical Handbook (7404/7405)","The official methods for all 12 required practicals — the walkthroughs in this app follow its exemplars.","https://filestore.aqa.org.uk/resources/chemistry/AQA-7404-7405-PHBK.PDF"],
@@ -1345,7 +1346,7 @@ function showView(v){
 /* ---------- home ---------- */
 const HOME=[
 ["Learn the theory","learn","--li","13 topic guides","Definitions worded for mark schemes, trends with real values, the anomalies examiners love."],
-["Run the simulations","lab","--cu","4 live models","Titration curves, Maxwell–Boltzmann, energy profiles and a particle-level gas — computed from the real equations."],
+["Run the simulations","lab","--cu","7 interactive sims","Build atoms, balance equations, explore VSEPR shapes, titration curves, Maxwell–Boltzmann and more."],
 ["Explore the elements","periodic","--na","118 elements","Electron configurations, categories and flame-test colours at a click."],
 ["Master the practicals","prac","--k","5 deep walkthroughs","Method checklists, CLEAPSS-based safety, examiner-reported errors — and spot-the-mistake challenges."],
 ["Test yourself","quiz","--bunsen","195 exam-style questions","Topic practice, streaks, instant marking with full explanations."],
@@ -1358,7 +1359,7 @@ $$("#homecards .card").forEach(c=>{
   c.addEventListener("click",go);
   c.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();go();}});
 });
-$("#statrow").innerHTML=[TOPICS.length+" topic guides","4 live simulations","118 elements","5 practical deep-dives",QUIZ.length+" quiz questions"]
+$("#statrow").innerHTML=[TOPICS.length+" topic guides","7 interactive simulations","118 elements","5 practical deep-dives",QUIZ.length+" quiz questions"]
   .map(x=>`<span>${x}</span>`).join("");
 $$(".hero-cta button").forEach(b=>b.addEventListener("click",()=>showView(b.dataset.goto)));
 function renderDash(){
@@ -1602,13 +1603,13 @@ window.applyPracLocks=function(){
     const ch=el.querySelector(".chev");
     if(ch){ch.textContent=locked?"🔒":"▸";ch.style.transform="";}
   });
-  ["sim-titr","sim-mb"].forEach(id=>{
+  ["sim-titr","sim-mb","sim-shape"].forEach(id=>{
     const el=document.getElementById(id); if(!el)return;
     el.classList.toggle("locked",!prem);
     let ov=el.querySelector(".simlock");
     if(!prem&&!ov){
       ov=document.createElement("div"); ov.className="simlock";
-      ov.innerHTML=`<div class="simlock-card"><div style="font-size:26px">🔒</div><b>Premium simulation</b><p>Unlock all four simulations, every topic and practical, and the full ${QUIZ.length}-question bank.</p><button class="btn">See Premium</button></div>`;
+      ov.innerHTML=`<div class="simlock-card"><div style="font-size:26px">🔒</div><b>Premium simulation</b><p>Unlock all seven simulations, every topic and practical, and the full ${QUIZ.length}-question bank.</p><button class="btn">See Premium</button></div>`;
       ov.querySelector("button").onclick=()=>openAccount();
       el.appendChild(ov);
     }
@@ -1747,7 +1748,34 @@ $("#sims").innerHTML=`
   <canvas class="plot" id="g-plot" style="height:260px"></canvas>
   <div class="readout"><div class="stat"><div class="k">Pressure</div><div class="v" id="g-p">—</div></div>
   <div class="stat"><div class="k">Mean speed scale</div><div class="v" id="g-s">—</div></div></div>
-</div><div class="sim" id="sim-titr">
+</div><div class="sim" id="sim-atom">
+  <h2>Build an atom</h2>
+  <p class="hint">Add protons, neutrons and electrons and watch the element, mass number, charge and shells respond. Protons decide the element; electrons decide the charge.</p>
+  <div class="controls">
+    <div class="ctrl"><label>Protons</label><p style="display:flex;gap:6px;margin:0"><button class="btn ghost" data-at="p-">−</button><span class="val" id="at-p" style="min-width:24px;text-align:center;font-size:16px">1</span><button class="btn ghost" data-at="p+">+</button></p></div>
+    <div class="ctrl"><label>Neutrons</label><p style="display:flex;gap:6px;margin:0"><button class="btn ghost" data-at="n-">−</button><span class="val" id="at-n" style="min-width:24px;text-align:center;font-size:16px">0</span><button class="btn ghost" data-at="n+">+</button></p></div>
+    <div class="ctrl"><label>Electrons</label><p style="display:flex;gap:6px;margin:0"><button class="btn ghost" data-at="e-">−</button><span class="val" id="at-e" style="min-width:24px;text-align:center;font-size:16px">1</span><button class="btn ghost" data-at="e+">+</button></p></div>
+  </div>
+  <canvas class="plot" id="at-plot" style="height:280px"></canvas>
+  <div class="readout">
+    <div class="stat"><div class="k">Element</div><div class="v" id="at-el">H · hydrogen</div></div>
+    <div class="stat"><div class="k">Nuclide</div><div class="v" id="at-nuc">¹H</div></div>
+    <div class="stat"><div class="k">Charge</div><div class="v" id="at-ch">0</div></div>
+    <div class="stat"><div class="k">Shells</div><div class="v" id="at-sh">1</div></div>
+  </div>
+</div>
+<div class="sim" id="sim-bal">
+  <h2>Balance the equation</h2>
+  <p class="hint">Adjust the coefficients until every element has the same count on both sides — the tallies show your progress, PhET-style. Balanced in smallest whole numbers wins.</p>
+  <div id="bal-eq" style="display:flex;flex-wrap:wrap;gap:8px 6px;align-items:center;font-size:19px;margin:14px 0"></div>
+  <div class="tblwrap"><table class="notetable" id="bal-tally"></table></div>
+  <div class="readout" style="align-items:center">
+    <button class="btn" id="bal-check">Check</button>
+    <span class="streak" id="bal-msg"></span>
+    <span class="streak" id="bal-score" style="margin-left:auto"></span>
+  </div>
+</div>
+<div class="sim" id="sim-titr">
   <h2>Titration curve</h2>
   <p class="hint">25.0 cm³ of acid in the flask, 0.100 mol dm⁻³ NaOH in the burette. Watch where the vertical section falls — and which indicator's range sits inside it. At half-equivalence for a weak acid, pH = pKa.</p>
   <div class="controls">
@@ -1786,7 +1814,20 @@ $("#sims").innerHTML=`
     <div class="stat"><div class="k">vs 400 K, no catalyst</div><div class="v" id="mb-x">—</div></div>
   </div>
 </div>
-`;
+<div class="sim" id="sim-shape">
+  <h2>Molecule shapes — VSEPR explorer</h2>
+  <p class="hint">Choose how many bonding and lone pairs surround the central atom; the geometry, bond angle and an example molecule appear. Lone pairs repel more, squeezing the angles.</p>
+  <div class="controls">
+    <div class="ctrl"><label for="sh-bp">Bonding pairs</label><select id="sh-bp"><option>2</option><option>3</option><option selected>4</option><option>5</option><option>6</option></select></div>
+    <div class="ctrl"><label for="sh-lp">Lone pairs</label><select id="sh-lp"><option selected>0</option><option>1</option><option>2</option></select></div>
+  </div>
+  <canvas class="plot" id="sh-plot" style="height:300px"></canvas>
+  <div class="readout">
+    <div class="stat"><div class="k">Shape</div><div class="v" id="sh-name">Tetrahedral</div></div>
+    <div class="stat"><div class="k">Bond angle</div><div class="v" id="sh-ang">109.5°</div></div>
+    <div class="stat"><div class="k">Example</div><div class="v" id="sh-ex">CH₄</div></div>
+  </div>
+</div>`;
 
 /* titration maths: exact charge balance solved by bisection */
 function titrPH(Ca,Va,Cb,Vb,Ka){
@@ -1989,9 +2030,172 @@ function drawGas(){
 gasInit();
 function gasLoop(){ if($("#v-lab").classList.contains("on")) drawGas(); if(!reduced) requestAnimationFrame(gasLoop); }
 
+/* build an atom */
+let atomP=1, atomN=0, atomE=1;
+const SHELLCAP=[2,8,8,2];
+function shellFill(e){
+  const out=[]; let left=e;
+  for(const cap of SHELLCAP){ if(left<=0)break; const n=Math.min(cap,left); out.push(n); left-=n; }
+  return out;
+}
+function drawAtom(){
+  const c=$("#at-plot"); if(!c.clientWidth)return;
+  const [ctx,w,h]=setupCanvas(c);
+  ctx.clearRect(0,0,w,h);
+  const cx=w/2, cy=h/2;
+  const shells=shellFill(atomE);
+  ctx.lineWidth=1;
+  shells.forEach((n,i)=>{
+    const r=46+i*30;
+    ctx.strokeStyle=cssVar("--line");
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,7); ctx.stroke();
+    for(let k=0;k<n;k++){
+      const a=(k/n)*6.283 - 1.57 + i*0.5;
+      ctx.fillStyle=cssVar("--bunsen");
+      ctx.beginPath(); ctx.arc(cx+Math.cos(a)*r, cy+Math.sin(a)*r, 5, 0, 7); ctx.fill();
+    }
+  });
+  const parts=[];
+  for(let i=0;i<atomP;i++)parts.push("p");
+  for(let i=0;i<atomN;i++)parts.push("n");
+  parts.sort(()=>0.5-((parts.length*7)%13)/13);
+  parts.forEach((t,i)=>{
+    const r=4.4*Math.sqrt(i), a=i*2.4;
+    ctx.fillStyle=t==="p"?cssVar("--li"):cssVar("--ink-soft");
+    ctx.beginPath(); ctx.arc(cx+Math.cos(a)*r, cy+Math.sin(a)*r, 6.5, 0, 7); ctx.fill();
+    ctx.strokeStyle=cssVar("--panel"); ctx.lineWidth=1.2; ctx.stroke();
+  });
+  ctx.font="12px ui-monospace,Menlo,monospace"; ctx.fillStyle=cssVar("--ink-soft");
+  ctx.fillText("protons",14,20); ctx.fillStyle=cssVar("--li"); ctx.fillRect(66,12,9,9);
+  ctx.fillStyle=cssVar("--ink-soft"); ctx.fillText("neutrons",14,38); ctx.fillRect(72,30,9,9);
+  ctx.fillText("electrons",14,56); ctx.fillStyle=cssVar("--bunsen"); ctx.fillRect(76,48,9,9);
+  const el=ELEMENTS[atomP-1];
+  const ch=atomP-atomE;
+  const sup=n=>String(n).split("").map(d=>"⁰¹²³⁴⁵⁶⁷⁸⁹"[+d]).join("");
+  $("#at-el").textContent=el?`${el.sym} · ${el.name.toLowerCase()}`:"—";
+  $("#at-nuc").textContent=el?`${sup(atomP+atomN)}${el.sym}${ch>0?sup(ch)+"⁺":ch<0?sup(-ch)+"⁻":""}`:"—";
+  $("#at-ch").textContent=ch>0?`+${ch} (cation)`:ch<0?`${ch} (anion)`:"0 (neutral)";
+  $("#at-sh").textContent=shells.join(", ")||"0";
+}
+$$("[data-at]").forEach(b=>b.addEventListener("click",()=>{
+  const [k,op]=[b.dataset.at[0],b.dataset.at[1]];
+  const d=op==="+"?1:-1;
+  if(k==="p")atomP=Math.max(1,Math.min(20,atomP+d));
+  if(k==="n")atomN=Math.max(0,Math.min(24,atomN+d));
+  if(k==="e")atomE=Math.max(0,Math.min(20,atomE+d));
+  $("#at-p").textContent=atomP; $("#at-n").textContent=atomN; $("#at-e").textContent=atomE;
+  drawAtom();
+}));
+
+/* balance the equation */
+const BALEQS=[
+ {sp:["H₂","O₂","H₂O"],nr:2,at:[{H:2},{O:2},{H:2,O:1}],sol:[2,1,2]},
+ {sp:["N₂","H₂","NH₃"],nr:2,at:[{N:2},{H:2},{N:1,H:3}],sol:[1,3,2]},
+ {sp:["CH₄","O₂","CO₂","H₂O"],nr:2,at:[{C:1,H:4},{O:2},{C:1,O:2},{H:2,O:1}],sol:[1,2,1,2]},
+ {sp:["Al","HCl","AlCl₃","H₂"],nr:2,at:[{Al:1},{H:1,Cl:1},{Al:1,Cl:3},{H:2}],sol:[2,6,2,3]},
+ {sp:["Fe","O₂","Fe₂O₃"],nr:2,at:[{Fe:1},{O:2},{Fe:2,O:3}],sol:[4,3,2]},
+ {sp:["C₃H₈","O₂","CO₂","H₂O"],nr:2,at:[{C:3,H:8},{O:2},{C:1,O:2},{H:2,O:1}],sol:[1,5,3,4]}];
+let balI=0, balCo=[], balDone=0;
+function balCounts(){
+  const eq=BALEQS[balI], L={}, R={};
+  eq.at.forEach((atoms,i)=>{
+    const tgt=i<eq.nr?L:R;
+    for(const el in atoms) tgt[el]=(tgt[el]||0)+balCo[i]*atoms[el];
+  });
+  return [L,R];
+}
+function renderBal(){
+  const eq=BALEQS[balI];
+  $("#bal-eq").innerHTML=eq.sp.map((sp,i)=>{
+    const sep=i===0?"":(i===eq.nr?'<span style="margin:0 6px">→</span>':'<span style="margin:0 4px">+</span>');
+    return `${sep}<span style="display:inline-flex;align-items:center;gap:5px">
+      <span style="display:inline-flex;flex-direction:column;gap:2px">
+        <button class="btn ghost" data-bal="${i}+" style="padding:2px 9px;font-size:13px">+</button>
+        <button class="btn ghost" data-bal="${i}-" style="padding:2px 9px;font-size:13px">−</button></span>
+      <b class="mono" style="font-size:22px;min-width:20px;text-align:center;color:var(--bunsen)">${balCo[i]}</b><span>${sp}</span></span>`;
+  }).join("");
+  const [L,R]=balCounts();
+  const els=[...new Set([...Object.keys(L),...Object.keys(R)])];
+  $("#bal-tally").innerHTML="<tr><th>Element</th><th>Left</th><th>Right</th><th></th></tr>"+
+    els.map(el=>{
+      const ok=L[el]===R[el];
+      return `<tr><td>${el}</td><td>${L[el]||0}</td><td>${R[el]||0}</td><td style="color:${ok?"var(--ok)":"var(--warn)"};font-weight:700">${ok?"⚖ balanced":"unbalanced"}</td></tr>`;
+    }).join("");
+  $("#bal-score").textContent=`equation ${balI+1}/${BALEQS.length} · solved ${balDone}`;
+  $$("[data-bal]").forEach(b=>b.addEventListener("click",()=>{
+    const i=+b.dataset.bal.slice(0,-1), d=b.dataset.bal.endsWith("+")?1:-1;
+    balCo[i]=Math.max(1,Math.min(12,balCo[i]+d));
+    $("#bal-msg").textContent="";
+    renderBal();
+  }));
+}
+function balStart(){ balCo=BALEQS[balI].sp.map(()=>1); $("#bal-msg").textContent=""; renderBal(); }
+$("#bal-check").addEventListener("click",()=>{
+  const [L,R]=balCounts();
+  const els=[...new Set([...Object.keys(L),...Object.keys(R)])];
+  const balanced=els.every(el=>L[el]===R[el]);
+  if(!balanced){$("#bal-msg").textContent="Not yet — check the orange rows.";return;}
+  const g=balCo.reduce((a,b)=>{while(b){[a,b]=[b,a%b];}return a;});
+  if(g>1){$("#bal-msg").textContent=`Balanced — but divide everything by ${g} for smallest whole numbers.`;return;}
+  balDone++; burstFrom($("#bal-check"));
+  $("#bal-msg").textContent="Balanced! ⚖️";
+  balI=(balI+1)%BALEQS.length;
+  setTimeout(balStart,1200);
+});
+balStart();
+
+/* molecule shapes */
+const GEOMS={
+ "2-0":{n:"Linear",a:"180°",ex:"CO₂",b:[[1,0],[-1,0]],lp:[]},
+ "3-0":{n:"Trigonal planar",a:"120°",ex:"BF₃",b:[[0,-1],[-0.87,0.5],[0.87,0.5]],lp:[]},
+ "4-0":{n:"Tetrahedral",a:"109.5°",ex:"CH₄",b:[[0,-1],[-0.9,0.55],[0.9,0.55],[0.16,0.34]],lp:[],w:3},
+ "3-1":{n:"Trigonal pyramidal",a:"107°",ex:"NH₃",b:[[-0.85,0.6],[0.85,0.6],[0.1,0.4]],lp:[[0,-1]],w:2},
+ "2-2":{n:"Bent",a:"104.5°",ex:"H₂O",b:[[-0.75,0.66],[0.75,0.66]],lp:[[-0.5,-0.87],[0.5,-0.87]]},
+ "5-0":{n:"Trigonal bipyramidal",a:"120° and 90°",ex:"PCl₅",b:[[0,-1],[0,1],[-0.95,0.12],[0.6,-0.28],[0.62,0.4]],lp:[]},
+ "6-0":{n:"Octahedral",a:"90°",ex:"SF₆",b:[[0,-1],[0,1],[-0.95,0.12],[0.95,-0.12],[-0.5,-0.42],[0.5,0.42]],lp:[]},
+ "4-2":{n:"Square planar",a:"90°",ex:"XeF₄",b:[[-0.95,0.12],[0.95,-0.12],[-0.5,-0.42],[0.5,0.42]],lp:[[0,-1],[0,1]]}};
+function drawShape(){
+  const c=$("#sh-plot"); if(!c.clientWidth)return;
+  const [ctx,w,h]=setupCanvas(c);
+  ctx.clearRect(0,0,w,h);
+  const bp=+$("#sh-bp").value, lpn=+$("#sh-lp").value;
+  const g=GEOMS[bp+"-"+lpn];
+  if(!g){
+    ctx.font="14px -apple-system,sans-serif"; ctx.fillStyle=cssVar("--ink-soft");
+    ctx.fillText("That combination isn't on the A-level specification — try another.",30,h/2);
+    $("#sh-name").textContent="—"; $("#sh-ang").textContent="—"; $("#sh-ex").textContent="—";
+    return;
+  }
+  const cx=w/2, cy=h/2, R=Math.min(w,h)*0.34;
+  g.lp.forEach(v=>{
+    const x=cx+v[0]*R*0.72, y=cy+v[1]*R*0.72;
+    ctx.fillStyle=cssVar("--k"); ctx.globalAlpha=.4;
+    ctx.beginPath(); ctx.ellipse(x,y,20,13,Math.atan2(v[1],v[0])+1.5708,0,7); ctx.fill();
+    ctx.globalAlpha=1;
+    ctx.fillStyle=cssVar("--ink");
+    ctx.beginPath(); ctx.arc(x-4,y,2.4,0,7); ctx.fill();
+    ctx.beginPath(); ctx.arc(x+4,y,2.4,0,7); ctx.fill();
+  });
+  g.b.forEach((v,i)=>{
+    const short=(g.w!==undefined&&i===g.w);
+    const L=short?R*0.55:R;
+    const x=cx+v[0]*L, y=cy+v[1]*L;
+    ctx.strokeStyle=cssVar("--ink-soft"); ctx.lineWidth=short?7:3.5;
+    ctx.globalAlpha=short?0.55:1;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(x,y); ctx.stroke();
+    ctx.globalAlpha=1;
+    ctx.fillStyle=cssVar("--cu");
+    ctx.beginPath(); ctx.arc(x,y,15,0,7); ctx.fill();
+  });
+  ctx.fillStyle=cssVar("--bunsen");
+  ctx.beginPath(); ctx.arc(cx,cy,20,0,7); ctx.fill();
+  $("#sh-name").textContent=g.n; $("#sh-ang").textContent=g.a; $("#sh-ex").textContent=g.ex;
+}
+["sh-bp","sh-lp"].forEach(id=>$("#"+id).addEventListener("input",drawShape));
+
 /* ---------- redraw plumbing ---------- */
 function redrawAll(){
-  drawTitr(); drawMB(); drawProf(); drawGas();
+  drawTitr(); drawMB(); drawProf(); drawGas(); drawAtom(); drawShape();
 }
 window.addEventListener("resize",redrawAll);
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",redrawAll);
@@ -2311,7 +2515,7 @@ function render(){
       <table class="featcmp">
         <tr><th></th><th>Free</th><th>Premium</th></tr>
         <tr><td>Topic guides</td><td class="n">6 of 13</td><td class="y">all 13</td></tr>
-        <tr><td>Live simulations</td><td class="n">2 of 4</td><td class="y">all 4</td></tr>
+        <tr><td>Interactive simulations</td><td class="n">4 of 7</td><td class="y">all 7</td></tr>
         <tr><td>Practical walkthroughs</td><td class="n">1 of 5</td><td class="y">all 5</td></tr>
         <tr><td>Quiz bank</td><td class="n">6 per session, mixed only</td><td class="y">${QUIZ.length} + topic practice</td></tr>
         <tr><td>Element Hunt hard mode</td><td class="n">—</td><td class="y">✓</td></tr>
