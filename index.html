@@ -277,6 +277,7 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
 .modal-x{position:absolute;top:12px;right:12px;border:0;background:var(--panel2);border-radius:50%;width:34px;height:34px;font-size:18px;line-height:1;color:var(--ink-soft);z-index:2}
 .modal-x:hover{color:var(--ink)}
 .modal-card #eldetail .card{border:0;box-shadow:none;margin:0}
+#acctmodal .card{box-shadow:none}
 /* accounts + paywall */
 .acct-card{max-width:540px}
 .field{display:flex;flex-direction:column;gap:5px;margin:10px 0}
@@ -390,6 +391,16 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
 </nav>
 <main>
 <div class="topbar"><div id="acct-corner"></div></div>
+<div class="modal" id="acctmodal" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-label="Account settings" style="max-width:640px">
+    <button class="modal-x" id="acctmodal-x" aria-label="Close">×</button>
+    <div style="padding:24px">
+      <div class="eyebrow">Settings</div>
+      <h2 class="serif" style="font-size:24px;margin:2px 0 16px">Account settings</h2>
+      <div id="acct"></div>
+    </div>
+  </div>
+</div>
 <div class="modal" id="authmodal" hidden>
   <div class="modal-card" role="dialog" aria-modal="true" aria-label="Sign in or create account" style="max-width:430px">
     <button class="modal-x" id="authmodal-x" aria-label="Close">×</button>
@@ -465,13 +476,6 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
   <div class="controls" style="margin:0 0 12px"><div class="ctrl"><label for="q-topic">Practise</label>
     <select id="q-topic"></select></div></div>
   <div class="quiz-card" id="quizcard"></div>
-</section>
-
-<section class="view" id="v-account">
-  <div class="eyebrow">Settings</div>
-  <h1>Account settings</h1>
-  <p class="lede">Your profile, subscription and data — all in one place.</p>
-  <div id="acct"></div>
 </section>
 
 <section class="view" id="v-sources">
@@ -1161,7 +1165,7 @@ $("#topics").innerHTML=TOPICS.map((t,i)=>{
   </div></div>`;}).join("");
 $$(".topic>button.head").forEach(b=>b.addEventListener("click",()=>{
   const t=b.parentElement;
-  if(t.classList.contains("locked")){showView("account");return;}
+  if(t.classList.contains("locked")){openAccount();return;}
   const open=t.classList.toggle("open");
   b.setAttribute("aria-expanded",open);
 }));
@@ -1241,7 +1245,7 @@ function huntNext(){
 }
 $("#hunt-btn").addEventListener("click",()=>{
   const diff=$("#hunt-diff").value;
-  if(diff==="hard"&&!window.chemPremium){showView("account");return;}
+  if(diff==="hard"&&!window.chemPremium){openAccount();return;}
   hunt={qs:[...HUNT_POOLS[diff]].sort(()=>Math.random()-.5).slice(0,8),i:0,score:0,t0:performance.now(),diff};
   $("#hunt-btn").textContent="🎯 Playing…";
   huntNext();
@@ -1319,11 +1323,12 @@ $("#pracs").innerHTML=PRACS.map((p,i)=>`<div class="prac" id="prac${i}">
   </div></div>`).join("");
 $$(".prac>button").forEach(b=>b.addEventListener("click",()=>{
   const t=b.parentElement;
-  if(t.classList.contains("locked")){showView("account");return;}
+  if(t.classList.contains("locked")){openAccount();return;}
   const open=t.classList.toggle("open");
   b.setAttribute("aria-expanded",open);
   b.querySelector(".chev").style.transform=open?"rotate(90deg)":"";
 }));
+window.openAccount=function(){}; // replaced by the auth module
 window.chemPremium=true; // local mode: everything open; the auth module flips this for free accounts
 window.applyPracLocks=function(){
   const prem=window.chemPremium;
@@ -1348,7 +1353,7 @@ window.applyPracLocks=function(){
     if(!prem&&!ov){
       ov=document.createElement("div"); ov.className="simlock";
       ov.innerHTML=`<div class="simlock-card"><div style="font-size:26px">🔒</div><b>Premium simulation</b><p>Unlock all four simulations, every topic and practical, and the full ${QUIZ.length}-question bank.</p><button class="btn">See Premium</button></div>`;
-      ov.querySelector("button").onclick=()=>showView("account");
+      ov.querySelector("button").onclick=()=>openAccount();
       el.appendChild(ov);
     }
     if(prem&&ov)ov.remove();
@@ -1410,7 +1415,7 @@ let QPOOL=[...QUIZ.keys()].sort(()=>Math.random()-.5);
 $("#q-topic").innerHTML='<option value="-1">All topics — mixed</option>'+TOPICS.map((t,i)=>`<option value="${i}">${t.t}</option>`).join("");
 $("#q-topic").addEventListener("input",()=>{
   const t=+$("#q-topic").value;
-  if(t>=0&&!window.chemPremium){$("#q-topic").value="-1";showView("account");return;}
+  if(t>=0&&!window.chemPremium){$("#q-topic").value="-1";openAccount();return;}
   QPOOL=[...QUIZ.keys()].filter(i=>t<0||QTOPIC[i]===t).sort(()=>Math.random()-.5);
   qi=0; qstreak=0; renderQuiz();
 });
@@ -1420,7 +1425,7 @@ function renderQuiz(){
       <span class="tagline" style="background:color-mix(in srgb,var(--na) 16%,transparent);color:var(--na)">Free preview finished</span>
       <div class="qtext">That's the 6 free questions — nice work 🎉</div>
       <p style="color:var(--ink-soft);font-size:14.5px;max-width:52ch;margin:0 0 6px">Premium unlocks all ${QUIZ.length} questions with streaks and explanations, every practical walkthrough, and progress that syncs across your devices.</p>
-      <div class="quiz-foot"><button class="btn" onclick="showView('account')">See Premium</button>
+      <div class="quiz-foot"><button class="btn" onclick="openAccount()">See Premium</button>
       <span class="score">Session score: ${qscore}/${qanswered}</span></div>`;
     return;
   }
@@ -1755,7 +1760,7 @@ if(!CFG.url||!CFG.anon){
   <p>Cloud accounts, synced progress and Premium are being wired up. Until then everything is free and your progress lives on this device.</p></div>`;
   const c=document.querySelector("#acct-corner");
   if(c){c.innerHTML='<button class="btn ghost" style="padding:7px 16px;font-size:13.5px">Log in</button>';
-    c.querySelector("button").onclick=()=>showView("account");}
+    c.querySelector("button").onclick=()=>openAccount();}
 }else{
 (async()=>{
 const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
@@ -1856,10 +1861,18 @@ document.addEventListener("click",e=>{
 document.addEventListener("keydown",e=>{
   if(e.key==="Escape"){
     const m=document.querySelector("#corner-menu"); if(m)m.classList.remove("open");
-    closeAuth();
+    closeAuth(); closeAcct();
   }
 });
 const authModal=document.querySelector("#authmodal");
+const acctModal=document.querySelector("#acctmodal");
+window.openAccount=function(){
+  if(!user){openAuth("in");return;}
+  render(); acctModal.hidden=false;
+};
+function closeAcct(){if(acctModal)acctModal.hidden=true;}
+document.querySelector("#acctmodal-x").addEventListener("click",closeAcct);
+acctModal.addEventListener("click",e=>{if(e.target===acctModal)closeAcct();});
 function openAuth(t){tab=t;renderAuth();authModal.hidden=false;
   const f=authModal.querySelector("#a-email"); if(f)f.focus();}
 function closeAuth(){if(authModal)authModal.hidden=true;}
@@ -1928,9 +1941,9 @@ function renderCorner(){
     </div></div>`;
   const menu=$("#corner-menu");
   $("#corner-av").onclick=e=>{e.stopPropagation();menu.classList.toggle("open");};
-  $("#cm-settings").onclick=()=>{menu.classList.remove("open");showView("account");};
-  const up=$("#cm-upgrade"); if(up)up.onclick=()=>{menu.classList.remove("open");showView("account");};
-  $("#cm-out").onclick=async()=>{await sb.auth.signOut();refresh();};
+  $("#cm-settings").onclick=()=>{menu.classList.remove("open");openAccount();};
+  const up=$("#cm-upgrade"); if(up)up.onclick=()=>{menu.classList.remove("open");openAccount();};
+  $("#cm-out").onclick=async()=>{await sb.auth.signOut();closeAcct();refresh();};
 }
 function render(){
   if(!user){
@@ -2063,7 +2076,7 @@ function render(){
     $("#pw-msg").textContent=error?error.message:"Password updated ✓";
     if(!error){$("#pw-msg").style.color="var(--ok)";$("#pw-new").value="";}
   };
-  $("#a-out").onclick=async()=>{await sb.auth.signOut();refresh();};
+  $("#a-out").onclick=async()=>{await sb.auth.signOut();closeAcct();refresh();};
   $("#a-export").onclick=async()=>{
     const {data:{session}}=await sb.auth.getSession(); if(!session)return;
     const r=await fetch("/api/account",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+session.access_token},body:JSON.stringify({action:"export"})});
@@ -2088,10 +2101,10 @@ sb.auth.onAuthStateChange(()=>refresh());
 refresh();
 if(new URLSearchParams(location.search).has("upgraded")){
   history.replaceState({},"",location.pathname);
-  showView("account");
-  let tries=0;
+  let tries=0, opened=false;
   const poll=setInterval(async()=>{             // webhook can land a second or two after the redirect
     await refresh(); tries++;
+    if(user&&!opened){opened=true;window.openAccount();}
     if(window.chemPremium){clearInterval(poll);
       acct.insertAdjacentHTML("afterbegin",`<div class="card acct-card" style="margin-bottom:12px;border-color:var(--ok)"><b style="color:var(--ok)">★ Payment received — Premium unlocked. Enjoy!</b></div>`);}
     if(tries>10)clearInterval(poll);
