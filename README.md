@@ -6,7 +6,7 @@ An interactive study companion for A-level chemistry (AQA / OCR / Edexcel), buil
 - **Simulations** — titration curves (exact charge-balance solver), Maxwell–Boltzmann, energy profiles, ideal gas particle box
 - **Periodic table** — 118 elements, electron configurations, flame tests, group reactivity trends
 - **Practicals** — walkthroughs of AQA required practicals with CLEAPSS-based safety and examiner-reported errors
-- **Quiz** — 67 exam-style questions with topic practice, streaks and explanations
+- **Quiz** — 195 exam-style questions (15 per chapter) with topic practice, streaks and explanations
 
 Content checked against: AQA Required Practical Handbook, RSC Education, CLEAPSS, NIST (CODATA / Atomic Spectra Database), IUPAC, and peer-reviewed reference data.
 
