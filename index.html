@@ -331,6 +331,23 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
 .spot li.false{border-color:var(--danger);background:color-mix(in srgb,var(--danger) 8%,var(--panel2))}
 .spot .why{font-size:13px;color:var(--ink-soft);margin-top:6px;border-top:1px dashed var(--line);padding-top:6px}
 .spot.checked li{cursor:default}
+.ex-q{background:var(--panel2);border-radius:10px;padding:16px 18px;margin:14px 0}
+.ex-q .meta{display:flex;gap:14px;align-items:center;font-size:12.5px;color:var(--ink-soft);margin-bottom:8px;font-weight:600;letter-spacing:.03em}
+.ex-q textarea{width:100%;min-height:120px;font:inherit;font-size:14.5px;padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);resize:vertical}
+.ex-timer{display:flex;align-items:center;gap:10px;margin:12px 0}
+.ex-timer .pbar>i{background:var(--bunsen)}
+.ex-timer.low .pbar>i{background:var(--danger)}
+.ex-res{border-left:4px solid var(--line);border-radius:0 10px 10px 0;background:var(--panel2);padding:12px 16px;margin:10px 0}
+.ex-res.good{border-color:var(--ok)}.ex-res.part{border-color:var(--warn)}.ex-res.bad{border-color:var(--danger)}
+.ex-res .fb{font-size:14px;margin-top:6px}
+.ex-res ul{margin:6px 0;padding-left:20px;font-size:13.5px}
+.prog-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.prog-row .nm{flex:0 0 220px;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prog-row .pbar{flex:1}
+.prog-row .pc{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:13px;min-width:86px;text-align:right;font-variant-numeric:tabular-nums}
+.prog-row .em{width:24px;text-align:center}
+.planbox{white-space:pre-wrap;font-size:14.5px;line-height:1.6;background:var(--panel2);border-radius:10px;padding:16px 18px;margin-top:12px;max-width:78ch}
+@media (max-width:760px){.prog-row .nm{flex-basis:130px;font-size:13px}}
 .topic.locked h3{opacity:.55}
 .topic.locked .swatch{opacity:.35}
 .topic.locked .sub{opacity:.6}
@@ -472,7 +489,8 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
   <button data-v="lab"><span class="dot" style="background:var(--cu)"></span>Simulations</button>
   <button data-v="periodic"><span class="dot" style="background:var(--na)"></span>Periodic table</button>
   <button data-v="prac"><span class="dot" style="background:var(--k)"></span>Practicals</button>
-  <button data-v="quiz"><span class="dot" style="background:var(--bunsen)"></span>Quiz</button>
+  <button data-v="quiz"><span class="dot" style="background:var(--bunsen)"></span>Test your knowledge</button>
+  <button data-v="progress"><span class="dot" style="background:var(--na)"></span>Progress</button>
   <button data-v="sources"><span class="dot" style="background:var(--ink-soft)"></span>Sources</button>
   <div class="spacer"></div>
   <div style="padding:10px;font-size:11.5px;color:var(--ink-soft)">
@@ -585,12 +603,35 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
 </section>
 
 <section class="view" id="v-quiz">
-  <div class="eyebrow">Test yourself</div>
-  <h1>Quiz</h1>
+  <div class="eyebrow">Quizzes &amp; exams</div>
+  <h1>Test your knowledge</h1>
   <p class="lede">Exam-style multiple choice with explanations, shuffled every session. Protect your streak. 🔥</p>
+  <div class="sim" id="examcard">
+    <h2>Exam-like questions</h2>
+    <p class="hint">Original questions in real exam formats, on a real exam clock — 2 minutes per mark. Written answers are marked by an AI examiner who explains exactly where the marks were lost.</p>
+    <div class="controls">
+      <div class="ctrl"><label for="ex-type">Question type</label><select id="ex-type">
+        <option value="mcq">Multiple choice</option>
+        <option value="written">Written answers</option>
+        <option value="atp">Alternative to practical</option></select></div>
+      <div class="ctrl"><label for="ex-count">Questions</label><select id="ex-count">
+        <option>5</option><option>10</option><option>15</option><option>20</option><option>25</option><option>30</option></select></div>
+      <button class="btn" id="ex-start">Start exam</button>
+      <span class="streak" id="ex-note"></span>
+    </div>
+    <div id="ex-area"></div>
+  </div>
+  <h2 class="serif" style="font-size:22px;margin:8px 0 6px">Quick-fire quiz</h2>
   <div class="controls" style="margin:0 0 12px"><div class="ctrl"><label for="q-topic">Practise</label>
     <select id="q-topic"></select></div></div>
   <div class="quiz-card" id="quizcard"></div>
+</section>
+
+<section class="view" id="v-progress">
+  <div class="eyebrow">Analytics</div>
+  <h1>Your progress</h1>
+  <p class="lede">Accuracy by chapter, your confidence ratings, and exam history — plus an AI-generated plan for catching up on whatever needs it most.</p>
+  <div id="prog-body"></div>
 </section>
 
 <section class="view" id="v-sources">
@@ -1194,6 +1235,54 @@ errors:[["Warming Tollens' over a flame or storing it","Water bath only, and rin
 ["Cross-contaminated droppers","One clean pipette per reagent, or every tube goes orange."]],
 exp:"Full result table: alkene decolourises Br₂ water; aldehyde: DNPH ppt + silver mirror + Fehling's brick-red + dichromate green; ketone: DNPH ppt only; 1°/2° alcohol: fizzes with Na, dichromate green; 3° alcohol: fizzes with Na, dichromate stays orange; carboxylic acid: fizzes with NaHCO₃. Bonus: the iodoform test (I₂/KI + NaOH, warm gently) gives a yellow CHI₃ precipitate for CH₃C=O compounds and CH₃CH(OH)– alcohols — it distinguishes ethanol (positive) from methanol (negative). Disposal: Tollens' mixtures go down the foul-water drain immediately after use (RSC) — stored residues form explosive silver compounds."}];
 
+/* ---------- original exam-style question banks (written by ChemLab, AQA-style) ---------- */
+const EXAMW=[
+{t:9,marks:3,q:"State and explain the trend in atomic radius across Period 3 from sodium to chlorine.",
+ scheme:["Atomic radius decreases across the period","Nuclear charge increases while electrons enter the same shell (similar shielding)","Outer electrons are attracted more strongly / pulled closer to the nucleus"]},
+{t:1,marks:4,q:"Explain why magnesium has a higher melting point than sodium.",
+ scheme:["Both have metallic bonding (lattice of positive ions in delocalised electrons)","Mg forms 2+ ions whereas Na forms 1+ ions","Mg releases more delocalised electrons per ion / smaller ion with higher charge density","Stronger electrostatic attraction between ions and delocalised electrons, so more energy needed to melt"]},
+{t:2,marks:4,q:"0.210 g of a Group 2 metal carbonate, MCO₃, reacts completely with excess hydrochloric acid, producing 60.0 cm³ of carbon dioxide, measured at RTP (take 1 mol of gas to occupy 24.0 dm³). Identify the metal M, showing your working.",
+ scheme:["n(CO₂) = 60.0 ÷ 24000 = 2.50 × 10⁻³ mol","n(MCO₃) = n(CO₂) = 2.50 × 10⁻³ mol (1:1 ratio)","Mr(MCO₃) = 0.210 ÷ 2.50 × 10⁻³ = 84","Ar(M) = 84 − 60 = 24, so M is magnesium"]},
+{t:6,marks:6,q:"A buffer solution contains ethanoic acid and sodium ethanoate. Explain, with equations, how this buffer resists a change in pH when (a) a small amount of hydrochloric acid and (b) a small amount of sodium hydroxide is added.",
+ scheme:["Buffer contains large reservoirs of both CH₃COOH and CH₃COO⁻","Added H⁺ reacts with the ethanoate ion: H⁺ + CH₃COO⁻ → CH₃COOH","Added OH⁻ reacts with the acid: OH⁻ + CH₃COOH → CH₃COO⁻ + H₂O","In each case the added ion is removed from solution","The ratio [CH₃COOH]/[CH₃COO⁻] changes only slightly","Since [H⁺] = Ka × ratio, the pH changes only slightly"]},
+{t:3,marks:4,q:"Define the term 'mean bond enthalpy' and explain why an enthalpy change calculated from mean bond enthalpies usually differs from the value obtained using Hess's law with enthalpies of formation.",
+ scheme:["Enthalpy change when one mole of a (gaseous) bond is broken","Averaged over that bond in many different compounds","Actual bond enthalpies in the specific molecules differ from the mean values","Hess's law values are measured for the actual compounds, so it is the more accurate method"]},
+{t:8,marks:5,q:"Propene reacts with hydrogen bromide to form a major and a minor product. Name the mechanism, describe its steps in words, and explain why 2-bromopropane is the major product.",
+ scheme:["Electrophilic addition","The π-bond (C=C) attacks the δ+ hydrogen of H–Br / HBr is polar with Hδ+","A carbocation intermediate forms and Br⁻ then attacks it","Addition of H to the end carbon gives a secondary carbocation; addition to the middle carbon gives a primary one","The secondary carbocation is more stable (alkyl groups donate electrons), so the route to 2-bromopropane dominates"]},
+{t:6,marks:4,q:"A student titrates a weak base with a strong acid and chooses phenolphthalein as the indicator. Explain why this choice will give an inaccurate result and name a more suitable indicator.",
+ scheme:["The equivalence point of a strong acid–weak base titration is below pH 7","The vertical region of the curve spans roughly pH 3–7","Phenolphthalein changes colour at pH 8.3–10.0, outside the vertical region, so it changes at the wrong volume","Methyl orange (range 3.1–4.4) lies within the vertical region and is suitable"]},
+{t:3,marks:3,q:"Define the standard enthalpy of formation of a compound. Include the conditions in your answer.",
+ scheme:["Enthalpy change when one mole of the compound is formed from its elements","All substances in their standard states","At 100 kPa and a stated temperature (usually 298 K)"]},
+{t:5,marks:5,q:"Hydrogen and iodine reach equilibrium: H₂(g) + I₂(g) ⇌ 2HI(g). At equilibrium a 2.00 dm³ flask contains 0.20 mol H₂, 0.20 mol I₂ and 1.60 mol HI. Calculate Kc and explain why it has no units.",
+ scheme:["Equilibrium concentrations: [H₂] = [I₂] = 0.10 mol dm⁻³, [HI] = 0.80 mol dm⁻³","Kc = [HI]² ÷ ([H₂][I₂])","Kc = 0.80² ÷ (0.10 × 0.10)","Kc = 64","Concentration units cancel (two on top, two on bottom), so Kc is dimensionless"]},
+{t:11,marks:4,q:"Explain why aqueous solutions of transition metal complexes such as [Cu(H₂O)₆]²⁺ are coloured.",
+ scheme:["The d-orbitals of the metal ion are split into two energy levels by the ligands","A d-electron absorbs a photon of visible light and is promoted to the higher level","The energy absorbed corresponds to ΔE = hν, a specific frequency of visible light","The remaining (complementary) frequencies are transmitted/reflected, giving the observed colour"]},
+{t:12,marks:4,q:"Predict the ¹H NMR spectrum of propanal (CH₃CH₂CHO): state the number of environments, the integration ratio, and the splitting pattern of the CH₃ signal, explaining the splitting rule you use.",
+ scheme:["Three proton environments","Integration ratio 3 : 2 : 1 (CH₃ : CH₂ : CHO)","The CH₃ signal is a triplet","n+1 rule: the adjacent CH₂ carries 2 protons, giving 2+1 = 3 peaks"]},
+{t:3,marks:6,q:"A student burns 1.15 g of ethanol (Mr = 46.0) in a spirit burner, heating 200 g of water from 25.0 °C to 48.0 °C. Calculate the enthalpy of combustion per mole of ethanol, and give two reasons why the answer is less exothermic than the data book value of −1367 kJ mol⁻¹.",
+ scheme:["q = m c ΔT = 200 × 4.18 × 23.0","q = 19 228 J ≈ 19.2 kJ","n(ethanol) = 1.15 ÷ 46.0 = 0.0250 mol","ΔH = −19.2 ÷ 0.0250 ≈ −770 kJ mol⁻¹ (negative sign required)","Reason 1: heat lost to the surroundings / apparatus rather than the water","Reason 2: incomplete combustion of the ethanol (or evaporation of water/ethanol)"]}];
+
+const EXAMP=[
+{t:2,marks:3,q:"Describe how to prepare 250 cm³ of a standard solution starting from a weighed solid.",
+ scheme:["Dissolve the weighed solid fully in distilled water in a beaker (stirring)","Transfer to a 250 cm³ volumetric flask with rinsings of the beaker and rod","Make up to the mark so the bottom of the meniscus sits on the line, stopper and invert to mix"]},
+{t:6,marks:2,q:"Before starting a titration, a student rinses the burette with distilled water only. Explain why this causes an error and state what should be done instead.",
+ scheme:["Water left on the walls dilutes the titrant so a larger titre is needed (systematic error)","Rinse the burette with the solution it will contain"]},
+{t:3,marks:4,q:"Describe how to determine an accurate temperature change for a reaction in a polystyrene cup, allowing for heat exchange with the surroundings.",
+ scheme:["Record the temperature every minute for several minutes before mixing","Add the second reagent at a known minute and continue recording every minute","Plot temperature against time and draw two best-fit straight lines (before and after mixing)","Extrapolate both lines to the time of mixing; ΔT is the vertical gap between them"]},
+{t:4,marks:3,q:"In the sodium thiosulfate and hydrochloric acid 'disappearing cross' experiment, state why the temperature must not exceed about 55 °C and describe how reaction mixtures should be disposed of.",
+ scheme:["The reaction releases toxic sulfur dioxide","More SO₂ escapes at higher temperatures (hazard to asthmatics; ventilation needed)","Pour finished mixtures into a sodium carbonate stop-bath immediately (do not leave standing)"]},
+{t:8,marks:3,q:"For a simple distillation, state where the thermometer bulb must be positioned, how the condenser water should be connected, and one safety reason why the apparatus must not be sealed.",
+ scheme:["Thermometer bulb level with the side-arm junction (reading vapour temperature)","Cooling water in at the bottom of the condenser and out at the top (counter-current)","A sealed apparatus would build up pressure and could shatter — one point must be open"]},
+{t:8,marks:4,q:"Describe a test-tube sequence to distinguish propanal from propanone, giving the observations for each compound.",
+ scheme:["Add 2,4-DNPH to both: both give an orange/yellow precipitate (confirms carbonyl)","Warm each with Tollens' reagent in a water bath","Propanal: silver mirror forms","Propanone: no visible change (or use Fehling's: brick-red ppt with propanal only)"]},
+{t:12,marks:3,q:"In thin-layer chromatography, describe how an Rf value is measured and give one reason the baseline must be drawn in pencil.",
+ scheme:["Measure from the baseline to the centre of the spot, and from the baseline to the solvent front","Rf = spot distance ÷ solvent front distance","Pencil is insoluble in the solvent — ink would dissolve and run/contaminate the plate"]},
+{t:2,marks:4,q:"A burette reading has an uncertainty of ±0.05 cm³ and a titre involves two readings. For a titre of 25.00 cm³, calculate the percentage uncertainty and state one change that would reduce it.",
+ scheme:["Total uncertainty = 2 × 0.05 = ±0.10 cm³","% uncertainty = (0.10 ÷ 25.00) × 100","= 0.4%","Use a larger titre (e.g. more dilute titrant / larger volume pipette) so the same absolute uncertainty is a smaller fraction"]},
+{t:6,marks:3,q:"Explain what is meant by the end-point of a titration, and why the titrant should be added dropwise with swirling as the end-point approaches.",
+ scheme:["The end-point is the first permanent colour change of the indicator","One drop can be enough to pass the equivalence point, so dropwise addition avoids overshooting","Swirling ensures complete mixing so the colour change is genuine/permanent"]},
+{t:9,marks:4,q:"Describe how to carry out a flame test on an unknown solid, and state the flame colours of potassium and calcium compounds.",
+ scheme:["Clean a nichrome/platinum wire by dipping in concentrated hydrochloric acid and heating until no colour","Dip the wire in the acid then the solid, and place in a (blue) Bunsen flame","Potassium: lilac flame","Calcium: brick-red flame"]}];
 /* ---------- spot the mistake ---------- */
 const SPOT=[
 [["Rinse the burette with distilled water just before filling it with the titrant.",1,"Water dilutes the titrant on the walls — rinse with the solution it will hold."],
@@ -1443,6 +1532,7 @@ const SOURCES=[
 ["RSC Titration screen experiment","The RSC's own interactive titration simulator — good companion practice to the simulation here.","https://edu.rsc.org/concentration-of-solutions-and-titration/titration-screen-experiment/2077.article"],
 ["AQA A-level Chemistry (7405) — assessment resources","Past papers, mark schemes and examiner reports: the highest-value practice material there is.","https://www.aqa.org.uk/subjects/chemistry/a-level/chemistry-7405/assessment-resources"],
 ["AQA Required Practical Handbook (7404/7405)","The official methods for all 12 required practicals — the walkthroughs in this app follow its exemplars.","https://filestore.aqa.org.uk/resources/chemistry/AQA-7404-7405-PHBK.PDF"],
+["Physics & Maths Tutor — Chemistry past papers","Organised genuine past papers and mark schemes from every exam board — pair them with ChemLab's exam-style practice; the real thing is the final step.","https://www.physicsandmathstutor.com/a-level-chemistry-papers/"],
 ["AQA A-level Chemistry Data Booklet","The exact NMR, IR and periodic-table data printed in your exam — the tables in the Analysis chapter mirror it.","https://filestore.aqa.org.uk/resources/chemistry/AQA-7405-SDB.PDF"],
 ["CLEAPSS Student Safety Sheets","The UK schools' laboratory-safety authority — free hazard and control-measure sheets you can cite in your own risk assessments.","https://science.cleapss.org.uk/resources/student-safety-sheets/"],
 ["RSC Interactive Periodic Table","Verified data, history and podcasts for every element.","https://www.rsc.org/periodic-table"],
@@ -1486,6 +1576,7 @@ function showView(v){
   $$("section.view").forEach(s=>s.classList.toggle("on",s.id==="v-"+v));
   window.scrollTo({top:0});
   if(v==="home")renderDash();
+  if(v==="progress")renderProgress();
   redrawAll();
 }
 
@@ -1495,7 +1586,7 @@ const HOME=[
 ["Run the simulations","lab","--cu","7 interactive sims","Build atoms, balance equations, explore VSEPR shapes, titration curves, Maxwell–Boltzmann and more."],
 ["Explore the elements","periodic","--na","118 elements","Electron configurations, categories and flame-test colours at a click."],
 ["Master the practicals","prac","--k","5 deep walkthroughs","Method checklists, CLEAPSS-based safety, examiner-reported errors — and spot-the-mistake challenges."],
-["Test yourself","quiz","--bunsen","195 exam-style questions","Topic practice, streaks, instant marking with full explanations."],
+["Test your knowledge","quiz","--bunsen","Quizzes + timed exams","195 quiz questions, plus timed exam papers marked by an AI examiner."],
 ["Check the sources","sources","--ink-soft","Accredited only","RSC, AQA, OCR, CLEAPSS, NIST and IUPAC references behind every number."]];
 $("#homecards").innerHTML=HOME.map(h=>`<div class="card link" tabindex="0" role="button" data-goto="${h[1]}">
   <span class="tagline" style="background:color-mix(in srgb,var(${h[2]}) 14%,transparent);color:var(${h[2]})">${h[3]}</span>
@@ -1631,6 +1722,7 @@ function renderReaderQuiz(t){
     wrap.dataset.done="1"; done++;
     [...wrap.children].forEach((ob,k)=>{ if(k===q.a)ob.classList.add("right"); ob.disabled=true; });
     if(+b.dataset.k===q.a){got++; burstFrom(b);} else b.classList.add("wrong");
+    recTopic(QTOPIC[+b.dataset.q], +b.dataset.k===q.a?1:0, 1);
     document.querySelector("#rqe"+wrap.dataset.rq).classList.add("on");
     if(done===5){
       const sc=$("#rq-score");
@@ -1933,6 +2025,7 @@ function renderQuiz(){
     if($("#qexpl").classList.contains("on")) return;
     const j=+b.dataset.j;
     qanswered++;
+    recTopic(QTOPIC[QPOOL[qi%QPOOL.length]], j===q.a?1:0, 1);
     if(j===q.a){
       qscore++; qstreak++; burstFrom(b);
       if(qstreak>load("chemlab-quiz-beststreak",0))store("chemlab-quiz-beststreak",qstreak);
@@ -2420,6 +2513,199 @@ function drawShape(){
   $("#sh-name").textContent=g.n; $("#sh-ang").textContent=g.a; $("#sh-ex").textContent=g.ex;
 }
 ["sh-bp","sh-lp"].forEach(id=>$("#"+id).addEventListener("input",drawShape));
+
+/* ---------- topic stats ---------- */
+function recTopic(t,got,max){
+  if(t==null)return;
+  const st=load("chemlab-topicstats",{});
+  st[t]=st[t]||{got:0,max:0};
+  st[t].got+=got; st[t].max+=max;
+  store("chemlab-topicstats",st);
+}
+
+/* ---------- exam engine ---------- */
+let EX=null, exTimer=null;
+function exPool(type,n){
+  if(type==="mcq") return [...QUIZ.keys()].sort(()=>Math.random()-.5).slice(0,n)
+    .map(i=>({kind:"mcq",qi:i,marks:1,t:QTOPIC[i]}));
+  const bank=type==="written"?EXAMW:EXAMP;
+  const picks=[...bank.keys()].sort(()=>Math.random()-.5).slice(0,Math.min(n,bank.length));
+  return picks.map(i=>({kind:"open",src:bank[i],marks:bank[i].marks,t:bank[i].t}));
+}
+function exStart(){
+  const type=$("#ex-type").value, want=+$("#ex-count").value;
+  if(!window.chemPremium && (type!=="mcq" || want>5)){openAccount();return;}
+  const qs=exPool(type,want);
+  if(qs.length<want)$("#ex-note").textContent=`Bank has ${qs.length} ${type==="written"?"written":"practical"} questions — using all of them.`;
+  else $("#ex-note").textContent="";
+  const totalMarks=qs.reduce((a,q)=>a+q.marks,0);
+  EX={type,qs,i:0,ans:qs.map(()=>null),t0:Date.now(),limit:totalMarks*2*60,marks:totalMarks,done:false};
+  $("#ex-start").disabled=true;
+  clearInterval(exTimer);
+  exTimer=setInterval(exTick,1000);
+  exRender();
+}
+function exTick(){
+  if(!EX||EX.done)return;
+  const left=EX.limit-Math.floor((Date.now()-EX.t0)/1000);
+  const el=$("#ex-clock");
+  if(el){
+    el.textContent=`${String(Math.max(0,Math.floor(left/60))).padStart(2,"0")}:${String(Math.max(0,left%60)).padStart(2,"0")}`;
+    const bar=$("#ex-tbar"); if(bar)bar.style.width=Math.max(0,left/EX.limit*100)+"%";
+    const wrap=$("#ex-twrap"); if(wrap)wrap.classList.toggle("low",left<EX.limit*0.15);
+  }
+  if(left<=0){exFinish();}
+}
+function exSaveCurrent(){
+  if(!EX)return;
+  const q=EX.qs[EX.i];
+  if(q.kind==="open"){const ta=$("#ex-ta"); if(ta)EX.ans[EX.i]=ta.value;}
+}
+function exRender(){
+  const q=EX.qs[EX.i];
+  const head=`<div class="ex-timer" id="ex-twrap"><b class="mono" id="ex-clock">--:--</b><div class="pbar"><i id="ex-tbar" style="width:100%"></i></div>
+    <span class="streak">question ${EX.i+1}/${EX.qs.length} · ${EX.marks} marks total</span></div>`;
+  let body;
+  if(q.kind==="mcq"){
+    const Q=QUIZ[q.qi];
+    body=`<div class="ex-q"><div class="meta"><span>MULTIPLE CHOICE</span><span>1 mark</span></div>
+      <div style="font-weight:600;margin-bottom:10px">${Q.q}</div>
+      <div>${Q.o.map((o,k)=>`<button class="opt exopt ${EX.ans[EX.i]===k?"right":""}" data-k="${k}" style="border:1px solid ${EX.ans[EX.i]===k?"var(--bunsen)":"var(--line)"};background:var(--panel);border-radius:9px;padding:8px 14px;margin:0 8px 8px 0;font-size:14.5px">${o}</button>`).join("")}</div></div>`;
+  } else {
+    body=`<div class="ex-q"><div class="meta"><span>${EX.type==="written"?"WRITTEN ANSWER":"PRACTICAL"}</span><span>${q.marks} marks</span><span>~${q.marks*2} min</span></div>
+      <div style="font-weight:600;margin-bottom:10px;max-width:75ch">${q.src.q}</div>
+      <textarea id="ex-ta" placeholder="Write your answer as you would in the exam — full sentences, working shown.">${EX.ans[EX.i]||""}</textarea></div>`;
+  }
+  const nav=`<p style="display:flex;gap:10px;flex-wrap:wrap">
+    <button class="btn ghost" id="ex-prev" ${EX.i===0?"disabled":""}>◀ Previous</button>
+    ${EX.i<EX.qs.length-1?'<button class="btn" id="ex-next">Next ▶</button>':""}
+    <button class="btn" id="ex-fin" style="background:var(--cu)">Finish &amp; mark</button></p>`;
+  $("#ex-area").innerHTML=head+body+nav;
+  $$("#ex-area .exopt").forEach(b=>b.addEventListener("click",()=>{EX.ans[EX.i]=+b.dataset.k;exRender();}));
+  const pv=$("#ex-prev"); if(pv)pv.addEventListener("click",()=>{exSaveCurrent();EX.i--;exRender();});
+  const nx=$("#ex-next"); if(nx)nx.addEventListener("click",()=>{exSaveCurrent();EX.i++;exRender();});
+  $("#ex-fin").addEventListener("click",()=>{exSaveCurrent();exFinish();});
+  exTick();
+}
+async function exFinish(){
+  if(!EX||EX.done)return;
+  EX.done=true; clearInterval(exTimer); $("#ex-start").disabled=false;
+  exSaveCurrent();
+  if(EX.type==="mcq"){
+    let got=0;
+    const rows=EX.qs.map((q,i)=>{
+      const Q=QUIZ[q.qi], ok=EX.ans[i]===Q.a;
+      if(ok)got++;
+      recTopic(q.t,ok?1:0,1);
+      return `<div class="ex-res ${ok?"good":"bad"}"><b>Q${i+1}</b> ${ok?"✓ 1/1":"✗ 0/1"} — ${Q.q}
+        ${ok?"":`<div class="fb">Correct answer: <b>${Q.o[Q.a]}</b>. ${Q.e}</div>`}</div>`;
+    }).join("");
+    exRecord(got);
+    $("#ex-area").innerHTML=`<h3 class="serif" style="font-size:20px;margin:14px 0 4px">Result: ${got}/${EX.marks}</h3>${rows}`;
+    if(got===EX.marks)burstFrom($("#ex-area"));
+    return;
+  }
+  $("#ex-area").innerHTML=`<p class="hint" style="margin:16px 0"><span class="spin" style="border-color:rgba(0,0,0,.15);border-top-color:var(--bunsen)"></span> The AI examiner is marking your paper — this takes up to a minute for a full set…</p>`;
+  const items=EX.qs.map((q,i)=>({q:q.src.q,marks:q.marks,scheme:q.src.scheme,answer:EX.ans[i]||""}));
+  let ai=null;
+  try{
+    const r=await fetch("/api/mark",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"mark",items})});
+    if(r.ok)ai=await r.json();
+  }catch(e){}
+  if(ai&&ai.results){
+    let got=0;
+    const rows=EX.qs.map((q,i)=>{
+      const res=ai.results[i]||{awarded:0,feedback:"",points_hit:[],points_missed:[]};
+      const aw=Math.max(0,Math.min(q.marks,res.awarded|0));
+      got+=aw; recTopic(q.t,aw,q.marks);
+      const cls=aw===q.marks?"good":aw>0?"part":"bad";
+      return `<div class="ex-res ${cls}"><b>Q${i+1}</b> ${aw}/${q.marks} — ${q.src.q}
+        <div class="fb">${res.feedback}</div>
+        ${res.points_missed.length?`<ul>${res.points_missed.map(p=>`<li>Missed: ${p}</li>`).join("")}</ul>`:""}</div>`;
+    }).join("");
+    exRecord(got);
+    $("#ex-area").innerHTML=`<h3 class="serif" style="font-size:20px;margin:14px 0 4px">Result: ${got}/${EX.marks}</h3>
+      <p style="font-size:14.5px;max-width:75ch;color:var(--ink-soft)">${ai.overall||""}</p>${rows}`;
+    return;
+  }
+  // fallback: self-marking against the schemes
+  const rows=EX.qs.map((q,i)=>`<div class="ex-res part"><b>Q${i+1}</b> (${q.marks} marks) — ${q.src.q}
+    <div class="fb"><i>Your answer:</i> ${EX.ans[i]?String(EX.ans[i]).replace(/</g,"&lt;"):"<i>blank</i>"}</div>
+    <div class="fb"><b>Mark scheme — tick each point you made:</b></div>
+    ${q.src.scheme.map((p,k)=>`<label style="display:flex;gap:8px;font-size:13.5px;margin:4px 0;cursor:pointer"><input type="checkbox" data-sm="${i}"> ${p}</label>`).join("")}</div>`).join("");
+  $("#ex-area").innerHTML=`<h3 class="serif" style="font-size:20px;margin:14px 0 4px">Mark your own paper</h3>
+    <p style="font-size:14px;color:var(--ink-soft);max-width:70ch">The AI examiner isn't connected yet, so compare your answers with the mark schemes and tick every point you made — self-marking is genuinely good revision.</p>
+    ${rows}<p><button class="btn" id="ex-selfdone">Total my marks</button></p>`;
+  $("#ex-selfdone").addEventListener("click",()=>{
+    let got=0;
+    EX.qs.forEach((q,i)=>{
+      const ticked=[...document.querySelectorAll(`input[data-sm="${i}"]:checked`)].length;
+      const aw=Math.min(q.marks,ticked); got+=aw; recTopic(q.t,aw,q.marks);
+    });
+    exRecord(got);
+    $("#ex-selfdone").outerHTML=`<h3 class="serif" style="font-size:20px">Result: ${got}/${EX.marks}</h3>`;
+  });
+}
+function exRecord(got){
+  const h=load("chemlab-examhist",[]);
+  h.push({ts:Date.now(),type:EX.type,n:EX.qs.length,got,max:EX.marks});
+  store("chemlab-examhist",h.slice(-30));
+}
+$("#ex-start").addEventListener("click",exStart);
+
+/* ---------- progress view ---------- */
+function renderProgress(){
+  const st=load("chemlab-topicstats",{});
+  const moods=load("chemlab-mood",{});
+  const mast=load("chemlab-mastered",[]);
+  const hist=load("chemlab-examhist",[]);
+  const rows=TOPICS.map((t,i)=>{
+    const d=st[i]||{got:0,max:0};
+    const pc=d.max?Math.round(d.got/d.max*100):null;
+    const col=pc==null?"var(--line)":pc>=75?"var(--ok)":pc>=50?"var(--warn)":"var(--danger)";
+    return {i,t,pc,d,col};
+  });
+  const weak=rows.filter(r=>r.pc!==null&&r.pc<70).sort((a,b)=>a.pc-b.pc).slice(0,3);
+  const unseen=rows.filter(r=>r.pc===null);
+  $("#prog-body").innerHTML=`
+  <div class="card" style="margin-bottom:14px"><h3>Accuracy by chapter</h3>
+    ${rows.map(r=>`<div class="prog-row">
+      <span class="em">${moods[r.i]?MOODS[moods[r.i]-1][0]:""}</span>
+      <span class="nm">${r.t.t}${mast.includes(r.i)?' <span style="color:var(--ok)">✓</span>':""}</span>
+      <div class="pbar"><i style="width:${r.pc??0}%;background:${r.col}"></i></div>
+      <span class="pc">${r.pc==null?"no data":r.pc+"% ("+r.d.got+"/"+r.d.max+")"}</span>
+    </div>`).join("")}
+  </div>
+  <div class="card" style="margin-bottom:14px"><h3>Where to focus</h3>
+    ${weak.length?`<p style="font-size:14.5px">Weakest chapters right now: ${weak.map(w=>`<b>${w.t.t}</b> (${w.pc}%)`).join(", ")}.</p>`:"<p style='font-size:14.5px'>No weak chapters detected yet — answer more questions to sharpen the picture.</p>"}
+    ${unseen.length?`<p style="font-size:13.5px;color:var(--ink-soft)">Not yet tested: ${unseen.map(u=>u.t.t).join(", ")}.</p>`:""}
+    <p style="margin-top:10px"><button class="btn" id="prog-plan">🧠 Generate my study plan</button></p>
+    <div id="prog-planout"></div>
+  </div>
+  <div class="card"><h3>Exam history</h3>
+    ${hist.length?`<div class="tblwrap"><table class="notetable"><tr><th>When</th><th>Type</th><th>Questions</th><th>Score</th></tr>
+      ${hist.slice(-8).reverse().map(h=>`<tr><td>${new Date(h.ts).toLocaleDateString("en-GB")}</td><td>${h.type==="mcq"?"Multiple choice":h.type==="written"?"Written":"Practical"}</td><td>${h.n}</td><td>${h.got}/${h.max} (${Math.round(h.got/h.max*100)}%)</td></tr>`).join("")}</table></div>`
+    :"<p style='font-size:14.5px;color:var(--ink-soft)'>No exams sat yet — head to Test your knowledge and start one.</p>"}
+  </div>`;
+  $("#prog-plan").addEventListener("click",async()=>{
+    const out=$("#prog-planout");
+    out.innerHTML='<p class="hint" style="margin-top:10px"><span class="spin" style="border-color:rgba(0,0,0,.15);border-top-color:var(--bunsen)"></span> Building your plan…</p>';
+    const stats={chapters:rows.map(r=>({name:r.t.t,accuracy_pc:r.pc,questions_answered:r.d.max,confidence_1to5:moods[r.i]||null,mastered:mast.includes(r.i)})),recent_exams:hist.slice(-6)};
+    let plan=null;
+    try{
+      const r=await fetch("/api/mark",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"plan",stats})});
+      if(r.ok)plan=(await r.json()).plan;
+    }catch(e){}
+    if(!plan){
+      const w=weak.length?weak:rows.filter(r=>r.pc!==null).sort((a,b)=>a.pc-b.pc).slice(0,2);
+      plan="Your two-week plan (offline coach):\n\n"+
+        (w.length?w.map((x,k)=>`Priority ${k+1}: ${x.t.t} (${x.pc}%). Reread the chapter in Study Mode, redo its 5-question check, then sit a 10-question exam two days later.`).join("\n"):"Answer questions across a few chapters first so I can find your weak spots.")+
+        (unseen.length?`\n\nUntested chapters to open this week: ${unseen.slice(0,3).map(u=>u.t.t).join(", ")}.`:"")+
+        "\n\nEvery day: 10 quick-fire questions on mixed topics. Every 3rd day: one timed exam. Goal: every chapter above 70% within two weeks.";
+    }
+    out.innerHTML=`<div class="planbox">${String(plan).replace(/</g,"&lt;")}</div>`;
+  });
+}
 
 /* ---------- redraw plumbing ---------- */
 function redrawAll(){
