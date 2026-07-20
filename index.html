@@ -323,9 +323,11 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
 .btn[disabled]{opacity:.45;cursor:default}
 .danger-zone{border:1px dashed var(--danger);border-radius:10px;padding:12px 14px;margin-top:10px;display:none}
 .danger-zone.open{display:block}
-.charmeter{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:11.5px;color:var(--ink-soft);margin-top:4px;font-variant-numeric:tabular-nums}
-.charmeter.ok{color:var(--ok)}
-.charmeter.max{color:var(--warn)}
+.charmeter{display:inline-block;font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:11.5px;color:var(--ink-soft);margin-top:7px;font-variant-numeric:tabular-nums;background:var(--panel2);border:1px solid var(--line);border-radius:99px;padding:3px 12px;transition:background .2s,color .2s,border-color .2s}
+.charmeter.ok{color:#fff;background:var(--ok);border-color:var(--ok)}
+.charmeter.max{color:#fff;background:var(--warn);border-color:var(--warn)}
+@keyframes bpop{0%{transform:scale(1)}40%{transform:scale(1.22)}100%{transform:scale(1)}}
+.charmeter.pop{animation:bpop .18s ease}
 .topbar{position:sticky;top:0;z-index:35;display:flex;justify-content:flex-end;align-items:center;gap:8px;
   padding:6px 0 10px;background:linear-gradient(var(--ground) 75%,transparent);min-height:46px}
 .avatar.sm{width:36px;height:36px;font-size:15px;flex:0 0 36px;cursor:pointer;transition:transform .12s}
@@ -1848,6 +1850,7 @@ function checkoutUrl(base){
 }
 let tab="in", plan="m";
 const pwScore=v=>{let c=0;if(v.length>=8)c++;if(v.length>=12)c++;if(/[A-Z]/.test(v)&&/[a-z]/.test(v))c++;if(/\d/.test(v))c++;if(/[^A-Za-z0-9]/.test(v))c++;return Math.min(c,4);};
+const bub=el=>{el.classList.remove("pop");void el.offsetWidth;el.classList.add("pop");};
 const avatarFor=(email,sm)=>{
   const hue=(prof&&prof.avatar_hue!=null)?prof.avatar_hue:[...email].reduce((a,ch)=>a+ch.charCodeAt(0)*7,0)%360;
   if(prof&&prof.avatar&&prof.avatar.startsWith("data:"))
@@ -1912,8 +1915,9 @@ function renderAuth(){
     }
     const c=q("#a-count");
     if(c){
-      if(tab==="up"){c.textContent=v.length+"/8 minimum";c.classList.toggle("ok",v.length>=8);}
+      if(tab==="up"){c.textContent=v.length+"/8"+(v.length>=8?" ✓":" minimum");c.classList.toggle("ok",v.length>=8);}
       else c.textContent=v.length+(v.length===1?" character":" characters");
+      bub(c);
     }
   });
   const go=async()=>{
@@ -2067,7 +2071,7 @@ function render(){
   $("#nick").addEventListener("keydown",e=>{if(e.key==="Enter")$("#nick-save").click();});
   $("#nick").addEventListener("input",()=>{
     const n=$("#nick").value.length;
-    const c=$("#nick-count"); c.textContent=n+"/24"; c.classList.toggle("max",n>=24);
+    const c=$("#nick-count"); c.textContent=n+"/24"+(n>=24?" · full!":""); c.classList.toggle("max",n>=24); bub(c);
   });
   acct.querySelectorAll(".av-e").forEach(b=>b.onclick=()=>saveProf({avatar:prof.avatar===b.dataset.e?null:b.dataset.e},true));
   acct.querySelectorAll(".av-h").forEach(b=>b.onclick=()=>saveProf({avatar_hue:+b.dataset.h},true));
@@ -2087,7 +2091,7 @@ function render(){
   const avrm=$("#av-remove"); if(avrm)avrm.onclick=()=>saveProf({avatar:null});
   $("#pw-new").addEventListener("input",()=>{
     const n=$("#pw-new").value.length;
-    const c=$("#pw-count"); c.textContent=n+"/8 minimum"; c.classList.toggle("ok",n>=8);
+    const c=$("#pw-count"); c.textContent=n+"/8"+(n>=8?" ✓":" minimum"); c.classList.toggle("ok",n>=8); bub(c);
   });
   $("#pw-save").onclick=async()=>{
     const v=$("#pw-new").value;
