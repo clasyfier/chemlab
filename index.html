@@ -1,0 +1,1085 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ChemLab · A-Level Chemistry</title>
+<style>
+:root{
+  --ground:#F3F6F5; --panel:#FFFFFF; --panel2:#EAF0EF; --ink:#16232B; --ink-soft:#51636E;
+  --line:#D9E2E1; --bunsen:#2456A6; --bunsen-soft:#E3EBF7;
+  --li:#C8384F; --na:#D9970F; --k:#8E7CC3; --cu:#2E9E7B;
+  --ok:#2E7D4F; --warn:#B0761A; --danger:#B23A3A;
+  --shadow:0 1px 3px rgba(22,35,43,.08),0 4px 16px rgba(22,35,43,.06);
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root{
+  --ground:#0F171C; --panel:#16222A; --panel2:#1C2A33; --ink:#E5EDEF; --ink-soft:#8FA3AD;
+  --line:#24343D; --bunsen:#6FA0E8; --bunsen-soft:#1B2C42;
+  --li:#E06A7E; --na:#E8B44A; --k:#AC9CDB; --cu:#4DBB98;
+  --ok:#5BBF8A; --warn:#D9A24A; --danger:#E07B7B;
+  --shadow:0 1px 3px rgba(0,0,0,.4),0 4px 16px rgba(0,0,0,.3);
+}}
+:root[data-theme="light"]{
+  --ground:#F3F6F5; --panel:#FFFFFF; --panel2:#EAF0EF; --ink:#16232B; --ink-soft:#51636E;
+  --line:#D9E2E1; --bunsen:#2456A6; --bunsen-soft:#E3EBF7;
+  --li:#C8384F; --na:#D9970F; --k:#8E7CC3; --cu:#2E9E7B;
+  --ok:#2E7D4F; --warn:#B0761A; --danger:#B23A3A;
+  --shadow:0 1px 3px rgba(22,35,43,.08),0 4px 16px rgba(22,35,43,.06);
+}
+:root[data-theme="dark"]{
+  --ground:#0F171C; --panel:#16222A; --panel2:#1C2A33; --ink:#E5EDEF; --ink-soft:#8FA3AD;
+  --line:#24343D; --bunsen:#6FA0E8; --bunsen-soft:#1B2C42;
+  --li:#E06A7E; --na:#E8B44A; --k:#AC9CDB; --cu:#4DBB98;
+  --ok:#5BBF8A; --warn:#D9A24A; --danger:#E07B7B;
+  --shadow:0 1px 3px rgba(0,0,0,.4),0 4px 16px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--ground); color:var(--ink);
+  font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+.serif{font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif}
+.mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+h1,h2,h3{font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;text-wrap:balance;margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+a{color:var(--bunsen)}
+sub,sup{line-height:0}
+
+.app{display:flex;min-height:100vh}
+nav.rail{
+  width:216px;flex:0 0 216px;padding:22px 14px;border-right:1px solid var(--line);
+  position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:4px;
+}
+.brand{display:flex;align-items:center;gap:10px;margin:0 8px 20px}
+.brand .flame{width:26px;height:34px;position:relative}
+.brand .flame::before{content:"";position:absolute;inset:0;border-radius:50% 50% 46% 46%/62% 62% 38% 38%;
+  background:linear-gradient(180deg,var(--bunsen) 0%,var(--cu) 85%);opacity:.9}
+.brand b{font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;font-size:20px;font-weight:600;letter-spacing:.01em}
+.brand small{display:block;color:var(--ink-soft);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+nav.rail button{
+  display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;
+  padding:9px 10px;border-radius:8px;color:var(--ink-soft);font-size:14.5px;
+}
+nav.rail button:hover{background:var(--panel2);color:var(--ink)}
+nav.rail button.on{background:var(--bunsen-soft);color:var(--bunsen);font-weight:600}
+nav.rail button:focus-visible,.card:focus-visible,button:focus-visible{outline:2px solid var(--bunsen);outline-offset:2px}
+nav.rail .dot{width:8px;height:8px;border-radius:50%;flex:0 0 8px}
+nav.rail .spacer{flex:1}
+main{flex:1;min-width:0;padding:30px clamp(18px,4vw,48px) 80px;max-width:1180px}
+section.view{display:none}
+section.view.on{display:block;animation:fadein .25s ease}
+@keyframes fadein{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.eyebrow{font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);font-weight:600;margin-bottom:6px}
+.view>h1{font-size:clamp(26px,3.4vw,34px);font-weight:600;margin-bottom:6px}
+.lede{color:var(--ink-soft);max-width:62ch;margin:0 0 26px}
+
+/* hero */
+#spectrum{width:100%;height:110px;display:block;border-radius:var(--r);background:#05080c}
+.hero-wrap{position:relative;margin:6px 0 26px}
+.hero-cap{position:absolute;right:12px;bottom:10px;color:#cfd8dc;font-size:11px;letter-spacing:.06em;opacity:.85}
+.grid{display:grid;gap:14px}
+.grid.cols3{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.grid.cols2{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+.card{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  padding:18px;box-shadow:var(--shadow);
+}
+.card h3{font-size:19px;margin-bottom:6px}
+.card p{margin:0;color:var(--ink-soft);font-size:14.5px}
+.card.link{cursor:pointer;transition:transform .12s ease}
+.card.link:hover{transform:translateY(-2px)}
+.tagline{display:inline-block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;
+  padding:2px 8px;border-radius:99px;margin-bottom:10px}
+
+/* topic accordions */
+.topic{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);margin-bottom:12px;overflow:hidden;box-shadow:var(--shadow)}
+.topic>button{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;padding:16px 18px;text-align:left}
+.topic .swatch{width:10px;height:34px;border-radius:4px;flex:0 0 10px}
+.topic h3{font-size:18px}
+.topic .sub{color:var(--ink-soft);font-size:13px}
+.topic .chev{margin-left:auto;color:var(--ink-soft);transition:transform .2s}
+.topic.open .chev{transform:rotate(90deg)}
+.topic .body{display:none;padding:0 18px 18px;border-top:1px solid var(--line)}
+.topic.open .body{display:block}
+.topic .body h4{margin:16px 0 6px;font-size:14px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft)}
+.topic .body p,.topic .body li{font-size:15px;max-width:72ch}
+.topic .body ul{margin:6px 0;padding-left:20px}
+.defbox{background:var(--panel2);border-radius:8px;padding:10px 14px;margin:10px 0;font-size:14.5px;max-width:72ch}
+.defbox b{color:var(--bunsen)}
+.eq{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:14px;background:var(--panel2);
+  padding:8px 12px;border-radius:8px;display:inline-block;margin:4px 0;overflow-x:auto;max-width:100%}
+
+/* sim panels */
+.sim{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:20px;margin-bottom:22px;box-shadow:var(--shadow)}
+.sim h2{font-size:22px;margin-bottom:4px}
+.sim .hint{color:var(--ink-soft);font-size:14px;margin:0 0 14px;max-width:70ch}
+.controls{display:flex;flex-wrap:wrap;gap:16px 26px;margin:12px 0;align-items:center}
+.ctrl{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--ink-soft)}
+.ctrl label{font-weight:600;letter-spacing:.03em}
+.ctrl input[type=range]{width:170px;accent-color:var(--bunsen)}
+.ctrl select{font:inherit;padding:5px 8px;border-radius:7px;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
+.ctrl .val{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--ink);font-size:13px;font-variant-numeric:tabular-nums}
+.toggle{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink)}
+canvas.plot{width:100%;height:320px;display:block;border-radius:8px;background:var(--panel2)}
+.readout{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.stat{background:var(--panel2);border-radius:8px;padding:8px 14px;min-width:110px}
+.stat .k{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft)}
+.stat .v{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:17px;font-variant-numeric:tabular-nums}
+
+/* periodic table */
+.pt-wrap{overflow-x:auto;padding-bottom:8px}
+.pt{display:grid;grid-template-columns:repeat(18,minmax(42px,1fr));gap:3px;min-width:840px}
+.el{border:0;border-radius:6px;padding:4px 2px 3px;text-align:center;background:var(--panel);
+  border:1px solid var(--line);transition:transform .1s}
+.el:hover{transform:scale(1.12);z-index:2;position:relative}
+.el .z{display:block;font-size:8.5px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.el .sym{display:block;font-weight:700;font-size:14px;line-height:1.1}
+.el .nm{display:block;font-size:7.5px;color:var(--ink-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.el.sel{outline:2px solid var(--bunsen);outline-offset:1px}
+.pt-legend{display:flex;flex-wrap:wrap;gap:8px 16px;margin:14px 0;font-size:12.5px;color:var(--ink-soft)}
+.pt-legend span{display:flex;align-items:center;gap:6px}
+.pt-legend i{width:11px;height:11px;border-radius:3px;display:inline-block}
+#eldetail{margin-top:16px}
+#eldetail .head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+#eldetail .bigsym{font-family:"Iowan Old Style",Palatino,Georgia,serif;font-size:52px;font-weight:600;line-height:1}
+#eldetail table{border-collapse:collapse;margin-top:10px;font-size:14.5px}
+#eldetail td{padding:5px 18px 5px 0;vertical-align:top}
+#eldetail td:first-child{color:var(--ink-soft);white-space:nowrap}
+.flamechip{display:inline-flex;align-items:center;gap:7px;background:var(--panel2);border-radius:99px;padding:4px 12px;font-size:13px}
+.flamechip i{width:12px;height:16px;border-radius:50% 50% 45% 45%/60% 60% 40% 40%;display:inline-block}
+.pt .el.dim{opacity:.22}
+.pt .el.hot .sym{color:#fff}
+.pt .el.hot .z,.pt .el.hot .nm{color:rgba(255,255,255,.75)}
+
+/* practicals */
+.prac{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow)}
+.prac>button{display:flex;align-items:center;gap:14px;width:100%;background:none;border:0;padding:16px 18px;text-align:left}
+.prac .num{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:13px;color:var(--bunsen);
+  border:1px solid var(--bunsen);border-radius:7px;padding:3px 8px;flex:0 0 auto}
+.prac h3{font-size:17.5px}
+.prac .body{display:none;padding:0 18px 20px;border-top:1px solid var(--line)}
+.prac.open .body{display:block}
+.prac .body h4{margin:18px 0 8px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft)}
+.prac ol,.prac ul{margin:6px 0;padding-left:22px}
+.prac li{font-size:15px;margin-bottom:6px;max-width:75ch}
+.hazards{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.haz{display:inline-flex;align-items:center;gap:6px;font-size:13px;border-radius:99px;padding:4px 12px;font-weight:600}
+.haz.warn{background:color-mix(in srgb,var(--warn) 14%,transparent);color:var(--warn)}
+.haz.danger{background:color-mix(in srgb,var(--danger) 14%,transparent);color:var(--danger)}
+.errbox{border-left:3px solid var(--warn);background:var(--panel2);border-radius:0 8px 8px 0;padding:10px 14px;margin:8px 0;font-size:14.5px;max-width:75ch}
+.errbox b{display:block}
+.expected{border-left:3px solid var(--ok);background:var(--panel2);border-radius:0 8px 8px 0;padding:10px 14px;margin:8px 0;font-size:14.5px;max-width:75ch}
+
+/* quiz */
+.quiz-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:24px;box-shadow:var(--shadow);max-width:720px}
+.quiz-card .qtext{font-size:18px;font-weight:600;margin:8px 0 16px;max-width:60ch}
+.quiz-card .opts{display:flex;flex-direction:column;gap:8px}
+.quiz-card .opts button{text-align:left;padding:11px 14px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);font-size:15px}
+.quiz-card .opts button:hover{border-color:var(--bunsen)}
+.quiz-card .opts button.right{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,transparent);font-weight:600}
+.quiz-card .opts button.wrong{border-color:var(--danger);background:color-mix(in srgb,var(--danger) 10%,transparent)}
+.quiz-card .expl{margin-top:14px;padding:12px 14px;background:var(--panel2);border-radius:8px;font-size:14.5px;display:none}
+.quiz-card .expl.on{display:block}
+.quiz-foot{display:flex;align-items:center;gap:14px;margin-top:18px}
+.btn{background:var(--bunsen);color:#fff;border:0;border-radius:8px;padding:9px 18px;font-weight:600;font-size:14.5px}
+:root[data-theme="dark"] .btn,html:not([data-theme]) .btn{color:#fff}
+.btn.ghost{background:var(--panel2);color:var(--ink)}
+.score{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+
+.srclist{max-width:75ch}
+.srclist .card{margin-bottom:12px}
+.srclist .card h3{font-size:16.5px}
+.srclist .card a{font-size:13.5px;word-break:break-all}
+
+@media (max-width:760px){
+  .app{flex-direction:column}
+  nav.rail{width:100%;flex-direction:row;height:auto;position:static;overflow-x:auto;
+    border-right:0;border-bottom:1px solid var(--line);padding:10px 12px;gap:2px}
+  .brand{margin:0 10px 0 0}.brand small{display:none}
+  nav.rail button{white-space:nowrap;width:auto}
+  nav.rail .spacer,nav.rail .dot{display:none}
+  main{padding:22px 16px 60px}
+}
+</style>
+
+</head>
+<body>
+<div class="app">
+<nav class="rail" aria-label="Sections">
+  <div class="brand"><div class="flame" aria-hidden="true"></div><div><b>ChemLab</b><small>A-Level Chemistry</small></div></div>
+  <button data-v="home" class="on"><span class="dot" style="background:var(--bunsen)"></span>Overview</button>
+  <button data-v="learn"><span class="dot" style="background:var(--li)"></span>Learn</button>
+  <button data-v="lab"><span class="dot" style="background:var(--cu)"></span>Simulations</button>
+  <button data-v="periodic"><span class="dot" style="background:var(--na)"></span>Periodic table</button>
+  <button data-v="prac"><span class="dot" style="background:var(--k)"></span>Practicals</button>
+  <button data-v="quiz"><span class="dot" style="background:var(--bunsen)"></span>Quiz</button>
+  <button data-v="sources"><span class="dot" style="background:var(--ink-soft)"></span>Sources</button>
+  <div class="spacer"></div>
+</nav>
+<main>
+
+<section class="view on" id="v-home">
+  <div class="eyebrow">Hydrogen emission spectrum · Balmer series</div>
+  <div class="hero-wrap">
+    <canvas id="spectrum" height="110"></canvas>
+    <div class="hero-cap mono">Hα 656 nm · Hβ 486 nm · Hγ 434 nm · Hδ 410 nm</div>
+  </div>
+  <h1>Chemistry, from first principles to the lab bench.</h1>
+  <p class="lede">A study companion for A-level chemistry (AQA · OCR · Edexcel). Learn the theory, run the simulations, master the required practicals — with values checked against IUPAC, NIST and the Royal Society of Chemistry.</p>
+  <div class="grid cols3" id="homecards"></div>
+</section>
+
+<section class="view" id="v-learn">
+  <div class="eyebrow">Theory</div>
+  <h1>Learn</h1>
+  <p class="lede">The core A-level topics, condensed to what examiners actually ask. Definitions are worded the way mark schemes want them.</p>
+  <div id="topics"></div>
+</section>
+
+<section class="view" id="v-lab">
+  <div class="eyebrow">Interactive</div>
+  <h1>Simulations</h1>
+  <p class="lede">Play with the variables the syllabus says matter. Every curve is computed live from the real equations.</p>
+  <div id="sims"></div>
+</section>
+
+<section class="view" id="v-periodic">
+  <div class="eyebrow">Reference</div>
+  <h1>Periodic table</h1>
+  <p class="lede">All 118 elements. Click any element for its electron configuration, and a flame-test colour where one exists.</p>
+  <div class="pt-legend" id="ptlegend"></div>
+  <div class="controls" style="margin:0 0 12px">
+    <label class="toggle"><input type="checkbox" id="pt-trends"> Show group reactivity trends</label>
+  </div>
+  <div class="pt-wrap"><div class="pt" id="pt"></div></div>
+  <div id="trendinfo" class="grid cols2" style="display:none;margin-top:16px"></div>
+  <div id="eldetail"></div>
+</section>
+
+<section class="view" id="v-prac">
+  <div class="eyebrow">Required practicals</div>
+  <h1>Master the hard experiments</h1>
+  <p class="lede">Deep walkthroughs of the most error-prone required practicals: full method, safety per CLEAPSS/RSC guidance, the mistakes examiners report every year, and the results you should expect.</p>
+  <div id="pracs"></div>
+  <h2 class="serif" style="margin:26px 0 10px;font-size:20px">The full AQA required practical list</h2>
+  <div class="card"><ol id="praclist" style="margin:6px 0;padding-left:22px;font-size:15px"></ol></div>
+</section>
+
+<section class="view" id="v-quiz">
+  <div class="eyebrow">Test yourself</div>
+  <h1>Quiz</h1>
+  <p class="lede">Exam-style multiple choice with explanations. Your score is kept on this device.</p>
+  <div class="quiz-card" id="quizcard"></div>
+</section>
+
+<section class="view" id="v-sources">
+  <div class="eyebrow">Accredited references</div>
+  <h1>Sources</h1>
+  <p class="lede">Everything in this app is checked against these bodies. Use them as your primary references for revision and practical work.</p>
+  <div class="srclist" id="srclist"></div>
+</section>
+
+</main>
+</div>
+<script>
+/* ---------- element data ---------- */
+const ELSTR = "H Hydrogen 1.008;He Helium 4.003;Li Lithium 6.94;Be Beryllium 9.012;B Boron 10.81;C Carbon 12.011;N Nitrogen 14.007;O Oxygen 15.999;F Fluorine 18.998;Ne Neon 20.180;Na Sodium 22.990;Mg Magnesium 24.305;Al Aluminium 26.982;Si Silicon 28.085;P Phosphorus 30.974;S Sulfur 32.06;Cl Chlorine 35.45;Ar Argon 39.95;K Potassium 39.098;Ca Calcium 40.078;Sc Scandium 44.956;Ti Titanium 47.867;V Vanadium 50.942;Cr Chromium 51.996;Mn Manganese 54.938;Fe Iron 55.845;Co Cobalt 58.933;Ni Nickel 58.693;Cu Copper 63.546;Zn Zinc 65.38;Ga Gallium 69.723;Ge Germanium 72.630;As Arsenic 74.922;Se Selenium 78.971;Br Bromine 79.904;Kr Krypton 83.798;Rb Rubidium 85.468;Sr Strontium 87.62;Y Yttrium 88.906;Zr Zirconium 91.224;Nb Niobium 92.906;Mo Molybdenum 95.95;Tc Technetium 98;Ru Ruthenium 101.07;Rh Rhodium 102.906;Pd Palladium 106.42;Ag Silver 107.868;Cd Cadmium 112.414;In Indium 114.818;Sn Tin 118.710;Sb Antimony 121.760;Te Tellurium 127.60;I Iodine 126.904;Xe Xenon 131.293;Cs Caesium 132.905;Ba Barium 137.327;La Lanthanum 138.905;Ce Cerium 140.116;Pr Praseodymium 140.908;Nd Neodymium 144.242;Pm Promethium 145;Sm Samarium 150.36;Eu Europium 151.964;Gd Gadolinium 157.25;Tb Terbium 158.925;Dy Dysprosium 162.500;Ho Holmium 164.930;Er Erbium 167.259;Tm Thulium 168.934;Yb Ytterbium 173.045;Lu Lutetium 174.967;Hf Hafnium 178.49;Ta Tantalum 180.948;W Tungsten 183.84;Re Rhenium 186.207;Os Osmium 190.23;Ir Iridium 192.217;Pt Platinum 195.084;Au Gold 196.967;Hg Mercury 200.592;Tl Thallium 204.38;Pb Lead 207.2;Bi Bismuth 208.980;Po Polonium 209;At Astatine 210;Rn Radon 222;Fr Francium 223;Ra Radium 226;Ac Actinium 227;Th Thorium 232.038;Pa Protactinium 231.036;U Uranium 238.029;Np Neptunium 237;Pu Plutonium 244;Am Americium 243;Cm Curium 247;Bk Berkelium 247;Cf Californium 251;Es Einsteinium 252;Fm Fermium 257;Md Mendelevium 258;No Nobelium 259;Lr Lawrencium 266;Rf Rutherfordium 267;Db Dubnium 268;Sg Seaborgium 269;Bh Bohrium 270;Hs Hassium 277;Mt Meitnerium 278;Ds Darmstadtium 281;Rg Roentgenium 282;Cn Copernicium 285;Nh Nihonium 286;Fl Flerovium 289;Mc Moscovium 290;Lv Livermorium 293;Ts Tennessine 294;Og Oganesson 294";
+const ELEMENTS = ELSTR.split(";").map((s,i)=>{const p=s.split(" ");return {z:i+1,sym:p[0],name:p[1],mass:p[2]};});
+const CAT_SETS = {
+  alkali:[3,11,19,37,55,87], alkaline:[4,12,20,38,56,88],
+  halogen:[9,17,35,53,85,117], noble:[2,10,18,36,54,86,118],
+  metalloid:[5,14,32,33,51,52], nonmetal:[1,6,7,8,15,16,34],
+};
+function catOf(z){
+  for(const k in CAT_SETS) if(CAT_SETS[k].includes(z)) return k;
+  if(z>=57&&z<=71) return "lanthanide";
+  if(z>=89&&z<=103) return "actinide";
+  if((z>=21&&z<=30)||(z>=39&&z<=48)||(z>=72&&z<=80)||(z>=104&&z<=112)) return "transition";
+  return "post";
+}
+const CAT_META = {
+  alkali:["Alkali metal","#C8384F"], alkaline:["Alkaline earth","#D9970F"],
+  transition:["Transition metal","#2456A6"], post:["Post-transition","#6B7F8C"],
+  metalloid:["Metalloid","#2E9E7B"], nonmetal:["Non-metal","#3E8FB0"],
+  halogen:["Halogen","#B0761A"], noble:["Noble gas","#8E7CC3"],
+  lanthanide:["Lanthanide","#C77CA5"], actinide:["Actinide","#A4636C"],
+};
+function ptPos(z){
+  if(z===1) return [1,1]; if(z===2) return [1,18];
+  if(z<=4) return [2,z-2]; if(z<=10) return [2,z+8];
+  if(z<=12) return [3,z-10]; if(z<=18) return [3,z];
+  if(z<=36) return [4,z-18]; if(z<=54) return [5,z-36];
+  if(z<=56) return [6,z-54];
+  if(z<=71) return [9,z-54];
+  if(z<=86) return [6,z-68];
+  if(z<=88) return [7,z-86];
+  if(z<=103) return [10,z-86];
+  return [7,z-100];
+}
+/* electron configuration by Aufbau, with d-block exceptions */
+const AUFBAU=["1s","2s","2p","3s","3p","4s","3d","4p","5s","4d","5p","6s","4f","5d","6p","7s","5f","6d","7p"];
+const ORBCAP={s:2,p:6,d:10,f:14};
+const CONF_EXC={24:["4s","3d",1],29:["4s","3d",1],41:["5s","4d",1],42:["5s","4d",1],44:["5s","4d",1],45:["5s","4d",1],46:["5s","4d",2],47:["5s","4d",1],78:["6s","5d",1],79:["6s","5d",1]};
+function econfig(z){
+  let left=z; const fill={};
+  for(const orb of AUFBAU){ if(left<=0)break; const cap=ORBCAP[orb[1]]; const n=Math.min(cap,left); fill[orb]=n; left-=n; }
+  const ex=CONF_EXC[z]; if(ex){ fill[ex[0]]-=ex[2]; fill[ex[1]]=(fill[ex[1]]||0)+ex[2]; if(fill[ex[0]]===0)delete fill[ex[0]]; }
+  const order=Object.keys(fill).sort((a,b)=> (+a[0]-+b[0]) || "spdf".indexOf(a[1])-"spdf".indexOf(b[1]));
+  return order.map(o=>o+"<sup>"+fill[o]+"</sup>").join(" ");
+}
+const NOBLE_Z=[2,10,18,36,54,86];
+function econfigShort(z){
+  let core=0; for(const n of NOBLE_Z) if(n<z) core=n;
+  if(!core) return econfig(z);
+  const coreSym=ELEMENTS[core-1].sym;
+  const full=econfig(z), coreConf=econfig(core);
+  return full.startsWith(coreConf)? "["+coreSym+"] "+full.slice(coreConf.length).trim() : full;
+}
+const FLAME={3:["crimson red","#DC2F4C"],11:["intense yellow-orange","#F3A712"],19:["lilac","#9A86D6"],37:["red-violet","#B04A98"],55:["blue-violet","#6C5CE7"],20:["brick red","#C4552E"],38:["crimson","#D62839"],56:["apple green","#7FB069"],29:["blue-green","#1B9E8A"]};
+
+/* ---------- topics ---------- */
+const TOPICS=[
+{c:"--li",t:"Atomic structure",s:"Subshells, ionisation energies, mass spectrometry",b:`
+<div class="defbox"><b>First ionisation energy</b> — the energy required to remove one mole of electrons from one mole of gaseous atoms, forming one mole of gaseous 1+ ions. <span class="mono">X(g) → X⁺(g) + e⁻</span></div>
+<h4>Trends across period 3</h4>
+<ul><li>General increase: nuclear charge rises, same shell, so attraction increases.</li>
+<li><b>Drop Mg → Al</b> (738 → 578 kJ mol⁻¹): Al's outer electron is in a 3p subshell, higher in energy than Mg's 3s — evidence for subshells.</li>
+<li><b>Drop P → S</b> (1012 → 1000 kJ mol⁻¹): in S the 3p electrons first pair up; repulsion between the paired electrons makes one easier to remove. (Same logic as Be→B and N→O in period 2: 899→801 and 1402→1314 kJ mol⁻¹.)</li></ul>
+<h4>Electron configuration rules</h4>
+<ul><li>Fill in order of increasing energy: 1s 2s 2p 3s 3p <b>4s before 3d</b>.</li>
+<li>Exceptions: Cr is [Ar] 3d⁵ 4s¹ and Cu is [Ar] 3d¹⁰ 4s¹ — half-filled and full d-subshells are extra stable.</li>
+<li>When transition metals ionise, <b>4s electrons are lost first</b>.</li></ul>
+<h4>Time-of-flight mass spectrometry</h4>
+<ul><li>Stages: ionisation (electron impact or electrospray) → acceleration (all ions gain the same kinetic energy) → flight tube (lighter ions travel faster) → detection (ions gain electrons; current ∝ abundance).</li>
+<li>Relative atomic mass from spectrum: <span class="eq">Ar = Σ(isotope mass × % abundance) ÷ 100</span></li></ul>`},
+{c:"--na",t:"Bonding & structure",s:"Ionic, covalent, metallic · shapes of molecules · intermolecular forces",b:`
+<h4>Shapes of molecules (electron-pair repulsion)</h4>
+<ul><li>Pairs of electrons repel to maximum separation; <b>lone pairs repel more</b> than bonding pairs, closing bond angles by ≈2.5° each.</li>
+<li>2 pairs — linear, 180° (CO₂). 3 — trigonal planar, 120° (BF₃). 4 — tetrahedral, 109.5° (CH₄). 3+1 lone — pyramidal, 107° (NH₃). 2+2 lone — bent, 104.5° (H₂O). 6 — octahedral, 90° (SF₆).</li></ul>
+<h4>Intermolecular forces, weakest → strongest</h4>
+<ul><li><b>Induced dipole–dipole (London/dispersion)</b> — in everything; grows with electron count and surface contact (why boiling points rise down group 7 and fall with branching).</li>
+<li><b>Permanent dipole–dipole</b> — between polar molecules (e.g. HCl).</li>
+<li><b>Hydrogen bonding</b> — H bonded to N, O or F, attracted to a lone pair on N/O/F of another molecule. Explains water's high boiling point and why ice is less dense than water (open lattice held by H-bonds).</li></ul>
+<div class="defbox"><b>Electronegativity</b> — the power of an atom to attract the pair of electrons in a covalent bond. Increases across a period, decreases down a group; F is the most electronegative (4.0 on the Pauling scale).</div>
+<h4>Structure determines properties</h4>
+<ul><li>Giant ionic: high melting point, conducts only molten/aqueous.</li>
+<li>Giant covalent (diamond, graphite, SiO₂): very high melting point; graphite conducts via delocalised electrons between layers.</li>
+<li>Simple molecular: low melting point — only weak intermolecular forces break, not covalent bonds.</li></ul>`},
+{c:"--cu",t:"Amount of substance",s:"Moles, gases, titrations, yield",b:`
+<div class="defbox"><b>Avogadro constant</b> N<sub>A</sub> = 6.022 × 10²³ mol⁻¹ — the number of particles in one mole.</div>
+<span class="eq">n = m / M &nbsp;&nbsp;·&nbsp;&nbsp; n = c × V(dm³) &nbsp;&nbsp;·&nbsp;&nbsp; pV = nRT (R = 8.314 J K⁻¹ mol⁻¹)</span>
+<ul><li>Ideal gas: p in Pa, V in <b>m³</b> (cm³ × 10⁻⁶), T in K (°C + 273). Most exam errors are unit conversions.</li>
+<li>Titration: n(known) from c×V → use mole ratio from the equation → c(unknown) = n/V. Concordant titres agree within 0.10 cm³; use their mean.</li></ul>
+<span class="eq">% atom economy = (M of desired product ÷ Σ M of all products) × 100</span>
+<span class="eq">% yield = (actual moles ÷ theoretical moles) × 100</span>
+<p>Atom economy is about the <i>reaction type</i> (addition = 100%); yield is about <i>practical losses</i>. Examiners ask you to distinguish them.</p>`},
+{c:"--k",t:"Energetics",s:"Enthalpy changes, calorimetry, Hess's law, bond enthalpies",b:`
+<div class="defbox"><b>Standard enthalpy of combustion</b> ΔH°c — enthalpy change when one mole of a substance burns completely in oxygen, all species in standard states, 100 kPa and a stated temperature (298 K).</div>
+<div class="defbox"><b>Standard enthalpy of formation</b> ΔH°f — enthalpy change when one mole of a compound forms from its elements, all in standard states.</div>
+<span class="eq">q = m × c × ΔT &nbsp;&nbsp;(c<sub>water</sub> = 4.18 J g⁻¹ K⁻¹) &nbsp;→&nbsp; ΔH = −q / n</span>
+<h4>Hess's law</h4>
+<ul><li>The enthalpy change is independent of route.</li>
+<li>From formation data: ΔH = Σ ΔH°f(products) − Σ ΔH°f(reactants).</li>
+<li>From combustion data: ΔH = Σ ΔH°c(reactants) − Σ ΔH°c(products). Note the direction flips.</li></ul>
+<h4>Bond enthalpies</h4>
+<ul><li>ΔH ≈ Σ(bonds broken) − Σ(bonds made). Breaking is endothermic (+), making is exothermic (−).</li>
+<li>Values are <b>means</b> over many compounds, so answers differ from Hess-law values — a favourite exam point.</li></ul>
+<p>See the <b>energy profile simulation</b> to connect Ea and ΔH visually.</p>`},
+{c:"--bunsen",t:"Kinetics",s:"Collision theory, Maxwell–Boltzmann, rate equations, Arrhenius",b:`
+<div class="defbox"><b>Activation energy</b> E<sub>a</sub> — the minimum energy colliding particles need for a reaction to occur.</div>
+<h4>Maxwell–Boltzmann distribution</h4>
+<ul><li>Shows the spread of molecular energies. Area under the curve = total number of molecules (constant).</li>
+<li>Higher T: peak shifts right and lower; <b>many more</b> molecules exceed E<sub>a</sub> — rate rises steeply.</li>
+<li>Catalyst: provides an alternative route with lower E<sub>a</sub>; the curve itself doesn't change, the E<sub>a</sub> line moves left.</li></ul>
+<h4>Rate equations (A-level year 2)</h4>
+<span class="eq">rate = k[A]<sup>m</sup>[B]<sup>n</sup></span>
+<ul><li>Orders m, n come <b>only from experiment</b>, never from the equation's coefficients.</li>
+<li>The rate-determining step contains the species in the rate equation.</li></ul>
+<h4>Arrhenius equation</h4>
+<span class="eq">k = A e<sup>−Ea/RT</sup> &nbsp;·&nbsp; ln k = ln A − Ea/(RT)</span>
+<p>A plot of ln k against 1/T is a straight line with gradient −E<sub>a</sub>/R — how E<sub>a</sub> is measured (required practical 3 uses this idea).</p>
+<p>Try the <b>Maxwell–Boltzmann simulation</b> with the temperature slider.</p>`},
+{c:"--li",t:"Equilibria",s:"Le Chatelier, Kc and Kp",b:`
+<div class="defbox"><b>Dynamic equilibrium</b> — forward and reverse rates are equal and concentrations are constant, in a closed system.</div>
+<h4>Le Chatelier's principle</h4>
+<ul><li>Position shifts to oppose a change. Raise T → shifts in the endothermic direction. Raise p → shifts to fewer gas moles. Catalyst → <b>no shift</b>, equilibrium reached faster.</li>
+<li>Haber process (N₂ + 3H₂ ⇌ 2NH₃, ΔH = −92 kJ mol⁻¹): compromise 400–450 °C, ~200 atm, iron catalyst — low T favours yield but is too slow.</li></ul>
+<h4>Equilibrium constant</h4>
+<span class="eq">Kc = [C]<sup>c</sup>[D]<sup>d</sup> / [A]<sup>a</sup>[B]<sup>b</sup></span>
+<ul><li>K changes <b>only with temperature</b>. For an exothermic reaction, raising T decreases K.</li>
+<li>Concentration/pressure changes move the <i>position</i> but K is unchanged.</li>
+<li>Kp uses partial pressures: p(X) = mole fraction × total pressure.</li></ul>`},
+{c:"--na",t:"Acids, bases & buffers",s:"pH, Ka, titration curves, indicators",b:`
+<div class="defbox"><b>Brønsted–Lowry:</b> an acid is a proton donor; a base is a proton acceptor.</div>
+<span class="eq">pH = −log₁₀[H⁺] &nbsp;·&nbsp; Kw = [H⁺][OH⁻] = 1.0 × 10⁻¹⁴ mol² dm⁻⁶ at 298 K</span>
+<span class="eq">Ka = [H⁺][A⁻]/[HA] &nbsp;·&nbsp; pKa = −log₁₀ Ka</span>
+<ul><li>Weak acid pH: [H⁺] ≈ √(Ka × c). Ethanoic acid Ka = 1.74 × 10⁻⁵ (pKa 4.76); 0.10 mol dm⁻³ gives pH ≈ 2.9.</li>
+<li>At half-equivalence in a weak acid titration, <b>pH = pKa</b> — how Ka is measured (required practical 9).</li></ul>
+<h4>Buffers</h4>
+<ul><li>A buffer resists pH change on adding small amounts of acid or base: weak acid + its salt (or excess weak acid part-neutralised).</li>
+<li>Added H⁺ is removed by A⁻ → HA; added OH⁻ is removed by HA → A⁻ + H₂O. The large reservoirs of HA and A⁻ keep the ratio, and hence pH, nearly constant.</li></ul>
+<h4>Choosing an indicator</h4>
+<ul><li>The indicator's range must fall inside the vertical section of the curve. Strong–strong: either works. Weak acid–strong base: <b>phenolphthalein</b> (8.3–10.0). Strong acid–weak base: <b>methyl orange</b> (3.1–4.4). Weak–weak: no sharp section — use a pH meter.</li></ul>
+<p>The <b>titration simulation</b> lets you test all of this live.</p>`},
+{c:"--cu",t:"Redox & electrochemistry",s:"Oxidation states, half-equations, electrode potentials",b:`
+<div class="defbox"><b>Oxidation is loss</b> of electrons (oxidation state increases); <b>reduction is gain</b>. The oxidising agent is itself reduced.</div>
+<h4>Standard electrode potentials (298 K, 100 kPa, 1 mol dm⁻³)</h4>
+<ul><li>Measured against the standard hydrogen electrode, E° = 0.00 V by definition.</li>
+<li class="mono">Zn²⁺/Zn −0.76 V · Fe²⁺/Fe −0.44 V · H⁺/H₂ 0.00 V · Cu²⁺/Cu +0.34 V · Fe³⁺/Fe²⁺ +0.77 V · Ag⁺/Ag +0.80 V · Cl₂/Cl⁻ +1.36 V · MnO₄⁻/Mn²⁺ +1.51 V</li>
+<li>Cell EMF = E°(positive electrode) − E°(negative electrode). The more negative half-cell is oxidised (is the anode). Daniell cell check: 0.34 − (−0.76) = 1.10 V.</li>
+<li>A reaction is feasible if EMF &gt; 0 — but feasible ≠ fast (kinetics can block it).</li>
+<li>AQA's data booklet contains no E° table — values are always supplied in the question, so learn the method, not the numbers.</li></ul>
+<h4>Balancing half-equations in acid</h4>
+<ol><li>Balance the main atom, then O with H₂O, then H with H⁺, then charge with e⁻.</li>
+<li>Example: MnO₄⁻ + 8H⁺ + 5e⁻ → Mn²⁺ + 4H₂O (purple → colourless: the classic self-indicating titration).</li></ol>`},
+{c:"--k",t:"Organic chemistry",s:"Mechanisms, functional groups, test-tube analysis",b:`
+<h4>The mechanisms to know cold</h4>
+<ul><li><b>Free-radical substitution</b> (alkanes + Cl₂, UV): initiation → propagation → termination.</li>
+<li><b>Electrophilic addition</b> (alkenes + HBr/Br₂): Markovnikov — H adds to the carbon with more H; the more stable carbocation forms the major product.</li>
+<li><b>Nucleophilic substitution</b> (haloalkanes + OH⁻/CN⁻/NH₃) and <b>elimination</b> (ethanolic KOH → alkene).</li>
+<li><b>Nucleophilic addition</b> (carbonyls + HCN/NaBH₄), <b>electrophilic substitution</b> (benzene, year 2).</li></ul>
+<h4>Identifying functional groups (RP6 & RP10)</h4>
+<ul>
+<li><b>Alkene</b>: bromine water orange → colourless.</li>
+<li><b>Aldehyde</b>: Tollens' reagent → silver mirror; Fehling's → brick-red precipitate. Ketones: no change with either.</li>
+<li><b>Any carbonyl (C=O)</b>: 2,4-DNPH → orange precipitate; its melting point identifies the compound.</li>
+<li><b>Primary/secondary alcohol or aldehyde</b>: acidified potassium dichromate orange → green. Tertiary alcohols: stays orange.</li>
+<li><b>Carboxylic acid</b>: sodium carbonate → effervescence (CO₂ turns limewater milky).</li>
+</ul>
+<p>Distinguish an aldehyde from a ketone: both give orange ppt with 2,4-DNPH, but only the aldehyde gives a silver mirror with Tollens'.</p>`},
+{c:"--bunsen",t:"Periodicity & the groups",s:"Period 3 trends, Group 2, Group 7",b:`
+<h4>Period 3 trends</h4>
+<ul><li>Atomic radius decreases (more protons, same shell). Melting points climb Na→Al (stronger metallic bonding), peak at Si (giant covalent), collapse for P₄, S₈, Cl₂, Ar (simple molecular — S₈ &gt; P₄ &gt; Cl₂ by electron count).</li></ul>
+<h4>Group 2 (alkaline earths)</h4>
+<ul><li>Down the group: reactivity with water increases; hydroxide solubility increases (Mg(OH)₂ insoluble → Ba(OH)₂ soluble); sulfate solubility <b>decreases</b> (BaSO₄ insoluble — basis of the sulfate test with acidified BaCl₂).</li></ul>
+<h4>Group 7 (halogens)</h4>
+<ul><li>Oxidising power decreases down the group: Cl₂ displaces Br⁻ and I⁻; Br₂ displaces only I⁻.</li>
+<li>Halide test: acidified silver nitrate → AgCl white (dissolves in dilute NH₃), AgBr cream (dissolves in conc. NH₃), AgI yellow (insoluble in NH₃).</li>
+<li>Reducing power of halides increases down the group — with conc. H₂SO₄, Cl⁻ gives HCl only; Br⁻ also gives SO₂; I⁻ gives H₂S, S and I₂.</li></ul>`}];
+
+/* ---------- required practicals ---------- */
+const PRACLIST=[
+"Make up a volumetric solution and carry out a simple acid–base titration",
+"Measurement of an enthalpy change",
+"Investigation of how the rate of a reaction changes with temperature",
+"Carry out simple test-tube reactions to identify: cations — Group 2, NH₄⁺; anions — Group 7 (halide ions), OH⁻, CO₃²⁻, SO₄²⁻",
+"Distillation of a product from a reaction",
+"Tests for alcohol, aldehyde, alkene and carboxylic acid",
+"Measuring the rate of reaction: by an initial rate method; by a continuous monitoring method",
+"Measuring the EMF of an electrochemical cell",
+"Investigate how pH changes when a weak acid reacts with a strong base and when a strong acid reacts with a weak base",
+"Preparation of: a pure organic solid and test of its purity; a pure organic liquid",
+"Carry out simple test-tube reactions to identify transition metal ions in aqueous solution",
+"Separation of species by thin-layer chromatography"];
+
+const PRACS=[
+{n:"RP 1",t:"Volumetric solution & acid–base titration",
+haz:[["warn","Dilute acids/alkalis — irritant"],["warn","Wear eye protection throughout"]],
+steps:["Make the standard solution: weigh the solid by difference on a 2 d.p. balance, dissolve fully in a beaker with distilled water, transfer with rinsings to a 250 cm³ volumetric flask, fill to the mark so the bottom of the meniscus sits on the line at eye level, stopper and invert ~10 times.",
+"Rinse the burette with the solution it will hold (not just water), then fill and remove the air bubble from the jet below the tap.",
+"Pipette 25.0 cm³ of the other solution into a conical flask using a pipette filler; add 2–3 drops of indicator only.",
+"Do a rough titration, then accurate runs: add dropwise near the endpoint with swirling, rinsing the flask walls with distilled water.",
+"Repeat until you have two concordant titres within 0.10 cm³; use their mean in the calculation."],
+errors:[["Rinsing the burette with water only","Water left on the walls dilutes your solution and shifts every titre. Rinse burette with the titrant and the pipette with what it will measure (AQA handbook)."],
+["Leaving the funnel in the burette","Drips from the funnel change the reading mid-run. Remove it after filling (RSC titration guidance)."],
+["Blowing out the pipette tip","The pipette is calibrated to retain the liquid left in the tip — drain under gravity only."],
+["Reading the top of the meniscus, or reading at an angle","Read the bottom of the meniscus at eye level, on a white tile background. Burettes read to the nearest 0.05 cm³."],
+["Overshooting the endpoint","AQA's 2019 examiner report: the endpoint is the first permanent colour change — with phenolphthalein a lasting pale pink, not purple. Add dropwise near the endpoint, swirling."],
+["Too much indicator","Indicators are themselves weak acids — a large amount shifts the result and muddies the colour. 2–3 drops."],
+["Averaging non-concordant titres","Only titres within 0.10 cm³ of each other go into the mean; discard the rough."],
+["Air bubble in the burette jet","It escapes mid-run and inflates the apparent titre. Open the tap fully to flush it before starting."]],
+exp:"With both solutions near 0.100 mol dm⁻³ and 1:1 stoichiometry, expect a titre around 25 cm³. Uncertainty per burette reading ±0.05 cm³ (±0.10 cm³ per titre), so % uncertainty ≈ (0.10 ÷ 25.0) × 100 ≈ 0.4% — one reason a titre below ~10 cm³ is poor design. Safety note (CLEAPSS SSS 31): dilute NaOH is still an irritant, and alkali in the eye is more damaging than acid of the same concentration — eye protection throughout."},
+{n:"RP 2",t:"Measuring an enthalpy change",
+haz:[["warn","CuSO₄ solution — harmful to aquatic life; avoid skin contact"],["warn","Fuels/spirit burners — flammable"]],
+steps:["AQA's exemplar finds ΔH for CuSO₄(s) + 5H₂O(l) → CuSO₄·5H₂O(s) — impossible to measure directly, so you measure two dissolving enthalpies and apply Hess's law.",
+"Experiment 1: weigh 3.90–4.10 g anhydrous CuSO₄ by difference. Put 25 cm³ deionised water in a polystyrene cup (inside a beaker for stability). Record the temperature every minute for 3 minutes, stirring; add the solid at minute 4 (do not record at minute 4); keep recording every minute from 5 to 15.",
+"Experiment 2: repeat with 6.20–6.30 g of hydrated CuSO₄·5H₂O in 24 cm³ of water — the reduced volume compensates for the water of crystallisation.",
+"Plot temperature against time for each run. Draw two straight best-fit lines (before and after addition) and extrapolate both to minute 4: ΔT is the vertical gap between them at the moment of mixing — this corrects for heat exchanged during the reaction.",
+"Calculate q = m c ΔT with m = 25 g (the water only — AQA's handbook: 'do not add on the mass of the solid'), c = 4.18 J g⁻¹ K⁻¹. Then ΔH = −q ÷ n for each experiment, and ΔH₃ = ΔH₁ − ΔH₂."],
+errors:[["Quoting the temperature at minute 4 instead of ΔT","ΔT is the gap between the two extrapolated lines at the time of mixing — not any single reading."],
+["Not extrapolating, or drawing S-shaped 'curves of best fit'","AQA's 2018 examiner report: two straight best-fit lines, both extrapolated to the minute of addition."],
+["Not doubling the thermometer uncertainty","ΔT comes from two readings, so the uncertainty doubles. Only 19.3% of students got this right in 2018."],
+["Using the wrong mass in q = mcΔT","m is the mass of water being heated — not the solid added, and not a volume of reagent."],
+["Poor graph scales","Points should span more than half of each axis with room left for the extrapolation; scales don't have to start at zero."],
+["Trying to cut % uncertainty with smaller volumes","Same ΔT, same uncertainty. The valid improvement is a larger ΔT — e.g. more concentrated reagents."]],
+exp:"Dissolving the anhydrous salt is exothermic (ΔH₁ < 0); dissolving the hydrate is endothermic (ΔH₂ > 0). A typical classroom ΔH₃ lands around −65 to −80 kJ mol⁻¹ (indicative ballpark — school values always undershoot data-book figures because of heat loss and the assumption that the solution's specific heat capacity equals water's). Safety: copper(II) sulfate is a skin/eye irritant (CLEAPSS SSS 40) — avoid contact, especially with the anhydrous powder."},
+{n:"RP 3 / 7",t:"Rates: thiosulfate cross & iodine clock",
+haz:[["danger","SO₂ evolved from thiosulfate + acid — toxic; ventilate, dispose promptly"],["warn","Dilute acids — irritant"]],
+steps:["Disappearing cross (AQA reduced-scale exemplar): Na₂S₂O₃ + 2HCl → 2NaCl + SO₂ + S. Put 10.0 cm³ of 0.05 mol dm⁻³ sodium thiosulfate in a tube over a marked cross; have ~10 cm³ of 1.0 mol dm⁻³ HCl ready in a second tube.",
+"Record the start temperature, add 1 cm³ of the acid, start timing, and stop when the cross viewed from above is no longer visible. Record the final temperature and use the mean T for that run.",
+"Empty the cloudy mixture straight into an alkaline stop-bath (sodium carbonate solution with phenolphthalein — replace it when the colour fades) rather than leaving it to stand.",
+"Repeat at ≥5 temperatures — room T, ~25, ~35, ~45, ~55 °C — warming the tubes in a water bath before mixing. AQA's limit: never above 55 °C (CLEAPSS advises staying below ~50 °C, because hot acidified thiosulfate gives off more SO₂).",
+"Iodine clock (initial rates, RP7): mix H₂O₂/KI/starch with a fixed small amount of thiosulfate; time to the sudden blue-black colour. Vary one concentration, topping up with water so total volume is constant. Initial rate ∝ 1/t.",
+"Plot rate = 1/t against mean temperature; for the Arrhenius extension plot ln(1/t) against 1/T — the gradient is −Ea/R."],
+errors:[["Plotting time against temperature and never mentioning rate","AQA's 2019 examiner report calls this the most common reason for losing marks. Convert to rate = 1/t before plotting."],
+["Assuming water-bath T equals mixture T","Record the mixture's own temperature at the start and end; use the mean."],
+["Judging the endpoint inconsistently","The same person should watch the cross each time, from the same position — the dominant random error."],
+["Changing two variables at once","Only temperature may vary: keep every concentration and volume identical between runs."],
+["Forcing a straight line through curved concentration–time data","For an initial rate, draw a tangent at t = 0 — don't fit a straight line to a curve."],
+["Leaving mixtures to stand","Acidified thiosulfate keeps releasing toxic SO₂. Straight into the carbonate stop-bath (CLEAPSS PP141)."]],
+exp:"Time falls sharply as temperature rises — rate roughly doubles per ~10 K (AQA spec 3.1.5.3). The ln(1/t) vs 1/T plot should be a straight line; a typical classroom Ea is ~45–50 kJ mol⁻¹ (indicative ballpark). Safety: SO₂ is toxic and asthmatics must be closely monitored — well-ventilated room, reduced-scale quantities (CLEAPSS SSS 35 / PP141)."},
+{n:"RP 5",t:"Distillation: preparing an organic liquid",
+haz:[["danger","Concentrated phosphoric(V) acid — corrosive; gloves and goggles"],["danger","Cyclohexene and other organic vapours — highly flammable; fume cupboard, no naked flames"],["warn","Anti-bumping granules required"]],
+steps:["AQA's exemplar: dehydrate cyclohexanol to cyclohexene. Put ~20 cm³ cyclohexanol into a weighed 50 cm³ pear-shaped flask and re-weigh (mass by difference). Add ~8 cm³ concentrated phosphoric(V) acid dropwise with frequent shaking.",
+"Add anti-bumping granules and assemble the distillation apparatus: still head with the thermometer bulb level with the side-arm opening, water condenser sloping down to a cooled receiver. Water enters the condenser at the bottom and leaves at the top. Heat gently and collect the distillate boiling below 100 °C.",
+"Transfer the distillate to a separating funnel with ~50 cm³ saturated sodium chloride solution. Invert gently several times, opening the tap to release pressure. Let the layers settle and run off the lower aqueous layer — cyclohexene is less dense, so it floats.",
+"Dry the organic layer over anhydrous CaCl₂, MgSO₄ or Na₂SO₄ until it runs clear, then decant into a weighed container. Weigh and calculate % yield. Redistil if a purer sample is needed.",
+"Confirm the alkene: a ~1 cm³ portion decolourises bromine water (or turns acidified KMnO₄ from purple to colourless/brown MnO₂).",
+"Related spec point: when making an aldehyde from a primary alcohol (RP10 territory), distil it off as it forms — its boiling point is lower than the alcohol's, so it escapes before being oxidised on to the carboxylic acid. If the acid is what you want, reflux first (vertical condenser, never sealed), then distil."],
+errors:[["Thermometer bulb in the liquid","It must sit level with the side-arm junction to read the vapour temperature of what is actually distilling over."],
+["Sealed apparatus","Pressure builds and glassware can shatter. The system must always be open to the air at one point."],
+["Water connected top-in","Counter-current cooling needs water in at the bottom; top-in leaves the condenser part-empty."],
+["Violent shaking, or never venting the separating funnel","Invert gently and open the tap regularly — especially after a carbonate wash, when CO₂ builds up fast."],
+["Wrong layer discarded","Check densities first (cyclohexene floats on water); if unsure, add a little water and watch which layer grows."],
+["No anti-bumping granules","Large bubbles form suddenly and can throw liquid into the condenser."]],
+exp:"Cyclohexene boils at 82.9 °C (NIST WebBook) vs cyclohexanol at ~161 °C, so the <100 °C fraction is clean to collect. The dried product is clear, not cloudy, and decolourises bromine water. A typical student yield is 50–70% (indicative). RSC's alternative liquid prep: 2-methylpropan-2-ol + concentrated HCl → 2-chloro-2-methylpropane, washed with NaHCO₃ solution, dried over Na₂SO₄, redistilled."},
+{n:"RP 6",t:"Test-tube identification of organic groups",
+haz:[["danger","Tollens' reagent — never store; explosive silver fulminate forms on standing. Make fresh, rinse away immediately"],["danger","Bromine water — toxic/corrosive; use dilute, in a fume cupboard if available"],["warn","2,4-DNPH — flammable when dry; use as supplied solution"]],
+steps:["Alkene: shake a few drops of sample vigorously with ~1 cm³ bromine water. Orange → colourless = C=C present.",
+"Carbonyl: add 3–4 drops of sample to 3–4 drops of 2,4-DNPH (Brady's reagent) at room temperature. Orange/yellow precipitate = aldehyde or ketone.",
+"Aldehyde vs ketone: make Tollens' fresh (AgNO₃ + 1 drop NaOH, then just enough dilute NH₃ to redissolve the brown precipitate). Warm at 60–70 °C in a water bath — silver mirror (or grey/black deposit) = aldehyde. Alternatively Fehling's: mix equal volumes of A and B (clear deep blue), warm with the sample — brick-red precipitate of Cu₂O = aldehyde.",
+"Alcohol: AQA's exemplar adds a rice-grain piece of sodium to ~1 cm³ of the dry liquid — effervescence (H₂) indicates the –OH group; destroy leftover sodium in ethanol. For 1° vs 2° vs 3°: warm with acidified potassium dichromate(VI) — orange → green means oxidisable (1°/2° alcohol or aldehyde); tertiary alcohols stay orange.",
+"Carboxylic acid: add solid NaHCO₃ or sodium carbonate solution — effervescence; the gas turns limewater milky.",
+"Haloalkane (bonus spec test): warm with NaOH(aq) at ~60 °C, acidify with dilute nitric acid, then add silver nitrate solution — white ppt = chloro, cream = bromo, yellow = iodo."],
+errors:[["Warming Tollens' over a flame or storing it","Water bath only, and rinse residues away at once — dried silver residues are explosive."],
+["Calling a ketone negative 'no reaction observed'","State the observation: 'orange precipitate with 2,4-DNPH, no silver mirror with Tollens' → ketone'. Examiners want observations, not conclusions alone."],
+["Using cold Fehling's/dichromate","Both need a warm water bath; no change just means you didn't heat it."],
+["Skipping the nitric acid before silver nitrate","Carbonate and hydroxide ions left in the mixture give false precipitates with AgNO₃ — acidify with dilute HNO₃ first."],
+["Testing in a random order","Molecules can carry more than one functional group. Plan a systematic elimination sequence, least hazardous test first (RSC guidance)."],
+["Cross-contaminated droppers","One clean pipette per reagent, or every tube goes orange."]],
+exp:"Full result table: alkene decolourises Br₂ water; aldehyde: DNPH ppt + silver mirror + Fehling's brick-red + dichromate green; ketone: DNPH ppt only; 1°/2° alcohol: fizzes with Na, dichromate green; 3° alcohol: fizzes with Na, dichromate stays orange; carboxylic acid: fizzes with NaHCO₃. Bonus: the iodoform test (I₂/KI + NaOH, warm gently) gives a yellow CHI₃ precipitate for CH₃C=O compounds and CH₃CH(OH)– alcohols — it distinguishes ethanol (positive) from methanol (negative). Disposal: Tollens' mixtures go down the foul-water drain immediately after use (RSC) — stored residues form explosive silver compounds."}];
+
+/* ---------- quiz ---------- */
+const QUIZ=[
+{q:"What is the electron configuration of a Cu atom?",o:["[Ar] 3d⁹ 4s²","[Ar] 3d¹⁰ 4s¹","[Ar] 3d¹⁰ 4s²","[Ar] 3d⁸ 4s²"],a:1,e:"Copper is an exception: a full 3d subshell plus 4s¹ is lower in energy than 3d⁹4s²."},
+{q:"Why does first ionisation energy fall between N and O?",o:["O has a larger radius","O's outer electron is in a higher subshell","In O, two 2p electrons pair up and repel","N has more protons"],a:2,e:"In oxygen a 2p orbital is doubly occupied for the first time; the paired-electron repulsion makes one easier to remove (1402 → 1314 kJ mol⁻¹)."},
+{q:"The bond angle in a molecule of NH₃ is closest to:",o:["120°","109.5°","107°","104.5°"],a:2,e:"Tetrahedral electron-pair arrangement, but one lone pair repels more strongly, closing the angle from 109.5° to about 107°."},
+{q:"Which indicator suits a weak acid–strong base titration?",o:["Methyl orange","Universal indicator","Phenolphthalein","None — use any"],a:2,e:"The vertical section spans roughly pH 7–11, which contains phenolphthalein's range (8.3–10.0) but not methyl orange's (3.1–4.4)."},
+{q:"0.10 mol dm⁻³ ethanoic acid (Ka = 1.74 × 10⁻⁵). pH ≈ ?",o:["1.0","2.9","4.8","5.7"],a:1,e:"[H⁺] ≈ √(Ka·c) = √(1.74×10⁻⁶) = 1.32×10⁻³, pH = 2.88."},
+{q:"At half-equivalence in a weak-acid titration, the pH equals:",o:["7","pKa","pKw − pKa","½ pKa"],a:1,e:"Half the acid is converted to its salt, so [HA] = [A⁻] and Ka = [H⁺], i.e. pH = pKa."},
+{q:"Raising the temperature of an equilibrium that is exothermic forwards will:",o:["Increase Kc","Decrease Kc","Leave Kc unchanged","Only change the rate"],a:1,e:"K depends only on temperature; heating pushes an exothermic equilibrium backwards, so K decreases."},
+{q:"Which change does NOT affect the value of Kc?",o:["Temperature increase","Adding a catalyst","Temperature decrease","None — all change Kc"],a:1,e:"A catalyst speeds both directions equally: equilibrium is reached faster but K and the position are unchanged."},
+{q:"In a Maxwell–Boltzmann distribution, raising the temperature:",o:["Raises the peak and shifts it left","Lowers the peak and shifts it right","Changes the area under the curve","Moves the Ea line to the left"],a:1,e:"The distribution flattens and spreads right; total area (number of molecules) is constant. Only a catalyst moves Ea."},
+{q:"rate = k[A][B]². If [B] is tripled, the rate:",o:["Triples","Increases ×6","Increases ×9","Is unchanged"],a:2,e:"Second order in B: 3² = 9."},
+{q:"Which is the correct half-equation for manganate(VII) in acid?",o:["MnO₄⁻ + 4H⁺ + 3e⁻ → Mn²⁺ + 2H₂O","MnO₄⁻ + 8H⁺ + 5e⁻ → Mn²⁺ + 4H₂O","MnO₄⁻ + 2H₂O + 3e⁻ → MnO₂ + 4OH⁻","MnO₄⁻ + e⁻ → MnO₄²⁻"],a:1,e:"Mn goes +7 → +2 (5 electrons); 4 waters balance the oxygens and 8 H⁺ balance hydrogen."},
+{q:"E°: Zn²⁺/Zn = −0.76 V, Cu²⁺/Cu = +0.34 V. The cell EMF is:",o:["0.42 V","−0.42 V","1.10 V","−1.10 V"],a:2,e:"EMF = E°(positive) − E°(negative) = 0.34 − (−0.76) = 1.10 V; zinc is oxidised."},
+{q:"Tollens' reagent warmed with propanal gives:",o:["Brick-red precipitate","Silver mirror","Orange precipitate","No visible change"],a:1,e:"Aldehydes reduce [Ag(NH₃)₂]⁺ to metallic silver; ketones do not."},
+{q:"A compound gives an orange ppt with 2,4-DNPH but nothing with Fehling's. It is:",o:["An aldehyde","A carboxylic acid","A ketone","A tertiary alcohol"],a:2,e:"DNPH shows a carbonyl; failing the oxidation tests rules out an aldehyde — so a ketone."},
+{q:"Why is the boiling point of water anomalously high?",o:["Strong covalent O–H bonds","Hydrogen bonding between molecules","Its bent shape","High density"],a:1,e:"Extensive hydrogen bonds between molecules must be overcome on boiling — covalent bonds do not break."},
+{q:"In the enthalpy practical, you extrapolate the cooling curve to the mixing time because:",o:["The thermometer lags","Heat is lost while the reaction happens, so the maximum recorded ΔT is too small","The reaction is incomplete","It removes anomalies"],a:1,e:"Extrapolation estimates the temperature rise that would have occurred with zero heat loss."},
+{q:"Down group 2, the solubility of the sulfates:",o:["Increases","Decreases","Stays constant","First rises then falls"],a:1,e:"MgSO₄ is soluble, BaSO₄ highly insoluble — the basis of the barium chloride test for sulfate ions."},
+{q:"Acidified AgNO₃ gives a cream precipitate soluble only in concentrated ammonia. The halide is:",o:["Chloride","Bromide","Iodide","Fluoride"],a:1,e:"AgBr is cream and dissolves only in concentrated NH₃; AgCl (white) dissolves in dilute, AgI (yellow) in neither."},
+{q:"25.0 cm³ of 0.100 mol dm⁻³ NaOH is neutralised by 20.0 cm³ of HCl. [HCl] = ?",o:["0.080 mol dm⁻³","0.100 mol dm⁻³","0.125 mol dm⁻³","0.250 mol dm⁻³"],a:2,e:"n(NaOH) = 2.50×10⁻³ mol = n(HCl); c = n/V = 2.50×10⁻³ ÷ 0.0200 = 0.125 mol dm⁻³."},
+{q:"During distillation, the thermometer bulb should be:",o:["In the boiling liquid","At the side-arm junction, level with the vapour outlet","Above the condenser","Anywhere in the flask"],a:1,e:"It must read the temperature of the vapour actually passing to the condenser, which identifies the fraction being collected."},
+{q:"Why is an aldehyde distilled off as it forms during oxidation of a primary alcohol?",o:["To speed the reaction","Its boiling point is lower than the alcohol's, so it escapes before further oxidation to the acid","To remove water","The catalyst requires it"],a:1,e:"Kept in the mixture under reflux it would oxidise to the carboxylic acid; immediate distillation exploits its lower boiling point."},
+{q:"The Arrhenius equation predicts that a plot of ln k against 1/T has gradient:",o:["Ea/R","−Ea/R","−R/Ea","ln A"],a:1,e:"ln k = ln A − Ea/(RT): straight line, gradient −Ea/R, intercept ln A."},
+{q:"Which molecule has the highest boiling point?",o:["Pentane","2-methylbutane","2,2-dimethylpropane","They are equal"],a:0,e:"All are C₅H₁₂; the straight chain has the greatest surface contact, so the strongest induced dipole–dipole forces."},
+{q:"A buffer is made from ethanoic acid and sodium ethanoate. Adding a little NaOH:",o:["Raises pH sharply","Is neutralised by CH₃COOH, so pH barely changes","Is neutralised by CH₃COO⁻","Destroys the buffer"],a:1,e:"OH⁻ + CH₃COOH → CH₃COO⁻ + H₂O; the reservoir of weak acid removes the added base and the [HA]/[A⁻] ratio barely moves."}];
+
+/* ---------- sources (accredited) ---------- */
+const SOURCES=[
+["RSC Practical videos (16–18)","Royal Society of Chemistry demonstration videos covering every A-level technique, including all the practicals in this app.","https://edu.rsc.org/practical/practical-videos-16-18-years/4012343.article"],
+["RSC Titration screen experiment","The RSC's own interactive titration simulator — good companion practice to the simulation here.","https://edu.rsc.org/concentration-of-solutions-and-titration/titration-screen-experiment/2077.article"],
+["AQA A-level Chemistry (7405) — assessment resources","Past papers, mark schemes and examiner reports: the highest-value practice material there is.","https://www.aqa.org.uk/subjects/chemistry/a-level/chemistry-7405/assessment-resources"],
+["AQA Required Practical Handbook (7404/7405)","The official methods for all 12 required practicals — the walkthroughs in this app follow its exemplars.","https://filestore.aqa.org.uk/resources/chemistry/AQA-7404-7405-PHBK.PDF"],
+["CLEAPSS Student Safety Sheets","The UK schools' laboratory-safety authority — free hazard and control-measure sheets you can cite in your own risk assessments.","https://science.cleapss.org.uk/resources/student-safety-sheets/"],
+["RSC Interactive Periodic Table","Verified data, history and podcasts for every element.","https://www.rsc.org/periodic-table"],
+["NIST Chemistry WebBook","Authoritative boiling points, thermochemistry and spectra — source of the physical constants used in the simulations.","https://webbook.nist.gov/chemistry/"],
+["OCR Chemistry A (H432)","OCR's official specification and past-paper page, for cross-board practice.","https://www.ocr.org.uk/qualifications/as-and-a-level/chemistry-a-h032-h432/"],
+["Pearson Edexcel A-level Chemistry","Edexcel's official qualification page with past papers.","https://qualifications.pearson.com/en/qualifications/edexcel-a-levels/chemistry-2015.html"],
+["IUPAC","International Union of Pure and Applied Chemistry — nomenclature rules, atomic weights and the Gold Book of definitions.","https://iupac.org/"]];
+</script>
+<script>
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
+const cssVar=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1, w=c.clientWidth, h=c.clientHeight;
+  c.width=w*dpr; c.height=h*dpr;
+  const ctx=c.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0);
+  return [ctx,w,h];
+}
+
+/* ---------- navigation ---------- */
+$$("nav.rail button[data-v]").forEach(b=>b.addEventListener("click",()=>showView(b.dataset.v)));
+function showView(v){
+  $$("nav.rail button[data-v]").forEach(b=>b.classList.toggle("on",b.dataset.v===v));
+  $$("section.view").forEach(s=>s.classList.toggle("on",s.id==="v-"+v));
+  window.scrollTo({top:0});
+  redrawAll();
+}
+
+/* ---------- home ---------- */
+const HOME=[
+["Learn the theory","learn","--li","10 topic guides","Definitions worded for mark schemes, trends with real values, the anomalies examiners love."],
+["Run the simulations","lab","--cu","4 live models","Titration curves, Maxwell–Boltzmann, energy profiles and a particle-level gas — computed from the real equations."],
+["Explore the elements","periodic","--na","118 elements","Electron configurations, categories and flame-test colours at a click."],
+["Master the practicals","prac","--k","5 deep walkthroughs","Method, CLEAPSS-based safety, the errors examiners report, and the results you should get."],
+["Test yourself","quiz","--bunsen","24 exam-style questions","Instant marking with full explanations."],
+["Check the sources","sources","--ink-soft","Accredited only","RSC, AQA, OCR, CLEAPSS, NIST and IUPAC references behind every number."]];
+$("#homecards").innerHTML=HOME.map(h=>`<div class="card link" tabindex="0" role="button" data-goto="${h[1]}">
+  <span class="tagline" style="background:color-mix(in srgb,var(${h[2]}) 14%,transparent);color:var(${h[2]})">${h[3]}</span>
+  <h3>${h[0]}</h3><p>${h[4]}</p></div>`).join("");
+$$("#homecards .card").forEach(c=>{
+  const go=()=>showView(c.dataset.goto);
+  c.addEventListener("click",go);
+  c.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();go();}});
+});
+
+/* ---------- hero: hydrogen emission spectrum ---------- */
+function wl2rgb(w){ // 380-700nm approximation
+  let r=0,g=0,b=0;
+  if(w>=380&&w<440){r=-(w-440)/60;b=1}
+  else if(w<490){g=(w-440)/50;b=1}
+  else if(w<510){g=1;b=-(w-510)/20}
+  else if(w<580){r=(w-510)/70;g=1}
+  else if(w<645){r=1;g=-(w-645)/65}
+  else if(w<=700){r=1}
+  let f=1;
+  if(w<420)f=.3+.7*(w-380)/40;
+  if(w>660)f=.3+.7*(700-w)/40;
+  const gm=v=>Math.round(255*Math.pow(v*f,.8));
+  return [gm(r),gm(g),gm(b)];
+}
+const BALMER=[656.3,486.1,434.0,410.2];
+let heroT=0;
+function drawSpectrum(){
+  const c=$("#spectrum"); if(!c.clientWidth) return;
+  const [ctx,w,h]=setupCanvas(c);
+  ctx.fillStyle="#05080c"; ctx.fillRect(0,0,w,h);
+  // faint continuum strip
+  for(let x=0;x<w;x++){
+    const wl=380+(x/w)*(700-380);
+    const [r,g,b]=wl2rgb(wl);
+    ctx.fillStyle=`rgba(${r},${g},${b},0.06)`;
+    ctx.fillRect(x,0,1,h);
+  }
+  // emission lines with glow
+  for(const wl of BALMER){
+    const x=((wl-380)/(700-380))*w;
+    const [r,g,b]=wl2rgb(wl);
+    const pulse=reduced?1:0.82+0.18*Math.sin(heroT/40+wl);
+    const grad=ctx.createLinearGradient(x-9,0,x+9,0);
+    grad.addColorStop(0,`rgba(${r},${g},${b},0)`);
+    grad.addColorStop(.5,`rgba(${r},${g},${b},${0.55*pulse})`);
+    grad.addColorStop(1,`rgba(${r},${g},${b},0)`);
+    ctx.fillStyle=grad; ctx.fillRect(x-9,0,18,h);
+    ctx.fillStyle=`rgba(${r},${g},${b},${pulse})`;
+    ctx.fillRect(x-1.2,0,2.4,h);
+  }
+  // nm scale
+  ctx.fillStyle="rgba(230,238,240,.55)"; ctx.font="10px ui-monospace,Menlo,monospace";
+  for(let nm=400;nm<=700;nm+=50){
+    const x=((nm-380)/(700-380))*w;
+    ctx.fillRect(x,h-8,1,4); ctx.fillText(nm,x-9,h-12);
+  }
+}
+function heroLoop(){ heroT++; drawSpectrum(); if(!reduced) requestAnimationFrame(heroLoop); }
+
+/* ---------- learn ---------- */
+$("#topics").innerHTML=TOPICS.map((t,i)=>`<div class="topic" id="topic${i}">
+  <button aria-expanded="false"><span class="swatch" style="background:var(${t.c})"></span>
+  <span><h3>${t.t}</h3><span class="sub">${t.s}</span></span><span class="chev">▸</span></button>
+  <div class="body">${t.b}</div></div>`).join("");
+$$(".topic>button").forEach(b=>b.addEventListener("click",()=>{
+  const t=b.parentElement, open=t.classList.toggle("open");
+  b.setAttribute("aria-expanded",open);
+}));
+
+/* ---------- periodic table ---------- */
+$("#ptlegend").innerHTML=Object.entries(CAT_META).map(([k,v])=>`<span><i style="background:${v[1]}"></i>${v[0]}</span>`).join("");
+$("#pt").innerHTML=ELEMENTS.map(e=>{
+  const [row,col]=ptPos(e.z), cat=catOf(e.z), color=CAT_META[cat][1];
+  return `<button class="el" data-z="${e.z}" style="grid-row:${row};grid-column:${col};border-bottom:3px solid ${color}"
+    title="${e.name}"><span class="z">${e.z}</span><span class="sym">${e.sym}</span><span class="nm">${e.name}</span></button>`;
+}).join("");
+function showElement(z){
+  const e=ELEMENTS[z-1], cat=catOf(z), [catName,color]=CAT_META[cat];
+  $$(".el").forEach(el=>el.classList.toggle("sel",+el.dataset.z===z));
+  const fl=FLAME[z];
+  $("#eldetail").innerHTML=`<div class="card">
+    <div class="head"><span class="bigsym" style="color:${color}">${e.sym}</span>
+      <div><h3 style="font-size:24px">${e.name}</h3>
+      <span class="tagline" style="background:color-mix(in srgb,${color} 15%,transparent);color:${color}">${catName}</span></div></div>
+    <table>
+      <tr><td>Atomic number</td><td class="mono">${e.z}</td></tr>
+      <tr><td>Relative atomic mass</td><td class="mono">${e.mass}</td></tr>
+      <tr><td>Electron configuration</td><td class="mono">${econfig(z)}</td></tr>
+      <tr><td>Shorthand</td><td class="mono">${econfigShort(z)}</td></tr>
+      ${fl?`<tr><td>Flame test</td><td><span class="flamechip"><i style="background:${fl[1]}"></i>${fl[0]}</span></td></tr>`:""}
+      ${z===24||z===29?`<tr><td>Note</td><td>Aufbau exception — a ${z===24?"half-filled":"full"} 3d subshell is more stable, so one 4s electron is promoted.</td></tr>`:""}
+    </table></div>`;
+}
+$$("#pt .el").forEach(b=>b.addEventListener("click",()=>showElement(+b.dataset.z)));
+showElement(6);
+
+/* group reactivity trends overlay */
+const TRENDS=[
+ {name:"Group 1 · alkali metals",col:"#C8384F",els:[3,11,19,37,55,87],dir:1,arrow:"▼ more reactive going down",
+  why:"The outer electron sits further from the nucleus and is shielded by more inner shells, so the first ionisation energy falls and the electron is lost more easily. Lithium fizzes steadily in water; potassium ignites with a lilac flame; caesium is explosive."},
+ {name:"Group 2 · alkaline earth metals",col:"#D9970F",els:[4,12,20,38,56,88],dir:1,arrow:"▼ more reactive going down",
+  why:"Same reasoning as group 1 — ionisation energies decrease down the group as radius and shielding grow. Magnesium barely reacts with cold water; barium reacts vigorously. (Two electrons are lost, so each step is less dramatic than in group 1.)"},
+ {name:"Group 7 · halogens",col:"#B0761A",els:[9,17,35,53,85],dir:-1,arrow:"▲ more reactive going up",
+  why:"Halogen reactivity is oxidising power — the pull on an incoming electron. Small atoms with little shielding attract it most strongly, so fluorine is the most reactive element of all. Displacement proves the order: chlorine displaces bromide and iodide from solution; bromine displaces only iodide."},
+ {name:"Group 0 · noble gases",col:"#8E7CC3",els:[2,10,18,36,54,86],dir:0,arrow:"— essentially inert",
+  why:"Full outer shells give no tendency to gain, lose or share electrons. Only a handful of compounds exist (xenon fluorides), made under forcing conditions."}];
+$("#trendinfo").innerHTML=TRENDS.map(t=>`<div class="card">
+  <span class="tagline" style="background:color-mix(in srgb,${t.col} 14%,transparent);color:${t.col}">${t.arrow}</span>
+  <h3>${t.name}</h3><p>${t.why}</p></div>`).join("");
+function applyTrends(){
+  const on=$("#pt-trends").checked;
+  $("#trendinfo").style.display=on?"grid":"none";
+  const inTrend=new Map();
+  TRENDS.forEach(t=>t.els.forEach((z,i)=>inTrend.set(z,[t,i])));
+  $$("#pt .el").forEach(el=>{
+    el.classList.remove("dim","hot"); el.style.background="";
+    if(!on) return;
+    const z=+el.dataset.z, hit=inTrend.get(z);
+    if(!hit){el.classList.add("dim");return;}
+    const [t,i]=hit, n=t.els.length;
+    const frac=t.dir===0?0.45:(t.dir===1?i/(n-1):1-i/(n-1));
+    const pct=Math.round(15+frac*65);
+    el.style.background=`color-mix(in srgb, ${t.col} ${pct}%, var(--panel))`;
+    if(pct>45) el.classList.add("hot");
+  });
+}
+$("#pt-trends").addEventListener("input",applyTrends);
+
+/* ---------- practicals ---------- */
+$("#praclist").innerHTML=PRACLIST.map(p=>`<li>${p}</li>`).join("");
+$("#pracs").innerHTML=PRACS.map((p,i)=>`<div class="prac" id="prac${i}">
+  <button aria-expanded="false"><span class="num">${p.n}</span><h3>${p.t}</h3><span class="chev" style="margin-left:auto;color:var(--ink-soft)">▸</span></button>
+  <div class="body">
+    <h4>Safety — before you touch anything</h4>
+    <div class="hazards">${p.haz.map(h=>`<span class="haz ${h[0]}">⚠ ${h[1]}</span>`).join("")}</div>
+    <h4>Method</h4><ol>${p.steps.map(s=>`<li>${s}</li>`).join("")}</ol>
+    <h4>Where marks are lost — examiner-reported errors</h4>
+    ${p.errors.map(e=>`<div class="errbox"><b>${e[0]}</b>${e[1]}</div>`).join("")}
+    <h4>What you should get</h4>
+    <div class="expected">${p.exp}</div>
+  </div></div>`).join("");
+$$(".prac>button").forEach(b=>b.addEventListener("click",()=>{
+  const t=b.parentElement,open=t.classList.toggle("open");
+  b.setAttribute("aria-expanded",open);
+  b.querySelector(".chev").style.transform=open?"rotate(90deg)":"";
+}));
+
+/* ---------- sources ---------- */
+$("#srclist").innerHTML=SOURCES.map(s=>`<div class="card"><h3>${s[0]}</h3><p>${s[1]}</p>
+  <a href="${s[2]}" target="_blank" rel="noopener">${s[2]}</a></div>`).join("");
+
+/* ---------- quiz ---------- */
+let qi=0, qscore=0, qanswered=0;
+try{const s=JSON.parse(localStorage.getItem("chemlab-quiz")||"{}"); qscore=s.score||0; qanswered=s.n||0;}catch(e){}
+function renderQuiz(){
+  const q=QUIZ[qi%QUIZ.length];
+  $("#quizcard").innerHTML=`
+    <span class="tagline" style="background:var(--bunsen-soft);color:var(--bunsen)">Question ${qi%QUIZ.length+1} of ${QUIZ.length}</span>
+    <div class="qtext">${q.q}</div>
+    <div class="opts">${q.o.map((o,j)=>`<button data-j="${j}">${o}</button>`).join("")}</div>
+    <div class="expl" id="qexpl">${q.e}</div>
+    <div class="quiz-foot">
+      <button class="btn" id="qnext" style="display:none">Next question</button>
+      <span class="score">Session score: ${qscore}/${qanswered}</span>
+    </div>`;
+  $$("#quizcard .opts button").forEach(b=>b.addEventListener("click",()=>{
+    if($("#qexpl").classList.contains("on")) return;
+    const j=+b.dataset.j;
+    qanswered++; if(j===q.a) qscore++;
+    try{localStorage.setItem("chemlab-quiz",JSON.stringify({score:qscore,n:qanswered}));}catch(e){}
+    $$("#quizcard .opts button").forEach((ob,oj)=>{
+      if(oj===q.a) ob.classList.add("right");
+      else if(oj===j) ob.classList.add("wrong");
+      ob.disabled=true;
+    });
+    $("#qexpl").classList.add("on");
+    $("#qnext").style.display="inline-block";
+    $("#quizcard .score").textContent=`Session score: ${qscore}/${qanswered}`;
+  }));
+  $("#qnext").addEventListener("click",()=>{qi++;renderQuiz();});
+}
+renderQuiz();
+
+/* ---------- simulations ---------- */
+$("#sims").innerHTML=`
+<div class="sim" id="sim-titr">
+  <h2>Titration curve</h2>
+  <p class="hint">25.0 cm³ of acid in the flask, 0.100 mol dm⁻³ NaOH in the burette. Watch where the vertical section falls — and which indicator's range sits inside it. At half-equivalence for a weak acid, pH = pKa.</p>
+  <div class="controls">
+    <div class="ctrl"><label for="t-acid">Acid</label><select id="t-acid">
+      <option value="strong">Hydrochloric (strong)</option>
+      <option value="1.74e-5" selected>Ethanoic · Ka 1.74×10⁻⁵</option>
+      <option value="1.78e-4">Methanoic · Ka 1.78×10⁻⁴</option>
+      <option value="6.3e-5">Benzoic · Ka 6.3×10⁻⁵</option></select></div>
+    <div class="ctrl"><label for="t-conc">Acid concentration</label><input type="range" id="t-conc" min="0.05" max="0.2" step="0.005" value="0.1"><span class="val" id="t-conc-v">0.100 mol dm⁻³</span></div>
+    <div class="ctrl"><label for="t-ind">Indicator</label><select id="t-ind">
+      <option value="phen" selected>Phenolphthalein (8.3–10.0)</option>
+      <option value="mo">Methyl orange (3.1–4.4)</option>
+      <option value="btb">Bromothymol blue (6.0–7.6)</option></select></div>
+    <div class="ctrl"><label for="t-vol">Base added</label><input type="range" id="t-vol" min="0" max="50" step="0.1" value="0"><span class="val" id="t-vol-v">0.0 cm³</span></div>
+  </div>
+  <canvas class="plot" id="t-plot"></canvas>
+  <div class="readout">
+    <div class="stat"><div class="k">pH now</div><div class="v" id="t-ph">—</div></div>
+    <div class="stat"><div class="k">Equivalence at</div><div class="v" id="t-eq">—</div></div>
+    <div class="stat"><div class="k">Flask colour</div><div class="v" id="t-col" style="display:flex;align-items:center;gap:8px">—</div></div>
+    <div class="stat" id="t-pka-box"><div class="k">pH at half-equiv.</div><div class="v" id="t-pka">—</div></div>
+  </div>
+</div>
+<div class="sim" id="sim-mb">
+  <h2>Maxwell–Boltzmann distribution</h2>
+  <p class="hint">The area under the curve is the total number of molecules — it never changes. Heating flattens the curve and shifts it right; only a catalyst moves the activation energy line.</p>
+  <div class="controls">
+    <div class="ctrl"><label for="mb-t">Temperature</label><input type="range" id="mb-t" min="200" max="1200" step="10" value="400"><span class="val" id="mb-t-v">400 K</span></div>
+    <div class="ctrl"><label for="mb-ea">Activation energy</label><input type="range" id="mb-ea" min="5" max="60" step="1" value="30"><span class="val" id="mb-ea-v">30 kJ mol⁻¹</span></div>
+    <label class="toggle"><input type="checkbox" id="mb-cat"> Catalyst (lower-Ea route, −35%)</label>
+    <label class="toggle"><input type="checkbox" id="mb-ref" checked> Show 400 K reference</label>
+  </div>
+  <canvas class="plot" id="mb-plot"></canvas>
+  <div class="readout">
+    <div class="stat"><div class="k">Fraction with E ≥ Ea</div><div class="v" id="mb-frac">—</div></div>
+    <div class="stat"><div class="k">vs 400 K, no catalyst</div><div class="v" id="mb-x">—</div></div>
+  </div>
+</div>
+<div class="sim" id="sim-prof">
+  <h2>Reaction energy profile</h2>
+  <p class="hint">ΔH is the height difference between reactants and products; Ea is the climb to the transition state. A catalyst offers a lower path — it changes Ea, never ΔH.</p>
+  <div class="controls">
+    <div class="ctrl"><label for="pr-ea">Activation energy</label><input type="range" id="pr-ea" min="20" max="120" step="1" value="75"><span class="val" id="pr-ea-v">75 kJ mol⁻¹</span></div>
+    <div class="ctrl"><label for="pr-dh">ΔH</label><input type="range" id="pr-dh" min="-100" max="100" step="1" value="-60"><span class="val" id="pr-dh-v">−60 kJ mol⁻¹</span></div>
+    <label class="toggle"><input type="checkbox" id="pr-cat"> Show catalysed route</label>
+  </div>
+  <canvas class="plot" id="pr-plot"></canvas>
+</div>
+<div class="sim" id="sim-gas">
+  <h2>Ideal gas · pV = nRT</h2>
+  <p class="hint">Particles in a box. Temperature sets their speed (⟨KE⟩ ∝ T), volume sets the box, and pressure is what you read off the wall collisions. R = 8.314 J K⁻¹ mol⁻¹.</p>
+  <div class="controls">
+    <div class="ctrl"><label for="g-n">Amount of gas</label><input type="range" id="g-n" min="0.5" max="3" step="0.1" value="1"><span class="val" id="g-n-v">1.0 mol</span></div>
+    <div class="ctrl"><label for="g-t">Temperature</label><input type="range" id="g-t" min="150" max="900" step="10" value="300"><span class="val" id="g-t-v">300 K</span></div>
+    <div class="ctrl"><label for="g-v">Volume</label><input type="range" id="g-v" min="10" max="50" step="1" value="25"><span class="val" id="g-v-v">25 dm³</span></div>
+  </div>
+  <canvas class="plot" id="g-plot" style="height:260px"></canvas>
+  <div class="readout"><div class="stat"><div class="k">Pressure</div><div class="v" id="g-p">—</div></div>
+  <div class="stat"><div class="k">Mean speed scale</div><div class="v" id="g-s">—</div></div></div>
+</div>`;
+
+/* titration maths: exact charge balance solved by bisection */
+function titrPH(Ca,Va,Cb,Vb,Ka){
+  const V=(Va+Vb)/1000, a=Ca*Va/1000, b=Cb*Vb/1000, Kw=1e-14;
+  const CA=a/V, CB=b/V;
+  const f=H=> H + CB - Kw/H - CA*Ka/(Ka+H);
+  let lo=1e-14, hi=1;
+  for(let i=0;i<80;i++){const m=Math.sqrt(lo*hi); if(f(m)>0)hi=m; else lo=m;}
+  return -Math.log10(Math.sqrt(lo*hi));
+}
+const INDS={phen:{lo:8.3,hi:10,cLo:"#e8e8e8",cHi:"#E75B96",nLo:"colourless",nHi:"pink"},
+  mo:{lo:3.1,hi:4.4,cLo:"#D93B3B",cHi:"#E8C51F",nLo:"red",nHi:"yellow"},
+  btb:{lo:6.0,hi:7.6,cLo:"#E8C51F",cHi:"#2456A6",nLo:"yellow",nHi:"blue"}};
+function drawTitr(){
+  const c=$("#t-plot"); if(!c.clientWidth)return;
+  const [ctx,w,h]=setupCanvas(c);
+  const Ka=$("#t-acid").value==="strong"?1e6:+$("#t-acid").value;
+  const Ca=+$("#t-conc").value, Vb=+$("#t-vol").value, Cb=0.1, Va=25;
+  const Veq=Ca*Va/Cb;
+  const L=52;
+  const X=v=>L+(v/50)*(w-L-14);
+  const Y2=p=> (h-30) - (p/14)*(h-46); // pH 0..14
+  ctx.clearRect(0,0,w,h);
+  // axes + grid
+  ctx.strokeStyle=cssVar("--line"); ctx.fillStyle=cssVar("--ink-soft");
+  ctx.font="11px ui-monospace,Menlo,monospace"; ctx.lineWidth=1;
+  for(let p=0;p<=14;p+=2){ctx.globalAlpha=.5;ctx.beginPath();ctx.moveTo(L,Y2(p));ctx.lineTo(w-14,Y2(p));ctx.stroke();ctx.globalAlpha=1;ctx.fillText(p,L-22,Y2(p)+4);}
+  for(let v=0;v<=50;v+=10){ctx.fillText(v,X(v)-6,h-10);}
+  ctx.fillText("pH",8,20); ctx.fillText("volume NaOH added / cm³",w/2-70,h-2);
+  // indicator band
+  const ind=INDS[$("#t-ind").value];
+  ctx.fillStyle=cssVar("--bunsen"); ctx.globalAlpha=.10;
+  ctx.fillRect(L,Y2(ind.hi),w-14-L,Y2(ind.lo)-Y2(ind.hi)); ctx.globalAlpha=1;
+  ctx.fillStyle=cssVar("--ink-soft");
+  ctx.fillText("indicator range",w-140,Y2(ind.hi)-4);
+  // curve
+  ctx.strokeStyle=cssVar("--bunsen"); ctx.lineWidth=2.4; ctx.beginPath();
+  for(let v=0;v<=50;v+=0.08){
+    const p=titrPH(Ca,Va,Cb,v,Ka);
+    const x=X(v),y=Y2(p);
+    v===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  }
+  ctx.stroke();
+  // equivalence marker
+  if(Veq<=50){
+    ctx.setLineDash([4,4]); ctx.strokeStyle=cssVar("--ink-soft"); ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(X(Veq),Y2(0));ctx.lineTo(X(Veq),Y2(14));ctx.stroke();ctx.setLineDash([]);
+  }
+  // current point
+  const ph=titrPH(Ca,Va,Cb,Vb,Ka);
+  ctx.fillStyle=cssVar("--li");
+  ctx.beginPath();ctx.arc(X(Vb),Y2(ph),5,0,7);ctx.fill();
+  // readouts
+  $("#t-ph").textContent=ph.toFixed(2);
+  $("#t-eq").textContent=Veq.toFixed(1)+" cm³";
+  const halfPh=Ka<1?(-Math.log10(Ka)).toFixed(2):"n/a (strong)";
+  $("#t-pka").textContent=halfPh;
+  let colName,colHex;
+  if(ph<ind.lo){colName=ind.nLo;colHex=ind.cLo;}
+  else if(ph>ind.hi){colName=ind.nHi;colHex=ind.cHi;}
+  else{colName="changing";colHex="color-mix(in srgb,"+ind.cLo+" 50%,"+ind.cHi+")";}
+  $("#t-col").innerHTML=`<i style="width:14px;height:14px;border-radius:50%;display:inline-block;background:${colHex};border:1px solid var(--line)"></i>${colName}`;
+}
+["t-acid","t-conc","t-ind","t-vol"].forEach(id=>$("#"+id).addEventListener("input",()=>{
+  $("#t-conc-v").textContent=(+$("#t-conc").value).toFixed(3)+" mol dm⁻³";
+  $("#t-vol-v").textContent=(+$("#t-vol").value).toFixed(1)+" cm³";
+  drawTitr();
+}));
+
+/* Maxwell-Boltzmann (energy form) */
+function mbCurve(T){ // returns f(E) samples, E in kJ/mol
+  const R=8.314e-3; // kJ/mol/K
+  const pts=[]; const kT=R*T;
+  for(let E=0;E<=100;E+=0.25) pts.push([E, Math.sqrt(E)*Math.exp(-E/kT)]);
+  const sum=pts.reduce((s,p)=>s+p[1],0);
+  return pts.map(p=>[p[0],p[1]/sum]); // normalised: area=1
+}
+function mbFrac(pts,Ea){ return pts.reduce((s,p)=>s+(p[0]>=Ea?p[1]:0),0); }
+function drawMB(){
+  const c=$("#mb-plot"); if(!c.clientWidth)return;
+  const [ctx,w,h]=setupCanvas(c);
+  const T=+$("#mb-t").value, cat=$("#mb-cat").checked, showRef=$("#mb-ref").checked;
+  let Ea=+$("#mb-ea").value; const EaEff=cat?Ea*0.65:Ea;
+  const L=46,B=34;
+  ctx.clearRect(0,0,w,h);
+  const cur=mbCurve(T), ref=mbCurve(400);
+  const ymax=Math.max(...ref.map(p=>p[1]),...cur.map(p=>p[1]))*1.15;
+  const X=E=>L+(E/100)*(w-L-14), Y=f=>(h-B)-(f/ymax)*(h-B-16);
+  // axes
+  ctx.strokeStyle=cssVar("--line");ctx.fillStyle=cssVar("--ink-soft");ctx.font="11px ui-monospace,Menlo,monospace";
+  ctx.beginPath();ctx.moveTo(L,10);ctx.lineTo(L,h-B);ctx.lineTo(w-14,h-B);ctx.stroke();
+  ctx.fillText("number of molecules",8,20);ctx.fillText("energy / kJ mol⁻¹",w/2-56,h-8);
+  for(let E=0;E<=100;E+=20)ctx.fillText(E,X(E)-6,h-B+14);
+  // shaded area beyond Ea
+  ctx.fillStyle=cssVar("--cu");ctx.globalAlpha=.28;ctx.beginPath();ctx.moveTo(X(EaEff),Y(0));
+  for(const [E,f] of cur) if(E>=EaEff) ctx.lineTo(X(E),Y(f));
+  ctx.lineTo(X(100),Y(0));ctx.closePath();ctx.fill();ctx.globalAlpha=1;
+  // reference curve
+  if(showRef){ctx.strokeStyle=cssVar("--ink-soft");ctx.setLineDash([3,4]);ctx.lineWidth=1.4;ctx.beginPath();
+    ref.forEach(([E,f],i)=>i?ctx.lineTo(X(E),Y(f)):ctx.moveTo(X(E),Y(f)));ctx.stroke();ctx.setLineDash([]);}
+  // main curve
+  ctx.strokeStyle=cssVar("--li");ctx.lineWidth=2.4;ctx.beginPath();
+  cur.forEach(([E,f],i)=>i?ctx.lineTo(X(E),Y(f)):ctx.moveTo(X(E),Y(f)));ctx.stroke();
+  // Ea lines
+  function eaLine(x,color,label){ctx.strokeStyle=color;ctx.lineWidth=1.6;ctx.setLineDash([5,4]);
+    ctx.beginPath();ctx.moveTo(x,16);ctx.lineTo(x,h-B);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle=color;ctx.fillText(label,x+4,26);}
+  eaLine(X(Ea),cssVar("--ink-soft"),"Ea");
+  if(cat)eaLine(X(EaEff),cssVar("--cu"),"Ea (catalysed)");
+  // readouts
+  const fr=mbFrac(cur,EaEff), fr0=mbFrac(mbCurve(400),+$("#mb-ea").value);
+  $("#mb-frac").textContent=(fr*100).toPrecision(3)+" %";
+  $("#mb-x").textContent="×"+(fr/fr0).toPrecision(3);
+}
+["mb-t","mb-ea","mb-cat","mb-ref"].forEach(id=>$("#"+id).addEventListener("input",()=>{
+  $("#mb-t-v").textContent=$("#mb-t").value+" K";
+  $("#mb-ea-v").textContent=$("#mb-ea").value+" kJ mol⁻¹";
+  drawMB();
+}));
+
+/* energy profile */
+function drawProf(){
+  const c=$("#pr-plot"); if(!c.clientWidth)return;
+  const [ctx,w,h]=setupCanvas(c);
+  const Ea=+$("#pr-ea").value, dH=+$("#pr-dh").value, cat=$("#pr-cat").checked;
+  ctx.clearRect(0,0,w,h);
+  const L=52,B=34;
+  // energy scale: reactants at 0; peak at Ea; products at dH. Range:
+  const top=Math.max(Ea,dH,0)+22, bot=Math.min(0,dH)-22;
+  const Y=E=>(h-B)-((E-bot)/(top-bot))*(h-B-14);
+  const x0=L+10, x1=w*0.28, xp=w*0.5, x2=w*0.72, x3=w-24;
+  ctx.strokeStyle=cssVar("--line");ctx.fillStyle=cssVar("--ink-soft");ctx.font="11px ui-monospace,Menlo,monospace";
+  ctx.beginPath();ctx.moveTo(L,8);ctx.lineTo(L,h-B);ctx.lineTo(w-14,h-B);ctx.stroke();
+  ctx.fillText("enthalpy",8,18);ctx.fillText("progress of reaction",w/2-60,h-8);
+  function path(peak,color,dash){
+    ctx.strokeStyle=color;ctx.lineWidth=2.4;if(dash)ctx.setLineDash([6,5]);
+    ctx.beginPath();ctx.moveTo(x0,Y(0));ctx.lineTo(x1,Y(0));
+    ctx.bezierCurveTo(xp-40,Y(0),xp-58,Y(peak),xp,Y(peak));
+    ctx.bezierCurveTo(xp+58,Y(peak),xp+40,Y(dH),x2,Y(dH));
+    ctx.lineTo(x3,Y(dH));ctx.stroke();ctx.setLineDash([]);
+  }
+  if(cat)path(Ea*0.55,cssVar("--cu"),true);
+  path(Ea,cssVar("--bunsen"),false);
+  // annotations
+  ctx.strokeStyle=cssVar("--ink-soft");ctx.lineWidth=1;ctx.setLineDash([3,3]);
+  ctx.beginPath();ctx.moveTo(x0,Y(0));ctx.lineTo(xp+70,Y(0));ctx.stroke();
+  ctx.beginPath();ctx.moveTo(xp,Y(Ea));ctx.lineTo(xp+70,Y(Ea));ctx.stroke();ctx.setLineDash([]);
+  ctx.strokeStyle=cssVar("--li");ctx.beginPath();ctx.moveTo(xp+62,Y(0));ctx.lineTo(xp+62,Y(Ea));ctx.stroke();
+  ctx.fillStyle=cssVar("--li");ctx.fillText("Ea "+Ea+" kJ",xp+68,(Y(0)+Y(Ea))/2);
+  ctx.strokeStyle=cssVar("--na");ctx.beginPath();ctx.moveTo(x3-8,Y(0));ctx.lineTo(x3-8,Y(dH));ctx.stroke();
+  ctx.fillStyle=cssVar("--na");ctx.fillText("ΔH "+(dH>0?"+":"")+dH+" kJ",x3-78,(Y(0)+Y(dH))/2+(dH>0?-6:12));
+  ctx.fillStyle=cssVar("--ink-soft");
+  ctx.fillText("reactants",x0,Y(0)-8);ctx.fillText("products",x2+6,Y(dH)-8);
+  ctx.fillText(dH<0?"exothermic":"endothermic",L+8,22);
+}
+["pr-ea","pr-dh","pr-cat"].forEach(id=>$("#"+id).addEventListener("input",()=>{
+  $("#pr-ea-v").textContent=$("#pr-ea").value+" kJ mol⁻¹";
+  const d=+$("#pr-dh").value;
+  $("#pr-dh-v").textContent=(d>0?"+":d<0?"−":"")+Math.abs(d)+" kJ mol⁻¹";
+  drawProf();
+}));
+
+/* ideal gas particle box */
+let gasParts=[];
+function gasInit(){
+  gasParts=[]; const N=Math.round(+$("#g-n").value*40);
+  let seed=42; const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
+  for(let i=0;i<N;i++) gasParts.push({x:rnd(),y:rnd(),a:rnd()*6.283});
+}
+function drawGas(){
+  const c=$("#g-plot"); if(!c.clientWidth)return;
+  const [ctx,w,h]=setupCanvas(c);
+  const n=+$("#g-n").value,T=+$("#g-t").value,Vd=+$("#g-v").value;
+  const P=n*8.314*T/(Vd/1000)/1000; // kPa
+  $("#g-p").textContent=P.toFixed(0)+" kPa";
+  $("#g-s").textContent="∝ √T = "+Math.sqrt(T).toFixed(1);
+  const boxW=(Vd/50)*(w-40)+40, boxH=h-30;
+  const bx=(w-boxW)/2, by=15;
+  ctx.clearRect(0,0,w,h);
+  ctx.strokeStyle=cssVar("--ink-soft");ctx.lineWidth=2;ctx.strokeRect(bx,by,boxW,boxH);
+  const need=Math.round(n*40);
+  while(gasParts.length<need)gasParts.push({x:Math.abs(Math.sin(gasParts.length*12.9898)),y:Math.abs(Math.sin(gasParts.length*78.233)),a:gasParts.length});
+  if(gasParts.length>need)gasParts.length=need;
+  const sp=Math.sqrt(T)/900;
+  ctx.fillStyle=cssVar("--bunsen");
+  for(const p of gasParts){
+    if(!reduced){
+      p.x+=Math.cos(p.a)*sp; p.y+=Math.sin(p.a)*sp*1.4;
+      if(p.x<0){p.x=0;p.a=Math.PI-p.a;} if(p.x>1){p.x=1;p.a=Math.PI-p.a;}
+      if(p.y<0){p.y=0;p.a=-p.a;} if(p.y>1){p.y=1;p.a=-p.a;}
+    }
+    ctx.beginPath();ctx.arc(bx+p.x*boxW,by+p.y*boxH,3,0,7);ctx.fill();
+  }
+}
+["g-n","g-t","g-v"].forEach(id=>$("#"+id).addEventListener("input",()=>{
+  $("#g-n-v").textContent=(+$("#g-n").value).toFixed(1)+" mol";
+  $("#g-t-v").textContent=$("#g-t").value+" K";
+  $("#g-v-v").textContent=$("#g-v").value+" dm³";
+}));
+gasInit();
+function gasLoop(){ if($("#v-lab").classList.contains("on")) drawGas(); if(!reduced) requestAnimationFrame(gasLoop); }
+
+/* ---------- redraw plumbing ---------- */
+function redrawAll(){
+  drawSpectrum(); drawTitr(); drawMB(); drawProf(); drawGas();
+}
+window.addEventListener("resize",redrawAll);
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",redrawAll);
+new MutationObserver(redrawAll).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+redrawAll();
+if(!reduced){heroLoop();gasLoop();}
+</script>
+
+</body>
+</html>
