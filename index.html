@@ -138,6 +138,20 @@ section.view.on{display:block;animation:fadein .25s ease}
 .notetable th{background:var(--panel2);font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft)}
 .tblwrap{overflow-x:auto}
 .topic{position:relative}
+.chapcard{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:var(--panel);
+  border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;margin-bottom:10px;box-shadow:var(--shadow);
+  cursor:pointer;transition:transform .12s,border-color .12s;font:inherit;color:inherit}
+.chapcard:hover{transform:translateX(4px);border-color:var(--bunsen)}
+.chapcard .swatch{width:10px;height:42px;border-radius:4px;flex:0 0 10px}
+.chapmain{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.chaptitle{font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;font-size:18px;font-weight:600;line-height:1.3}
+.chapcard .sub{color:var(--ink-soft);font-size:13px}
+.chapmeta{display:flex;align-items:center;gap:10px;flex:0 0 auto}
+.chapgo{font-size:13px;font-weight:700;color:var(--bunsen);letter-spacing:.03em;white-space:nowrap}
+.mastered-badge{font-size:11.5px;font-weight:700;color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,transparent);border-radius:99px;padding:3px 10px;white-space:nowrap}
+.chapcard.locked .chaptitle,.chapcard.locked .sub,.chapcard.locked .swatch{opacity:.55}
+.chapcard.locked .chapgo{color:var(--ink-soft)}
+@media (max-width:760px){.chapgo{display:none}.chapcard{padding:13px 14px}}
 .fsbtn{position:absolute;right:54px;top:14px;z-index:2;border:1px solid var(--line);background:var(--panel2);
   border-radius:99px;padding:5px 13px;font-size:12.5px;color:var(--ink-soft);font-weight:600}
 .fsbtn:hover{border-color:var(--bunsen);color:var(--bunsen)}
@@ -472,6 +486,7 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
       <span class="code-chip" id="r-code"></span>
       <h1 id="r-h1"></h1>
       <div class="sub" id="r-sub"></div>
+      <p style="margin:12px 0 0" id="r-master-wrap"><button class="master" data-i="0" id="r-master">✓ Mark as mastered</button></p>
     </div>
     <div class="reader-body" id="r-body"></div>
     <div class="reader-quiz" id="r-quiz"></div>
@@ -1531,22 +1546,21 @@ const QC=[
  {q:"Co-ordination number of [Cu(H₂O)₆]²⁺?",o:["2","4","6","12"],a:2}],
 [{q:"A sharp IR absorption at 1715 cm⁻¹ suggests…",o:["O–H","C=O","C–H","N–H"],a:1},
  {q:"A triplet in ¹H NMR means the adjacent carbon carries…",o:["1 H","2 H","3 H","no H"],a:1}]];
-$("#topics").innerHTML=TOPICS.map((t,i)=>{
-  const qc=QC[i].map((q,j)=>`<div class="q">${q.q}</div><div>${q.o.map((o,k)=>`<button data-t="${i}" data-j="${j}" data-k="${k}">${o}</button>`).join("")}</div>`).join("");
-  return `<div class="topic" id="topic${i}">
-  <button class="fsbtn" data-fs="${i}">⤢ Study mode</button>
-  <button class="head" aria-expanded="false" style="padding-right:150px"><span class="swatch" style="background:var(${t.c})"></span>
-  <span><h3>${t.t} <span class="code-chip">AQA ${TCODES[i]}</span></h3><span class="sub">${t.s}</span></span>
-  <span class="chev">▸</span></button>
-  <div class="body">${t.b}
-    <div class="qc"><h4>⚡ Quick check</h4>${qc}</div>
-    <p style="margin:16px 0 4px"><button class="master" data-i="${i}">✓ Mark as mastered</button></p>
-  </div></div>`;}).join("");
-$$(".topic>button.head").forEach(b=>b.addEventListener("click",()=>{
-  const t=b.parentElement;
-  if(t.classList.contains("locked")){openAccount();return;}
-  const open=t.classList.toggle("open");
-  b.setAttribute("aria-expanded",open);
+$("#topics").innerHTML=TOPICS.map((t,i)=>`<button class="chapcard" data-ch="${i}" id="topic${i}">
+  <span class="swatch" style="background:var(${t.c})"></span>
+  <span class="chapmain">
+    <span class="chaptitle">${t.t} <span class="code-chip">AQA ${TCODES[i]}</span></span>
+    <span class="sub">${t.s}</span>
+  </span>
+  <span class="chapmeta">
+    <span class="mastered-badge" id="mb${i}" hidden>✓ mastered</span>
+    <span class="chapgo">Study ▸</span>
+  </span>
+</button>`).join("");
+$$(".chapcard").forEach(b=>b.addEventListener("click",()=>{
+  const i=+b.dataset.ch;
+  if(topicLocked(i)){openAccount();return;}
+  openReader(i);
 }));
 let readerI=0;
 const topicLocked=i=>!window.chemPremium && i>=6;
@@ -1567,6 +1581,8 @@ function openReader(i){
     $("#r-body").innerHTML=t.b;
     renderReaderQuiz(i);
   }
+  const rmw=$("#r-master-wrap");
+  if(rmw){rmw.style.display=topicLocked(i)?"none":""; $("#r-master").dataset.i=i; refreshMaster();}
   $("#r-prev").disabled=$("#r-prev2").disabled=(i===0);
   $("#r-next").disabled=$("#r-next2").disabled=(i===TOPICS.length-1);
   $("#r-prev2").textContent=i>0?"◀ "+TOPICS[i-1].t:"◀";
@@ -1610,15 +1626,11 @@ function renderReaderQuiz(t){
     }
   }));
 }
-$$(".fsbtn").forEach(b=>b.addEventListener("click",e=>{
-  e.stopPropagation();
-  const i=+b.dataset.fs;
-  if(topicLocked(i)){openAccount();return;}
-  openReader(i);
-}));
+
 function refreshMaster(){
   const m=load("chemlab-mastered",[]);
   $$(".master").forEach(b=>{const on=m.includes(+b.dataset.i);b.classList.toggle("on",on);b.textContent=on?"✓ Mastered":"✓ Mark as mastered";});
+  TOPICS.forEach((_,i)=>{const b=document.querySelector("#mb"+i); if(b)b.hidden=!m.includes(i);});
 }
 $$(".master").forEach(b=>b.addEventListener("click",()=>{
   let m=load("chemlab-mastered",[]); const i=+b.dataset.i;
@@ -1627,13 +1639,7 @@ $$(".master").forEach(b=>b.addEventListener("click",()=>{
   if(m.includes(i))burstFrom(b);
 }));
 refreshMaster();
-$$(".qc button").forEach(b=>b.addEventListener("click",()=>{
-  const q=QC[+b.dataset.t][+b.dataset.j];
-  const sibs=[...b.parentElement.children];
-  if(sibs.some(x=>x.disabled))return;
-  sibs.forEach((x,k)=>{if(k===q.a)x.classList.add("right");x.disabled=true;});
-  if(+b.dataset.k!==q.a)b.classList.add("wrong"); else burstFrom(b);
-}));
+
 
 /* ---------- periodic table ---------- */
 $("#ptlegend").innerHTML=Object.entries(CAT_META).map(([k,v])=>`<span><i style="background:${v[1]}"></i>${v[0]}</span>`).join("");
@@ -1786,12 +1792,11 @@ window.applyPracLocks=function(){
     const ch=el.querySelector(".chev");
     if(ch){ch.textContent=locked?"🔒":"▸";ch.style.transform="";}
   });
-  $$(".topic").forEach((el,i)=>{
+  $$(".chapcard").forEach((el,i)=>{
     const locked=!prem && i>=6; // year-1 core free, the rest Premium
     el.classList.toggle("locked",locked);
-    if(locked)el.classList.remove("open");
-    const ch=el.querySelector(".chev");
-    if(ch){ch.textContent=locked?"🔒":"▸";ch.style.transform="";}
+    const go=el.querySelector(".chapgo");
+    if(go)go.textContent=locked?"🔒 Premium":"Study ▸";
   });
   ["sim-titr","sim-mb","sim-shape"].forEach(id=>{
     const el=document.getElementById(id); if(!el)return;
