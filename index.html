@@ -337,6 +337,8 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
 .av-h{width:26px;height:26px;border-radius:50%;border:2px solid transparent;transition:transform .1s;padding:0}
 .av-h:hover{transform:scale(1.18)}
 .av-h.on{border-color:var(--ink);box-shadow:0 0 0 2px var(--panel)}
+.avatar{overflow:hidden}
+.avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block}
 .price-box b{font-size:20px;font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
 .price-box span{display:block;font-size:12px;color:var(--ink-soft)}
 
@@ -1806,6 +1808,8 @@ let tab="in", plan="m";
 const pwScore=v=>{let c=0;if(v.length>=8)c++;if(v.length>=12)c++;if(/[A-Z]/.test(v)&&/[a-z]/.test(v))c++;if(/\d/.test(v))c++;if(/[^A-Za-z0-9]/.test(v))c++;return Math.min(c,4);};
 const avatarFor=(email,sm)=>{
   const hue=(prof&&prof.avatar_hue!=null)?prof.avatar_hue:[...email].reduce((a,ch)=>a+ch.charCodeAt(0)*7,0)%360;
+  if(prof&&prof.avatar&&prof.avatar.startsWith("data:"))
+    return `<span class="avatar${sm?" sm":""}"><img src="${prof.avatar}" alt=""></span>`;
   const inner=(prof&&prof.avatar)?prof.avatar:((prof&&prof.nickname)||email)[0].toUpperCase();
   return `<span class="avatar${sm?" sm":""}" style="background:hsl(${hue},48%,44%)">${inner}</span>`;
 };
@@ -1932,6 +1936,12 @@ function render(){
       <h4 class="setlbl" style="margin-top:14px">Profile picture</h4>
       <div class="avpick">${AV_EMOJI.map(e=>`<button class="av-e${prof.avatar===e?" on":""}" data-e="${e}" aria-label="Avatar ${e}">${e}</button>`).join("")}</div>
       <div class="avhues">${AV_HUES.map(h=>`<button class="av-h${prof.avatar_hue===h?" on":""}" data-h="${h}" style="background:hsl(${h},50%,45%)" aria-label="Colour"></button>`).join("")}</div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:6px">
+        <button class="btn ghost" id="av-upload">📷 Upload your own…</button>
+        ${prof.avatar&&prof.avatar.startsWith("data:")?'<button class="btn ghost" id="av-remove" style="color:var(--danger)">Remove photo</button>':""}
+        <input id="av-file" type="file" accept="image/*" hidden>
+        <span class="aerr" id="av-msg" style="min-height:auto;margin:0"></span>
+      </div>
     </div>
     <div style="border-top:1px solid var(--line);padding-top:12px;margin-top:12px">
       <h4 class="setlbl">Change password</h4>
@@ -1994,6 +2004,20 @@ function render(){
   $("#nick").addEventListener("keydown",e=>{if(e.key==="Enter")$("#nick-save").click();});
   acct.querySelectorAll(".av-e").forEach(b=>b.onclick=()=>saveProf({avatar:prof.avatar===b.dataset.e?null:b.dataset.e},true));
   acct.querySelectorAll(".av-h").forEach(b=>b.onclick=()=>saveProf({avatar_hue:+b.dataset.h},true));
+  $("#av-upload").onclick=()=>$("#av-file").click();
+  $("#av-file").addEventListener("change",async e=>{
+    const f=e.target.files[0]; if(!f)return;
+    if(f.size>5*1024*1024){$("#av-msg").textContent="That file is over 5 MB — pick a smaller one.";return;}
+    try{
+      const bmp=await createImageBitmap(f);
+      const S=128, c=document.createElement("canvas"); c.width=S; c.height=S;
+      const cx=c.getContext("2d");
+      const side=Math.min(bmp.width,bmp.height);
+      cx.drawImage(bmp,(bmp.width-side)/2,(bmp.height-side)/2,side,side,0,0,S,S);
+      await saveProf({avatar:c.toDataURL("image/jpeg",0.85)},true);
+    }catch(err){$("#av-msg").textContent="Couldn't read that image — try a JPG or PNG.";}
+  });
+  const avrm=$("#av-remove"); if(avrm)avrm.onclick=()=>saveProf({avatar:null});
   $("#pw-save").onclick=async()=>{
     const v=$("#pw-new").value;
     if(v.length<8){$("#pw-msg").textContent="Use at least 8 characters.";return;}
