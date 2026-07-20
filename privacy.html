@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Privacy Policy · ChemLab</title>
+<style>
+:root{--ground:#F3F6F5;--panel:#FFFFFF;--ink:#16232B;--ink-soft:#51636E;--line:#D9E2E1;--bunsen:#2456A6}
+@media (prefers-color-scheme:dark){:root{--ground:#0F171C;--panel:#16222A;--ink:#E5EDEF;--ink-soft:#8FA3AD;--line:#24343D;--bunsen:#6FA0E8}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+main{max-width:720px;margin:0 auto;padding:40px 20px 80px}
+h1,h2{font-family:"Iowan Old Style",Palatino,Georgia,serif;text-wrap:balance}
+h1{font-size:30px}h2{font-size:20px;margin-top:32px}
+p,li{max-width:68ch;color:var(--ink)}
+a{color:var(--bunsen)}
+table{border-collapse:collapse;font-size:14.5px;margin:12px 0}
+td,th{border:1px solid var(--line);padding:8px 12px;text-align:left;vertical-align:top}
+.muted{color:var(--ink-soft);font-size:14px}
+</style>
+</head>
+<body>
+<main>
+<p><a href="/">← Back to ChemLab</a></p>
+<h1>Privacy Policy</h1>
+<p class="muted">Last updated: 20 July 2026</p>
+
+<p>ChemLab ("we") is an A-level chemistry study tool at chemlab-ten.vercel.app. This policy explains what data we hold about you, why, and the rights you have over it under the EU/UK General Data Protection Regulation (GDPR).</p>
+
+<h2>What we collect, and why</h2>
+<table>
+<tr><th>Data</th><th>Why</th><th>Legal basis</th></tr>
+<tr><td>Email address + password (stored only as a bcrypt hash — we cannot read it)</td><td>Your account and sign-in</td><td>Contract (Art. 6(1)(b))</td></tr>
+<tr><td>Study progress (topics mastered, quiz scores, practical checklists, game bests)</td><td>Syncing your progress across devices</td><td>Contract</td></tr>
+<tr><td>Premium status and a Stripe customer reference</td><td>Knowing what you've paid for</td><td>Contract</td></tr>
+</table>
+<p>That is the complete list. We do not collect names, run advertising, use analytics trackers, or profile you. The browser storage we use holds only your sign-in session and your own study progress — no tracking cookies, so no cookie banner is required.</p>
+
+<h2>Payments</h2>
+<p>Card details are entered on and processed entirely by <a href="https://stripe.com/privacy">Stripe</a>. Your card number never reaches ChemLab's servers; we store only Stripe's anonymous customer reference and whether your subscription is active.</p>
+
+<h2>Where your data lives, and how it's protected</h2>
+<ul>
+<li>Stored with Supabase in Frankfurt, Germany (EU) — encrypted at rest with AES-256.</li>
+<li>All traffic is encrypted in transit with TLS.</li>
+<li>Passwords are hashed with bcrypt; database access is restricted by row-level security so each account can only ever read its own row.</li>
+</ul>
+
+<h2>Who processes it</h2>
+<table>
+<tr><th>Processor</th><th>Role</th><th>Location</th></tr>
+<tr><td>Supabase</td><td>Database and authentication</td><td>EU (Frankfurt)</td></tr>
+<tr><td>Vercel</td><td>Website hosting</td><td>Global CDN</td></tr>
+<tr><td>Stripe</td><td>Payment processing</td><td>EU/US (EU-approved safeguards)</td></tr>
+</table>
+
+<h2>How long we keep it</h2>
+<p>For as long as your account exists. Delete your account and everything above is erased immediately and permanently; any active subscription is cancelled at the same time.</p>
+
+<h2>Your rights</h2>
+<ul>
+<li><b>Access & portability</b> — Account → "Download my data" gives you everything we hold, as JSON, instantly.</li>
+<li><b>Erasure</b> — Account → "Delete my account". Immediate and irreversible.</li>
+<li><b>Rectification</b> — contact us to correct anything.</li>
+<li><b>Complaint</b> — you may complain to your national data protection authority.</li>
+</ul>
+
+<h2>Age</h2>
+<p>ChemLab is a study tool for A-level students. If you are below the age of digital consent in your country (13–16 depending on the country), please ask a parent or guardian before creating an account.</p>
+
+<h2>Contact</h2>
+<p>Data controller: ChemLab — <a href="mailto:cristianmateiionescu@gmail.com">cristianmateiionescu@gmail.com</a></p>
+
+<h2>Changes</h2>
+<p>If this policy changes materially we will note it here with a new date.</p>
+</main>
+</body>
+</html>

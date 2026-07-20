@@ -1366,6 +1366,7 @@ function render(){
       <div class="field"><label for="a-pass">Password</label><input id="a-pass" type="password" autocomplete="${tab==="in"?"current":"new"}-password"></div>
       <div class="aerr" id="a-err"></div>
       <button class="btn" id="a-go">${tab==="in"?"Sign in":"Create account"}</button>
+      <p style="font-size:12.5px;color:var(--ink-soft);margin:12px 0 0">No tracking, no ads, EU-hosted, delete anytime — <a href="/privacy.html">privacy policy</a>.</p>
     </div>`;
     $("#t-in").onclick=()=>{tab="in";render();};
     $("#t-up").onclick=()=>{tab="up";render();};
@@ -1392,9 +1393,33 @@ function render(){
       <p style="color:var(--ink-soft);font-size:13px;max-width:52ch">You'll go to a secure Stripe checkout and come straight back here — Premium unlocks automatically. While we're in test mode, use card 4242 4242 4242 4242, any future date, any CVC.</p>
       <p><button class="btn ghost" id="a-refresh">Refresh status</button></p>`}
     <p style="margin-top:14px"><button class="btn ghost" id="a-out">Sign out</button></p>
+    <div style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">
+      <h4 style="margin:0 0 6px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft)">Your data &amp; privacy</h4>
+      <p style="font-size:13.5px;color:var(--ink-soft);max-width:52ch">Everything ChemLab stores about you is yours — read the <a href="/privacy.html">privacy policy</a>.</p>
+      <p style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn ghost" id="a-export">Download my data</button>
+        <button class="btn ghost" id="a-delete" style="color:var(--danger)">Delete my account</button></p>
+    </div>
   </div>`;
   const rb=$("#a-refresh"); if(rb)rb.onclick=refresh;
   $("#a-out").onclick=async()=>{await sb.auth.signOut();refresh();};
+  $("#a-export").onclick=async()=>{
+    const {data:{session}}=await sb.auth.getSession(); if(!session)return;
+    const r=await fetch("/api/account",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+session.access_token},body:JSON.stringify({action:"export"})});
+    const blob=new Blob([JSON.stringify(await r.json(),null,2)],{type:"application/json"});
+    const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="chemlab-data.json"; a.click(); URL.revokeObjectURL(a.href);
+  };
+  $("#a-delete").onclick=async()=>{
+    if(prompt("This permanently erases your account, progress and any subscription. Type DELETE to confirm.")!=="DELETE")return;
+    const {data:{session}}=await sb.auth.getSession(); if(!session)return;
+    const r=await fetch("/api/account",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+session.access_token},body:JSON.stringify({action:"delete"})});
+    if((await r.json()).deleted){
+      ["chemlab-mastered","chemlab-quiz","chemlab-prac","chemlab-hunt-best","chemlab-quiz-beststreak"].forEach(k=>localStorage.removeItem(k));
+      await sb.auth.signOut();
+      acct.innerHTML='<div class="card acct-card"><h3>Account deleted</h3><p>Everything we stored about you is gone. Thanks for trying ChemLab.</p></div>';
+      window.chemPremium=false; window.applyPracLocks();
+    } else alert("Deletion failed — please email us and we will erase it manually.");
+  };
 }
 sb.auth.onAuthStateChange(()=>refresh());
 refresh();
