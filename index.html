@@ -195,6 +195,39 @@ canvas.plot{width:100%;height:320px;display:block;border-radius:8px;background:v
 .srclist .card h3{font-size:16.5px}
 .srclist .card a{font-size:13.5px;word-break:break-all}
 
+/* gamification */
+.code-chip{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:11px;color:var(--bunsen);background:var(--bunsen-soft);border-radius:6px;padding:2px 7px;letter-spacing:.04em;font-weight:600}
+.master{margin-left:0;border:1px solid var(--line);background:var(--panel2);border-radius:99px;padding:5px 14px;font-size:13px;color:var(--ink-soft)}
+.master.on{background:color-mix(in srgb,var(--ok) 15%,transparent);border-color:var(--ok);color:var(--ok);font-weight:700}
+.pbar{height:6px;border-radius:99px;background:var(--panel2);overflow:hidden;flex:1;min-width:60px}
+.pbar>i{display:block;height:100%;border-radius:99px;background:var(--cu);transition:width .3s;width:0}
+.ringrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-top:16px}
+.ring{--p:0;--rc:var(--bunsen);width:86px;height:86px;border-radius:50%;margin:0 auto 10px;display:grid;place-items:center;background:conic-gradient(var(--rc) calc(var(--p)*1%),var(--panel2) 0)}
+.ring>b{width:66px;height:66px;border-radius:50%;background:var(--panel);display:grid;place-items:center;font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:14px;font-variant-numeric:tabular-nums}
+.ringcard{text-align:center}
+.ringcard .k{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft)}
+.qc{margin-top:18px;border-top:2px dashed var(--line);padding-top:12px}
+.qc h4{margin:0 0 4px}
+.qc .q{margin:12px 0 7px;font-weight:600;font-size:15px}
+.qc button{border:1px solid var(--line);background:var(--panel2);border-radius:99px;padding:5px 14px;margin:0 6px 6px 0;font-size:14px}
+.qc button:hover{border-color:var(--bunsen)}
+.qc button.right{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 14%,transparent);font-weight:700}
+.qc button.wrong{border-color:var(--danger);background:color-mix(in srgb,var(--danger) 12%,transparent)}
+ul.chk{list-style:none;padding-left:0!important;margin:8px 0}
+.chk li{display:flex;gap:10px;align-items:flex-start;padding:7px 10px;border-radius:8px;cursor:pointer;max-width:78ch}
+.chk li:hover{background:var(--panel2)}
+.chk li .box{flex:0 0 20px;width:20px;height:20px;border:2px solid var(--line);border-radius:6px;margin-top:2px;display:grid;place-items:center;color:transparent;font-size:13px;line-height:1}
+.chk li.done .box{background:var(--ok);border-color:var(--ok);color:#fff}
+.chk li.done .txt{opacity:.55;text-decoration:line-through}
+.streak{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-variant-numeric:tabular-nums;font-size:13.5px;color:var(--ink-soft)}
+.hunt{display:flex;flex-wrap:wrap;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px 16px;margin:0 0 14px;box-shadow:var(--shadow)}
+.hunt .ask{font-weight:600;font-size:15px}
+.el.flash-ok{animation:flok .55s}
+.el.flash-no{animation:flno .4s}
+@keyframes flok{0%{box-shadow:0 0 0 3px var(--ok)}100%{box-shadow:0 0 0 0 transparent}}
+@keyframes flno{0%,100%{transform:none}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.confetti-bit{position:fixed;width:8px;height:8px;border-radius:2px;pointer-events:none;z-index:99}
+
 @media (max-width:760px){
   .app{flex-direction:column}
   nav.rail{width:100%;flex-direction:row;height:auto;position:static;overflow-x:auto;
@@ -231,12 +264,13 @@ canvas.plot{width:100%;height:320px;display:block;border-radius:8px;background:v
   <h1>Chemistry, from first principles to the lab bench.</h1>
   <p class="lede">A study companion for A-level chemistry (AQA · OCR · Edexcel). Learn the theory, run the simulations, master the required practicals — with values checked against IUPAC, NIST and the Royal Society of Chemistry.</p>
   <div class="grid cols3" id="homecards"></div>
+  <div id="dash"></div>
 </section>
 
 <section class="view" id="v-learn">
   <div class="eyebrow">Theory</div>
   <h1>Learn</h1>
-  <p class="lede">The core A-level topics, condensed to what examiners actually ask. Definitions are worded the way mark schemes want them.</p>
+  <p class="lede">The core A-level topics, condensed to what examiners actually ask, tagged with their AQA spec codes. Answer the quick checks, then mark each topic mastered to build your progress ring.</p>
   <div id="topics"></div>
 </section>
 
@@ -250,7 +284,12 @@ canvas.plot{width:100%;height:320px;display:block;border-radius:8px;background:v
 <section class="view" id="v-periodic">
   <div class="eyebrow">Reference</div>
   <h1>Periodic table</h1>
-  <p class="lede">All 118 elements. Click any element for its electron configuration, and a flame-test colour where one exists.</p>
+  <p class="lede">All 118 elements. Click any element for its electron configuration, and a flame-test colour where one exists. Then see how fast you are in Element Hunt.</p>
+  <div class="hunt">
+    <button class="btn" id="hunt-btn">🎯 Element Hunt</button>
+    <span class="ask" id="hunt-ask">Find 8 elements from their clues, against the clock.</span>
+    <span class="streak" id="hunt-score"></span>
+  </div>
   <div class="pt-legend" id="ptlegend"></div>
   <div class="controls" style="margin:0 0 12px">
     <label class="toggle"><input type="checkbox" id="pt-trends"> Show group reactivity trends</label>
@@ -272,7 +311,7 @@ canvas.plot{width:100%;height:320px;display:block;border-radius:8px;background:v
 <section class="view" id="v-quiz">
   <div class="eyebrow">Test yourself</div>
   <h1>Quiz</h1>
-  <p class="lede">Exam-style multiple choice with explanations. Your score is kept on this device.</p>
+  <p class="lede">Exam-style multiple choice with explanations, shuffled every session. Protect your streak. 🔥</p>
   <div class="quiz-card" id="quizcard"></div>
 </section>
 
@@ -604,6 +643,22 @@ function setupCanvas(c){
   const ctx=c.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0);
   return [ctx,w,h];
 }
+const store=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+const load=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}};
+function burst(x,y,n=14){
+  if(reduced)return;
+  const cols=[cssVar("--li"),cssVar("--na"),cssVar("--k"),cssVar("--cu"),cssVar("--bunsen")];
+  for(let i=0;i<n;i++){
+    const b=document.createElement("i");b.className="confetti-bit";
+    b.style.left=x+"px";b.style.top=y+"px";b.style.background=cols[i%cols.length];
+    document.body.appendChild(b);
+    const a=Math.random()*6.283,d=40+Math.random()*70;
+    b.animate([{transform:"translate(0,0) rotate(0)",opacity:1},
+      {transform:`translate(${Math.cos(a)*d}px,${Math.sin(a)*d+60}px) rotate(${180+Math.random()*360}deg)`,opacity:0}],
+      {duration:700+Math.random()*400,easing:"cubic-bezier(.2,.6,.3,1)"}).onfinish=()=>b.remove();
+  }
+}
+function burstFrom(el){const r=el.getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2);}
 
 /* ---------- navigation ---------- */
 $$("nav.rail button[data-v]").forEach(b=>b.addEventListener("click",()=>showView(b.dataset.v)));
@@ -611,6 +666,7 @@ function showView(v){
   $$("nav.rail button[data-v]").forEach(b=>b.classList.toggle("on",b.dataset.v===v));
   $$("section.view").forEach(s=>s.classList.toggle("on",s.id==="v-"+v));
   window.scrollTo({top:0});
+  if(v==="home")renderDash();
   redrawAll();
 }
 
@@ -630,6 +686,24 @@ $$("#homecards .card").forEach(c=>{
   c.addEventListener("click",go);
   c.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();go();}});
 });
+function renderDash(){
+  const mastered=load("chemlab-mastered",[]).length;
+  const qz=load("chemlab-quiz",{score:0,n:0});
+  const acc=qz.n?Math.round(qz.score/qz.n*100):0;
+  const prac=load("chemlab-prac",{});
+  const totalSteps=PRACS.reduce((s,p)=>s+p.steps.length,0);
+  const doneSteps=Object.values(prac).reduce((s,a)=>s+(a||[]).filter(Boolean).length,0);
+  const best=load("chemlab-hunt-best",0);
+  const ring=(p,c,txt,k)=>`<div class="ringcard"><div class="ring" style="--p:${Math.min(100,p)};--rc:var(${c})"><b>${txt}</b></div><div class="k">${k}</div></div>`;
+  $("#dash").innerHTML=`<div class="card" style="margin-top:14px"><h3>Your progress</h3>
+    <p style="margin-top:2px">Everything below is earned in the app — quick checks, ticked lab steps, quiz streaks and hunts. It stays on this device.</p>
+    <div class="ringrow">
+    ${ring(mastered/TOPICS.length*100,"--li",mastered+"/"+TOPICS.length,"topics mastered")}
+    ${ring(acc,"--cu",acc+"%","quiz accuracy")}
+    ${ring(totalSteps?doneSteps/totalSteps*100:0,"--na",doneSteps+"/"+totalSteps,"lab steps ticked")}
+    ${ring(best/8*100,"--k",best+"/8","element hunt best")}
+    </div></div>`;
+}
 
 /* ---------- hero: hydrogen emission spectrum ---------- */
 function wl2rgb(w){ // 380-700nm approximation
@@ -682,13 +756,59 @@ function drawSpectrum(){
 function heroLoop(){ heroT++; drawSpectrum(); if(!reduced) requestAnimationFrame(heroLoop); }
 
 /* ---------- learn ---------- */
-$("#topics").innerHTML=TOPICS.map((t,i)=>`<div class="topic" id="topic${i}">
-  <button aria-expanded="false"><span class="swatch" style="background:var(${t.c})"></span>
-  <span><h3>${t.t}</h3><span class="sub">${t.s}</span></span><span class="chev">▸</span></button>
-  <div class="body">${t.b}</div></div>`).join("");
-$$(".topic>button").forEach(b=>b.addEventListener("click",()=>{
+const TCODES=["3.1.1","3.1.3","3.1.2","3.1.4","3.1.5 · 3.1.9","3.1.6 · 3.1.10","3.1.12","3.1.7 · 3.1.11","3.3","3.2"];
+const QC=[
+[{q:"Which electrons does a transition metal lose first when it ionises?",o:["3d","4s","3p","3s"],a:1},
+ {q:"In TOF mass spectrometry, acceleration gives every ion the same…",o:["speed","mass","kinetic energy","charge"],a:2}],
+[{q:"Bond angle in H₂O?",o:["120°","109.5°","107°","104.5°"],a:3},
+ {q:"Strongest intermolecular force between HF molecules?",o:["London forces","Permanent dipole–dipole","Hydrogen bonding","Ionic"],a:2}],
+[{q:"In pV = nRT, volume must be in…",o:["dm³","cm³","m³","litres"],a:2},
+ {q:"The atom economy of any addition reaction is…",o:["always 100%","always below 50%","equal to the yield","impossible to predict"],a:0}],
+[{q:"Breaking a chemical bond is always…",o:["exothermic","endothermic","energy-neutral","catalysed"],a:1},
+ {q:"Using formation data, ΔH of reaction equals…",o:["Σf(reactants) − Σf(products)","Σf(products) − Σf(reactants)","the sum of all ΔH°f","q ÷ n"],a:1}],
+[{q:"A catalyst changes which quantity?",o:["ΔH","Kc","Ea","temperature"],a:2},
+ {q:"Orders in a rate equation come from…",o:["the balanced equation","experiment only","the mole ratio","electronegativity"],a:1}],
+[{q:"The only change that alters the value of Kc is…",o:["pressure","concentration","a catalyst","temperature"],a:3},
+ {q:"Raising pressure shifts a gaseous equilibrium towards…",o:["more gas moles","fewer gas moles","no change ever","the endothermic side"],a:1}],
+[{q:"pH of 0.01 mol dm⁻³ HCl?",o:["1","2","7","12"],a:1},
+ {q:"A buffer is a weak acid plus…",o:["a strong acid","its salt","pure water","an indicator"],a:1}],
+[{q:"An oxidising agent is itself…",o:["oxidised","reduced","neutralised","unchanged"],a:1},
+ {q:"A cell reaction is feasible when its EMF is…",o:["greater than 0","less than 0","exactly 0","exactly 1.10 V"],a:0}],
+[{q:"Markovnikov: H adds to the carbon that already has…",o:["more hydrogens","fewer hydrogens","the halogen","a double bond"],a:0},
+ {q:"Warming a ketone with Tollens' reagent gives…",o:["a silver mirror","a brick-red precipitate","no visible change","a green solution"],a:2}],
+[{q:"Highest melting point in period 3?",o:["Na","Al","Si","S₈"],a:2},
+ {q:"Which silver halide dissolves in dilute ammonia?",o:["AgCl","AgBr","AgI","none of them"],a:0}]];
+$("#topics").innerHTML=TOPICS.map((t,i)=>{
+  const qc=QC[i].map((q,j)=>`<div class="q">${q.q}</div><div>${q.o.map((o,k)=>`<button data-t="${i}" data-j="${j}" data-k="${k}">${o}</button>`).join("")}</div>`).join("");
+  return `<div class="topic" id="topic${i}">
+  <button class="head" aria-expanded="false"><span class="swatch" style="background:var(${t.c})"></span>
+  <span><h3>${t.t} <span class="code-chip">AQA ${TCODES[i]}</span></h3><span class="sub">${t.s}</span></span>
+  <span class="chev">▸</span></button>
+  <div class="body">${t.b}
+    <div class="qc"><h4>⚡ Quick check</h4>${qc}</div>
+    <p style="margin:16px 0 4px"><button class="master" data-i="${i}">✓ Mark as mastered</button></p>
+  </div></div>`;}).join("");
+$$(".topic>button.head").forEach(b=>b.addEventListener("click",()=>{
   const t=b.parentElement, open=t.classList.toggle("open");
   b.setAttribute("aria-expanded",open);
+}));
+function refreshMaster(){
+  const m=load("chemlab-mastered",[]);
+  $$(".master").forEach(b=>{const on=m.includes(+b.dataset.i);b.classList.toggle("on",on);b.textContent=on?"✓ Mastered":"✓ Mark as mastered";});
+}
+$$(".master").forEach(b=>b.addEventListener("click",()=>{
+  let m=load("chemlab-mastered",[]); const i=+b.dataset.i;
+  m=m.includes(i)?m.filter(x=>x!==i):[...m,i];
+  store("chemlab-mastered",m); refreshMaster();
+  if(m.includes(i))burstFrom(b);
+}));
+refreshMaster();
+$$(".qc button").forEach(b=>b.addEventListener("click",()=>{
+  const q=QC[+b.dataset.t][+b.dataset.j];
+  const sibs=[...b.parentElement.children];
+  if(sibs.some(x=>x.disabled))return;
+  sibs.forEach((x,k)=>{if(k===q.a)x.classList.add("right");x.disabled=true;});
+  if(+b.dataset.k!==q.a)b.classList.add("wrong"); else burstFrom(b);
 }));
 
 /* ---------- periodic table ---------- */
@@ -715,7 +835,47 @@ function showElement(z){
       ${z===24||z===29?`<tr><td>Note</td><td>Aufbau exception — a ${z===24?"half-filled":"full"} 3d subshell is more stable, so one 4s electron is promoted.</td></tr>`:""}
     </table></div>`;
 }
-$$("#pt .el").forEach(b=>b.addEventListener("click",()=>showElement(+b.dataset.z)));
+/* element hunt game */
+const HUNTS=[["the element with configuration [Ar] 3d⁵ 4s¹",24],["the element with configuration [Ar] 3d¹⁰ 4s¹",29],
+["the element whose flame test is lilac",19],["the element whose flame test is crimson red",3],
+["the element whose flame test is apple green",56],["the halogen in period 4",35],
+["the noble gas in period 3",18],["the alkali metal in period 5",37],
+["the metalloid in period 2",5],["the most electronegative element of all",9],
+["the metal oxidised in a zinc–copper cell",30],["the giant covalent element at period 3's melting-point peak",14],
+["the element whose flame test is intense yellow-orange",11],["the halogen that is a grey-black solid at room temperature",53],
+["the group 2 metal in period 3",12],["the lightest noble gas",2]];
+let hunt=null;
+function huntNext(){
+  if(!hunt)return;
+  if(hunt.i>=hunt.qs.length){
+    const t=Math.round((performance.now()-hunt.t0)/1000);
+    const best=load("chemlab-hunt-best",0);
+    const isBest=hunt.score>best;
+    if(isBest)store("chemlab-hunt-best",hunt.score);
+    $("#hunt-ask").textContent=`Done — ${hunt.score}/${hunt.qs.length} in ${t}s${isBest?" · new personal best! 🎉":""}`;
+    $("#hunt-score").textContent="";
+    $("#hunt-btn").textContent="🎯 Play again";
+    hunt=null; return;
+  }
+  $("#hunt-ask").textContent=`Find: ${hunt.qs[hunt.i][0]}`;
+  $("#hunt-score").textContent=`${hunt.score} pt · clue ${hunt.i+1}/${hunt.qs.length}`;
+}
+$("#hunt-btn").addEventListener("click",()=>{
+  hunt={qs:[...HUNTS].sort(()=>Math.random()-.5).slice(0,8),i:0,score:0,t0:performance.now()};
+  $("#hunt-btn").textContent="🎯 Playing…";
+  huntNext();
+});
+function onElClick(z,btn){
+  if(hunt){
+    const want=hunt.qs[hunt.i][1];
+    if(z===want){hunt.score++; btn.classList.add("flash-ok"); burstFrom(btn);}
+    else{btn.classList.add("flash-no"); const w=document.querySelector(`#pt .el[data-z="${want}"]`); if(w)w.classList.add("flash-ok");}
+    setTimeout(()=>$$("#pt .el").forEach(e=>e.classList.remove("flash-ok","flash-no")),600);
+    hunt.i++; setTimeout(huntNext,650);
+  }
+  showElement(z);
+}
+$$("#pt .el").forEach(b=>b.addEventListener("click",()=>onElClick(+b.dataset.z,b)));
 showElement(6);
 
 /* group reactivity trends overlay */
@@ -757,7 +917,9 @@ $("#pracs").innerHTML=PRACS.map((p,i)=>`<div class="prac" id="prac${i}">
   <div class="body">
     <h4>Safety — before you touch anything</h4>
     <div class="hazards">${p.haz.map(h=>`<span class="haz ${h[0]}">⚠ ${h[1]}</span>`).join("")}</div>
-    <h4>Method</h4><ol>${p.steps.map(s=>`<li>${s}</li>`).join("")}</ol>
+    <h4>Method — tick each step as you master it <span class="streak" id="pracpct${i}"></span></h4>
+    <div style="display:flex;align-items:center;gap:10px;margin:6px 0;max-width:78ch"><div class="pbar"><i id="pracbar${i}"></i></div></div>
+    <ul class="chk">${p.steps.map((s,j)=>`<li data-p="${i}" data-s="${j}"><span class="box">✓</span><span class="txt">${s}</span></li>`).join("")}</ul>
     <h4>Where marks are lost — examiner-reported errors</h4>
     ${p.errors.map(e=>`<div class="errbox"><b>${e[0]}</b>${e[1]}</div>`).join("")}
     <h4>What you should get</h4>
@@ -768,18 +930,41 @@ $$(".prac>button").forEach(b=>b.addEventListener("click",()=>{
   b.setAttribute("aria-expanded",open);
   b.querySelector(".chev").style.transform=open?"rotate(90deg)":"";
 }));
+function refreshPrac(i){
+  const a=(load("chemlab-prac",{})[i])||[];
+  const n=PRACS[i].steps.length, done=a.filter(Boolean).length;
+  $$(`.chk li[data-p="${i}"]`).forEach(li=>li.classList.toggle("done",!!a[+li.dataset.s]));
+  const bar=$("#pracbar"+i); if(bar)bar.style.width=(done/n*100)+"%";
+  const pct=$("#pracpct"+i); if(pct)pct.textContent=done?`${done}/${n}${done===n?" — lab complete! 🧪":""}`:"";
+}
+$$(".chk li").forEach(li=>li.addEventListener("click",()=>{
+  const i=+li.dataset.p, j=+li.dataset.s;
+  const st=load("chemlab-prac",{}); st[i]=st[i]||[];
+  st[i][j]=!st[i][j]; store("chemlab-prac",st); refreshPrac(i);
+  if(st[i][j]){
+    burstFrom(li.querySelector(".box"));
+    if(st[i].filter(Boolean).length===PRACS[i].steps.length)burstFrom($("#pracbar"+i));
+  }
+}));
+PRACS.forEach((_,i)=>refreshPrac(i));
 
 /* ---------- sources ---------- */
 $("#srclist").innerHTML=SOURCES.map(s=>`<div class="card"><h3>${s[0]}</h3><p>${s[1]}</p>
   <a href="${s[2]}" target="_blank" rel="noopener">${s[2]}</a></div>`).join("");
 
 /* ---------- quiz ---------- */
-let qi=0, qscore=0, qanswered=0;
-try{const s=JSON.parse(localStorage.getItem("chemlab-quiz")||"{}"); qscore=s.score||0; qanswered=s.n||0;}catch(e){}
+let qi=0, qstreak=0;
+let qscore=load("chemlab-quiz",{score:0,n:0}).score, qanswered=load("chemlab-quiz",{score:0,n:0}).n;
+const QORDER=[...QUIZ.keys()].sort(()=>Math.random()-.5);
 function renderQuiz(){
-  const q=QUIZ[qi%QUIZ.length];
+  const q=QUIZ[QORDER[qi%QUIZ.length]];
+  const beststreak=load("chemlab-quiz-beststreak",0);
   $("#quizcard").innerHTML=`
     <span class="tagline" style="background:var(--bunsen-soft);color:var(--bunsen)">Question ${qi%QUIZ.length+1} of ${QUIZ.length}</span>
+    <div style="display:flex;align-items:center;gap:12px;margin:10px 0 2px">
+      <div class="pbar"><i style="width:${(qi%QUIZ.length)/QUIZ.length*100}%"></i></div>
+      <span class="streak" id="qstreak">🔥 ${qstreak}${beststreak?` · best ${beststreak}`:""}</span>
+    </div>
     <div class="qtext">${q.q}</div>
     <div class="opts">${q.o.map((o,j)=>`<button data-j="${j}">${o}</button>`).join("")}</div>
     <div class="expl" id="qexpl">${q.e}</div>
@@ -790,8 +975,12 @@ function renderQuiz(){
   $$("#quizcard .opts button").forEach(b=>b.addEventListener("click",()=>{
     if($("#qexpl").classList.contains("on")) return;
     const j=+b.dataset.j;
-    qanswered++; if(j===q.a) qscore++;
-    try{localStorage.setItem("chemlab-quiz",JSON.stringify({score:qscore,n:qanswered}));}catch(e){}
+    qanswered++;
+    if(j===q.a){
+      qscore++; qstreak++; burstFrom(b);
+      if(qstreak>load("chemlab-quiz-beststreak",0))store("chemlab-quiz-beststreak",qstreak);
+    } else qstreak=0;
+    store("chemlab-quiz",{score:qscore,n:qanswered});
     $$("#quizcard .opts button").forEach((ob,oj)=>{
       if(oj===q.a) ob.classList.add("right");
       else if(oj===j) ob.classList.add("wrong");
@@ -800,6 +989,8 @@ function renderQuiz(){
     $("#qexpl").classList.add("on");
     $("#qnext").style.display="inline-block";
     $("#quizcard .score").textContent=`Session score: ${qscore}/${qanswered}`;
+    const bs=load("chemlab-quiz-beststreak",0);
+    $("#qstreak").textContent=`🔥 ${qstreak}${bs?` · best ${bs}`:""}`;
   }));
   $("#qnext").addEventListener("click",()=>{qi++;renderQuiz();});
 }
@@ -1077,6 +1268,7 @@ function redrawAll(){
 window.addEventListener("resize",redrawAll);
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",redrawAll);
 new MutationObserver(redrawAll).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+renderDash();
 redrawAll();
 if(!reduced){heroLoop();gasLoop();}
 </script>
