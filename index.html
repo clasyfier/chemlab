@@ -2941,7 +2941,11 @@ async function refresh(){
     premium=!!p?.premium;
     const merged=merge(p?.progress||{},snapshot());
     applyLocal(merged); pushProgress();
-  }else premium=false;
+    localStorage.setItem("chemlab-signedin","1");
+  }else{
+    premium=false;
+    if(localStorage.getItem("chemlab-signedin")){wipeLocal();location.reload();return;}
+  }
   window.chemPremium=!!(user&&premium);
   window.applyPracLocks(); try{renderQuiz()}catch(e){}
   render(); renderCorner();
@@ -3262,7 +3266,7 @@ function render(){
     } else { $("#a-delgo").textContent="Erase everything"; alert("Deletion failed — please email us and we will erase it manually."); }
   };
 }
-sb.auth.onAuthStateChange(()=>refresh());
+sb.auth.onAuthStateChange((ev)=>{if(ev==="SIGNED_OUT"){wipeLocal();location.reload();}else refresh();});
 refresh();
 if(new URLSearchParams(location.search).has("upgraded")){
   history.replaceState({},"",location.pathname);
