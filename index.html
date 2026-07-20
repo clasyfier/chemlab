@@ -1386,11 +1386,11 @@ function render(){
     ${premium?`<p>Everything is unlocked and your progress syncs to the cloud automatically. Manage or cancel your subscription any time from the receipt email Lemon Squeezy sent you.</p>`
     :`<h3>Go Premium</h3>
       <p>Unlock all 5 practical walkthroughs, the full ${typeof QUIZ!=="undefined"?QUIZ.length:24}-question bank with streaks, and cloud-synced progress.</p>
-      <div class="price-row">
-        <a class="price-box" style="text-decoration:none;color:inherit" href="${checkoutUrl(CFG.checkout)}" target="_blank" rel="noopener"><b>£4.99</b><span>per month</span></a>
-        <a class="price-box" style="text-decoration:none;color:inherit" href="${checkoutUrl(CFG.checkoutYear)}" target="_blank" rel="noopener"><b>£29</b><span>per year — save 51%</span></a></div>
-      <p style="display:flex;gap:10px;flex-wrap:wrap">
-        <button class="btn ghost" id="a-refresh">I've paid — refresh</button></p>`}
+      <p style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:14px 0 6px">
+        <a class="btn" style="text-decoration:none;font-size:15.5px;padding:11px 22px" href="${checkoutUrl(CFG.checkout)}">Get Premium — £4.99/month</a>
+        <a href="${checkoutUrl(CFG.checkoutYear)}" style="font-weight:600">or £29/year (save 51%)</a></p>
+      <p style="color:var(--ink-soft);font-size:13px;max-width:52ch">You'll go to a secure Stripe checkout and come straight back here — Premium unlocks automatically. While we're in test mode, use card 4242 4242 4242 4242, any future date, any CVC.</p>
+      <p><button class="btn ghost" id="a-refresh">Refresh status</button></p>`}
     <p style="margin-top:14px"><button class="btn ghost" id="a-out">Sign out</button></p>
   </div>`;
   const rb=$("#a-refresh"); if(rb)rb.onclick=refresh;
@@ -1398,6 +1398,17 @@ function render(){
 }
 sb.auth.onAuthStateChange(()=>refresh());
 refresh();
+if(new URLSearchParams(location.search).has("upgraded")){
+  history.replaceState({},"",location.pathname);
+  showView("account");
+  let tries=0;
+  const poll=setInterval(async()=>{             // webhook can land a second or two after the redirect
+    await refresh(); tries++;
+    if(window.chemPremium){clearInterval(poll);
+      acct.insertAdjacentHTML("afterbegin",`<div class="card acct-card" style="margin-bottom:12px;border-color:var(--ok)"><b style="color:var(--ok)">★ Payment received — Premium unlocked. Enjoy!</b></div>`);}
+    if(tries>10)clearInterval(poll);
+  },2000);
+}
 })();
 }
 </script>
