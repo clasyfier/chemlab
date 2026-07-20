@@ -3071,6 +3071,9 @@ function renderAuth(){
   q("#a-go").onclick=go;
   q("#a-pass").addEventListener("keydown",e=>{if(e.key==="Enter")go();});
 }
+function wipeLocal(){                            // signing out resets this device to zero
+  Object.keys(localStorage).filter(k=>k.startsWith("chemlab-")).forEach(k=>localStorage.removeItem(k));
+}
 function renderCorner(){
   const c=document.querySelector("#acct-corner"); if(!c)return;
   if(!user){
@@ -3092,7 +3095,7 @@ function renderCorner(){
   $("#corner-av").onclick=e=>{e.stopPropagation();menu.classList.toggle("open");};
   $("#cm-settings").onclick=()=>{menu.classList.remove("open");openAccount();};
   const up=$("#cm-upgrade"); if(up)up.onclick=()=>{menu.classList.remove("open");openAccount();};
-  $("#cm-out").onclick=async()=>{await sb.auth.signOut();closeAcct();refresh();};
+  $("#cm-out").onclick=async()=>{await sb.auth.signOut();wipeLocal();location.reload();};
 }
 function render(){
   if(!user){
@@ -3238,7 +3241,7 @@ function render(){
     $("#pw-msg").textContent=error?error.message:"Password updated ✓";
     if(!error){$("#pw-msg").style.color="var(--ok)";$("#pw-new").value="";}
   };
-  $("#a-out").onclick=async()=>{await sb.auth.signOut();closeAcct();refresh();};
+  $("#a-out").onclick=async()=>{await sb.auth.signOut();wipeLocal();location.reload();};
   $("#a-export").onclick=async()=>{
     const {data:{session}}=await sb.auth.getSession(); if(!session)return;
     const r=await fetch("/api/account",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+session.access_token},body:JSON.stringify({action:"export"})});
@@ -3252,7 +3255,7 @@ function render(){
     $("#a-delgo").innerHTML='<span class="spin"></span>Erasing…';
     const r=await fetch("/api/account",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+session.access_token},body:JSON.stringify({action:"delete"})});
     if((await r.json()).deleted){
-      ["chemlab-mastered","chemlab-quiz","chemlab-prac","chemlab-hunt-best","chemlab-quiz-beststreak","chemlab-mood"].forEach(k=>localStorage.removeItem(k));
+      wipeLocal();
       await sb.auth.signOut();
       acct.innerHTML='<div class="card acct-card"><h3>Account deleted</h3><p>Everything we stored about you is gone. Thanks for trying ChemLab.</p></div>';
       window.chemPremium=false; window.applyPracLocks();
