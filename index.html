@@ -247,6 +247,7 @@ ul.chk{list-style:none;padding-left:0!important;margin:8px 0}
 .prac.locked .num{border-color:var(--ink-soft);color:var(--ink-soft);opacity:.6}
 .price-row{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}
 .price-box{border:1px solid var(--line);border-radius:10px;padding:12px 18px;background:var(--panel2)}
+.price-box:hover{border-color:var(--bunsen)}
 .price-box b{font-size:20px;font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
 .price-box span{display:block;font-size:12px;color:var(--ink-soft)}
 
@@ -1288,7 +1289,7 @@ if(!reduced){gasLoop();}
 <script>
 /* Fill these three after creating your Supabase project + Lemon Squeezy store (see SETUP.md).
    All three are safe to be public. Empty = local mode: no accounts, everything unlocked. */
-window.CHEMLAB_CONFIG={ url:"https://hetgjlorwmbmlyczfiyn.supabase.co", anon:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhldGdqbG9yd21ibWx5Y3pmaXluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ1NDk2NzQsImV4cCI6MjEwMDEyNTY3NH0.mu2OJkt8Grj-O4guASvnAn-e4TuzV5P5W1ZRnqA4Lrc", checkout:"" };
+window.CHEMLAB_CONFIG={ url:"https://hetgjlorwmbmlyczfiyn.supabase.co", anon:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhldGdqbG9yd21ibWx5Y3pmaXluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ1NDk2NzQsImV4cCI6MjEwMDEyNTY3NH0.mu2OJkt8Grj-O4guASvnAn-e4TuzV5P5W1ZRnqA4Lrc", checkout:"https://buy.stripe.com/test_eVq8wRd8Q3kveJLbv49fW00", checkoutYear:"https://buy.stripe.com/test_00w4gBfgY7ALgRTfLk9fW01" };
 </script>
 <script type="module">
 const CFG=window.CHEMLAB_CONFIG;
@@ -1347,10 +1348,10 @@ async function refresh(){
   window.applyPracLocks(); try{renderQuiz()}catch(e){}
   render();
 }
-function checkoutUrl(){
-  const u=new URL(CFG.checkout);
-  u.searchParams.set("checkout[custom][user_id]",user.id);
-  if(user.email)u.searchParams.set("checkout[email]",user.email);
+function checkoutUrl(base){
+  const u=new URL(base);
+  u.searchParams.set("client_reference_id",user.id);
+  if(user.email)u.searchParams.set("prefilled_email",user.email);
   return u.toString();
 }
 let tab="in";
@@ -1385,10 +1386,11 @@ function render(){
     ${premium?`<p>Everything is unlocked and your progress syncs to the cloud automatically. Manage or cancel your subscription any time from the receipt email Lemon Squeezy sent you.</p>`
     :`<h3>Go Premium</h3>
       <p>Unlock all 5 practical walkthroughs, the full ${typeof QUIZ!=="undefined"?QUIZ.length:24}-question bank with streaks, and cloud-synced progress.</p>
-      <div class="price-row"><div class="price-box"><b>£4.99</b><span>per month</span></div><div class="price-box"><b>£29</b><span>per year — save 51%</span></div></div>
+      <div class="price-row">
+        <a class="price-box" style="text-decoration:none;color:inherit" href="${checkoutUrl(CFG.checkout)}" target="_blank" rel="noopener"><b>£4.99</b><span>per month</span></a>
+        <a class="price-box" style="text-decoration:none;color:inherit" href="${checkoutUrl(CFG.checkoutYear)}" target="_blank" rel="noopener"><b>£29</b><span>per year — save 51%</span></a></div>
       <p style="display:flex;gap:10px;flex-wrap:wrap">
-        <a class="btn" style="text-decoration:none" href="${CFG.checkout?checkoutUrl():"#"}" target="_blank" rel="noopener">Get Premium</a>
-        <button class="btn ghost" id="a-refresh">I've subscribed — refresh</button></p>`}
+        <button class="btn ghost" id="a-refresh">I've paid — refresh</button></p>`}
     <p style="margin-top:14px"><button class="btn ghost" id="a-out">Sign out</button></p>
   </div>`;
   const rb=$("#a-refresh"); if(rb)rb.onclick=refresh;

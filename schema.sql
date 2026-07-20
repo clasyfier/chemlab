@@ -3,7 +3,7 @@ create table if not exists public.profiles (
   id uuid references auth.users on delete cascade primary key,
   email text,
   premium boolean not null default false,
-  ls_customer_id text,
+  payment_customer_id text,
   progress jsonb not null default '{}',
   updated_at timestamptz not null default now()
 );
