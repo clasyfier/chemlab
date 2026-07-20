@@ -315,8 +315,6 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
 .pwwrap{position:relative}
 .pwwrap input{width:100%;padding-right:40px}
 .eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:0;color:var(--ink-soft);font-size:15px;padding:6px}
-.strength{height:5px;border-radius:99px;background:var(--panel2);overflow:hidden;margin-top:7px}
-.strength i{display:block;height:100%;width:0;border-radius:99px;transition:width .25s,background .25s}
 .spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:rot .7s linear infinite;vertical-align:-2px;margin-right:7px}
 @keyframes rot{to{transform:rotate(360deg)}}
 .shake{animation:flno .4s}
@@ -326,8 +324,13 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
 .charmeter{display:inline-block;font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:11.5px;color:var(--ink-soft);margin-top:7px;font-variant-numeric:tabular-nums;background:var(--panel2);border:1px solid var(--line);border-radius:99px;padding:3px 12px;transition:background .2s,color .2s,border-color .2s}
 .charmeter.ok{color:#fff;background:var(--ok);border-color:var(--ok)}
 .charmeter.max{color:#fff;background:var(--warn);border-color:var(--warn)}
-@keyframes bpop{0%{transform:scale(1)}40%{transform:scale(1.22)}100%{transform:scale(1)}}
-.charmeter.pop{animation:bpop .18s ease}
+.pwmeter{display:flex;align-items:center;gap:10px;margin-top:9px}
+.rankbadge{font-family:"Iowan Old Style",Palatino,Georgia,serif;font-weight:900;font-style:italic;font-size:21px;line-height:1.25;min-width:48px;text-align:center;padding:3px 8px;border-radius:9px;color:#fff;background:#8a8f98;text-shadow:0 1px 2px rgba(0,0,0,.35);transition:background .25s,box-shadow .25s}
+.rankbadge.ssplus{background:linear-gradient(135deg,#e8b923,#f8e27a,#e8b923);animation:mythic 1.2s infinite}
+@keyframes mythic{0%,100%{filter:brightness(1)}50%{filter:brightness(1.4)}}
+.ranktrack{display:flex;gap:3px;flex:1;min-width:110px}
+.ranktrack i{height:10px;flex:1;border-radius:3px;background:var(--panel2);box-shadow:inset 0 0 0 1px var(--line);transition:background .2s}
+.ranklabel{font-size:11.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;min-width:96px;color:var(--ink-soft);transition:color .2s}
 .topbar{position:sticky;top:0;z-index:35;display:flex;justify-content:flex-end;align-items:center;gap:8px;
   padding:6px 0 10px;background:linear-gradient(var(--ground) 75%,transparent);min-height:46px}
 .avatar.sm{width:36px;height:36px;font-size:15px;flex:0 0 36px;cursor:pointer;transition:transform .12s}
@@ -1850,7 +1853,28 @@ function checkoutUrl(base){
 }
 let tab="in", plan="m";
 const pwScore=v=>{let c=0;if(v.length>=8)c++;if(v.length>=12)c++;if(/[A-Z]/.test(v)&&/[a-z]/.test(v))c++;if(/\d/.test(v))c++;if(/[^A-Za-z0-9]/.test(v))c++;return Math.min(c,4);};
-const bub=el=>{el.classList.remove("pop");void el.offsetWidth;el.classList.add("pop");};
+const RANKS=[["F","Feeble","#8a8f98"],["D","Dull","#c46a4a"],["C","Common","#e08a2e"],["B","Brave","#e0b52e"],["A","Heroic","#3fae6a"],["S","Super","#2fa8c9"],["SS","Legendary","#9b59d0"],["SS+","MYTHIC","#e8b923"]];
+function pwRank(v){
+  let sc=0;
+  if(v.length>=8)sc++; if(v.length>=10)sc++; if(v.length>=12)sc++; if(v.length>=16)sc++;
+  if(/[a-z]/.test(v))sc++; if(/[A-Z]/.test(v))sc++; if(/\d/.test(v))sc++; if(/[^A-Za-z0-9]/.test(v))sc++;
+  if(v.length<6)sc=Math.min(sc,1);
+  const idx=Math.max(0,Math.min(7,sc-1));
+  return {idx,rank:RANKS[idx][0],label:RANKS[idx][1],color:RANKS[idx][2],pass:idx>=4};
+}
+const METER='<span class="rankbadge">F</span><div class="ranktrack"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><span class="ranklabel">rank A needed</span>';
+function paintMeter(root,v){
+  const m=pwRank(v);
+  const badge=root.querySelector(".rankbadge"), segs=root.querySelectorAll(".ranktrack i"), lab=root.querySelector(".ranklabel");
+  badge.textContent=m.rank;
+  badge.classList.toggle("ssplus",m.idx===7);
+  badge.style.background=m.idx===7?"":m.color;
+  badge.style.boxShadow=m.idx>=5?`0 0 13px 1px ${m.color}`:"none";
+  segs.forEach((sg,i)=>{sg.style.background=(v.length&&i<=m.idx)?m.color:"";});
+  if(!v.length){lab.textContent="rank A needed";lab.style.color="";}
+  else{lab.textContent=m.label+(m.pass?" ✓":"");lab.style.color=m.color;}
+  return m;
+}
 const avatarFor=(email,sm)=>{
   const hue=(prof&&prof.avatar_hue!=null)?prof.avatar_hue:[...email].reduce((a,ch)=>a+ch.charCodeAt(0)*7,0)%360;
   if(prof&&prof.avatar&&prof.avatar.startsWith("data:"))
@@ -1895,7 +1919,7 @@ function renderAuth(){
     <div class="field"><label for="a-email">Email</label><input id="a-email" type="email" autocomplete="email" placeholder="you@example.com"></div>
     <div class="field"><label for="a-pass">Password</label>
       <div class="pwwrap"><input id="a-pass" type="password" autocomplete="${tab==="in"?"current":"new"}-password" placeholder="${tab==="up"?"8+ characters":"••••••••"}"><button class="eye" id="a-eye" type="button" aria-label="Show password">👁</button></div>
-      ${tab==="up"?'<div class="strength"><i id="a-str"></i></div>':""}
+      ${tab==="up"?'<div class="pwmeter" id="a-meter">'+METER+'</div>':""}
       <div class="charmeter" id="a-count">${tab==="up"?"0/8 minimum":"0 characters"}</div>
     </div>
     <div class="aerr" id="a-err"></div>
@@ -1907,22 +1931,25 @@ function renderAuth(){
   q("#a-eye").onclick=()=>{const f=q("#a-pass");f.type=f.type==="password"?"text":"password";};
   q("#a-pass").addEventListener("input",()=>{
     const v=q("#a-pass").value;
-    const bar=q("#a-str");
-    if(bar){
-      const sc=pwScore(v);
-      bar.style.width=(sc*25)+"%";
-      bar.style.background=["var(--danger)","var(--danger)","var(--warn)","var(--cu)","var(--ok)"][sc];
-    }
+    const meter=q("#a-meter"); if(meter)paintMeter(meter,v);
     const c=q("#a-count");
     if(c){
       if(tab==="up"){c.textContent=v.length+"/8"+(v.length>=8?" ✓":" minimum");c.classList.toggle("ok",v.length>=8);}
       else c.textContent=v.length+(v.length===1?" character":" characters");
-      bub(c);
     }
   });
   const go=async()=>{
     const email=q("#a-email").value.trim(), password=q("#a-pass").value;
     const btn=q("#a-go"); q("#a-err").textContent="";
+    if(tab==="up"){
+      const m=pwRank(password);
+      if(!m.pass){
+        q("#a-err").textContent=`Password rank ${m.rank} — you need at least rank A (Heroic). Add length, capitals, numbers or symbols.`;
+        const card=authModal.querySelector(".modal-card");
+        card.classList.remove("shake"); void card.offsetWidth; card.classList.add("shake");
+        return;
+      }
+    }
     btn.innerHTML='<span class="spin"></span>'+(tab==="in"?"Signing in…":"Creating account…"); btn.disabled=true;
     const {data,error}=await (tab==="in"?sb.auth.signInWithPassword({email,password}):sb.auth.signUp({email,password}));
     if(error){
@@ -2013,6 +2040,7 @@ function render(){
         <input id="pw-new" type="password" autocomplete="new-password" placeholder="New password (8+ characters)"
           style="font:inherit;padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);min-width:230px">
         <button class="btn ghost" id="pw-save">Update password</button></p>
+      <div class="pwmeter" id="pw-meter">${METER}</div>
       <div class="charmeter" id="pw-count">0/8 minimum</div>
       <div class="aerr" id="pw-msg"></div>
     </div>
@@ -2071,7 +2099,7 @@ function render(){
   $("#nick").addEventListener("keydown",e=>{if(e.key==="Enter")$("#nick-save").click();});
   $("#nick").addEventListener("input",()=>{
     const n=$("#nick").value.length;
-    const c=$("#nick-count"); c.textContent=n+"/24"+(n>=24?" · full!":""); c.classList.toggle("max",n>=24); bub(c);
+    const c=$("#nick-count"); c.textContent=n+"/24"+(n>=24?" · full!":""); c.classList.toggle("max",n>=24);
   });
   acct.querySelectorAll(".av-e").forEach(b=>b.onclick=()=>saveProf({avatar:prof.avatar===b.dataset.e?null:b.dataset.e},true));
   acct.querySelectorAll(".av-h").forEach(b=>b.onclick=()=>saveProf({avatar_hue:+b.dataset.h},true));
@@ -2090,12 +2118,14 @@ function render(){
   });
   const avrm=$("#av-remove"); if(avrm)avrm.onclick=()=>saveProf({avatar:null});
   $("#pw-new").addEventListener("input",()=>{
-    const n=$("#pw-new").value.length;
-    const c=$("#pw-count"); c.textContent=n+"/8"+(n>=8?" ✓":" minimum"); c.classList.toggle("ok",n>=8); bub(c);
+    const v=$("#pw-new").value;
+    paintMeter($("#pw-meter"),v);
+    const c=$("#pw-count"); c.textContent=v.length+"/8"+(v.length>=8?" ✓":" minimum"); c.classList.toggle("ok",v.length>=8);
   });
   $("#pw-save").onclick=async()=>{
     const v=$("#pw-new").value;
-    if(v.length<8){$("#pw-msg").textContent="Use at least 8 characters.";return;}
+    const m=pwRank(v);
+    if(!m.pass){$("#pw-msg").textContent=`Rank ${m.rank} — your new password needs at least rank A (Heroic).`;return;}
     $("#pw-save").disabled=true; $("#pw-msg").textContent="";
     const {error}=await sb.auth.updateUser({password:v});
     $("#pw-save").disabled=false;
