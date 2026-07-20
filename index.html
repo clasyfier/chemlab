@@ -1465,7 +1465,28 @@ renderQuiz();
 
 /* ---------- simulations ---------- */
 $("#sims").innerHTML=`
-<div class="sim" id="sim-titr">
+<div class="sim" id="sim-prof">
+  <h2>Reaction energy profile</h2>
+  <p class="hint">ΔH is the height difference between reactants and products; Ea is the climb to the transition state. A catalyst offers a lower path — it changes Ea, never ΔH.</p>
+  <div class="controls">
+    <div class="ctrl"><label for="pr-ea">Activation energy</label><input type="range" id="pr-ea" min="20" max="120" step="1" value="75"><span class="val" id="pr-ea-v">75 kJ mol⁻¹</span></div>
+    <div class="ctrl"><label for="pr-dh">ΔH</label><input type="range" id="pr-dh" min="-100" max="100" step="1" value="-60"><span class="val" id="pr-dh-v">−60 kJ mol⁻¹</span></div>
+    <label class="toggle"><input type="checkbox" id="pr-cat"> Show catalysed route</label>
+  </div>
+  <canvas class="plot" id="pr-plot"></canvas>
+</div>
+<div class="sim" id="sim-gas">
+  <h2>Ideal gas · pV = nRT</h2>
+  <p class="hint">Particles in a box. Temperature sets their speed (⟨KE⟩ ∝ T), volume sets the box, and pressure is what you read off the wall collisions. R = 8.314 J K⁻¹ mol⁻¹.</p>
+  <div class="controls">
+    <div class="ctrl"><label for="g-n">Amount of gas</label><input type="range" id="g-n" min="0.5" max="3" step="0.1" value="1"><span class="val" id="g-n-v">1.0 mol</span></div>
+    <div class="ctrl"><label for="g-t">Temperature</label><input type="range" id="g-t" min="150" max="900" step="10" value="300"><span class="val" id="g-t-v">300 K</span></div>
+    <div class="ctrl"><label for="g-v">Volume</label><input type="range" id="g-v" min="10" max="50" step="1" value="25"><span class="val" id="g-v-v">25 dm³</span></div>
+  </div>
+  <canvas class="plot" id="g-plot" style="height:260px"></canvas>
+  <div class="readout"><div class="stat"><div class="k">Pressure</div><div class="v" id="g-p">—</div></div>
+  <div class="stat"><div class="k">Mean speed scale</div><div class="v" id="g-s">—</div></div></div>
+</div><div class="sim" id="sim-titr">
   <h2>Titration curve</h2>
   <p class="hint">25.0 cm³ of acid in the flask, 0.100 mol dm⁻³ NaOH in the burette. Watch where the vertical section falls — and which indicator's range sits inside it. At half-equivalence for a weak acid, pH = pKa.</p>
   <div class="controls">
@@ -1504,28 +1525,7 @@ $("#sims").innerHTML=`
     <div class="stat"><div class="k">vs 400 K, no catalyst</div><div class="v" id="mb-x">—</div></div>
   </div>
 </div>
-<div class="sim" id="sim-prof">
-  <h2>Reaction energy profile</h2>
-  <p class="hint">ΔH is the height difference between reactants and products; Ea is the climb to the transition state. A catalyst offers a lower path — it changes Ea, never ΔH.</p>
-  <div class="controls">
-    <div class="ctrl"><label for="pr-ea">Activation energy</label><input type="range" id="pr-ea" min="20" max="120" step="1" value="75"><span class="val" id="pr-ea-v">75 kJ mol⁻¹</span></div>
-    <div class="ctrl"><label for="pr-dh">ΔH</label><input type="range" id="pr-dh" min="-100" max="100" step="1" value="-60"><span class="val" id="pr-dh-v">−60 kJ mol⁻¹</span></div>
-    <label class="toggle"><input type="checkbox" id="pr-cat"> Show catalysed route</label>
-  </div>
-  <canvas class="plot" id="pr-plot"></canvas>
-</div>
-<div class="sim" id="sim-gas">
-  <h2>Ideal gas · pV = nRT</h2>
-  <p class="hint">Particles in a box. Temperature sets their speed (⟨KE⟩ ∝ T), volume sets the box, and pressure is what you read off the wall collisions. R = 8.314 J K⁻¹ mol⁻¹.</p>
-  <div class="controls">
-    <div class="ctrl"><label for="g-n">Amount of gas</label><input type="range" id="g-n" min="0.5" max="3" step="0.1" value="1"><span class="val" id="g-n-v">1.0 mol</span></div>
-    <div class="ctrl"><label for="g-t">Temperature</label><input type="range" id="g-t" min="150" max="900" step="10" value="300"><span class="val" id="g-t-v">300 K</span></div>
-    <div class="ctrl"><label for="g-v">Volume</label><input type="range" id="g-v" min="10" max="50" step="1" value="25"><span class="val" id="g-v-v">25 dm³</span></div>
-  </div>
-  <canvas class="plot" id="g-plot" style="height:260px"></canvas>
-  <div class="readout"><div class="stat"><div class="k">Pressure</div><div class="v" id="g-p">—</div></div>
-  <div class="stat"><div class="k">Mean speed scale</div><div class="v" id="g-s">—</div></div></div>
-</div>`;
+`;
 
 /* titration maths: exact charge balance solved by bisection */
 function titrPH(Ca,Va,Cb,Vb,Ka){
