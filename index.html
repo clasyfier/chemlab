@@ -1892,7 +1892,8 @@ function renderAuth(){
     <div class="field"><label for="a-email">Email</label><input id="a-email" type="email" autocomplete="email" placeholder="you@example.com"></div>
     <div class="field"><label for="a-pass">Password</label>
       <div class="pwwrap"><input id="a-pass" type="password" autocomplete="${tab==="in"?"current":"new"}-password" placeholder="${tab==="up"?"8+ characters":"••••••••"}"><button class="eye" id="a-eye" type="button" aria-label="Show password">👁</button></div>
-      ${tab==="up"?'<div class="strength"><i id="a-str"></i></div><div class="charmeter" id="a-count">0/8 minimum</div>':""}
+      ${tab==="up"?'<div class="strength"><i id="a-str"></i></div>':""}
+      <div class="charmeter" id="a-count">${tab==="up"?"0/8 minimum":"0 characters"}</div>
     </div>
     <div class="aerr" id="a-err"></div>
     <button class="btn" id="a-go" style="width:100%;padding:11px">${tab==="in"?"Sign in":"Create account"}</button>
@@ -1910,7 +1911,10 @@ function renderAuth(){
       bar.style.background=["var(--danger)","var(--danger)","var(--warn)","var(--cu)","var(--ok)"][sc];
     }
     const c=q("#a-count");
-    if(c){c.textContent=v.length+"/8 minimum";c.classList.toggle("ok",v.length>=8);}
+    if(c){
+      if(tab==="up"){c.textContent=v.length+"/8 minimum";c.classList.toggle("ok",v.length>=8);}
+      else c.textContent=v.length+(v.length===1?" character":" characters");
+    }
   });
   const go=async()=>{
     const email=q("#a-email").value.trim(), password=q("#a-pass").value;
