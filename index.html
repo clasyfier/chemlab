@@ -2770,7 +2770,7 @@ async function exFinish(){
   const items=EX.qs.map((q,i)=>({q:q.src.q,marks:q.marks,scheme:q.src.scheme,answer:EX.ans[i]||""}));
   let ai=null;
   try{
-    const r=await fetch("/api/mark",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"mark",items})});
+    const r=await fetch("/api/mark",{method:"POST",headers:{"Content-Type":"application/json",...(window.chemAuthHeader?await window.chemAuthHeader():{})},body:JSON.stringify({action:"mark",items})});
     if(r.ok)ai=await r.json();
   }catch(e){}
   if(ai&&ai.results){
@@ -2855,7 +2855,7 @@ function renderProgress(){
     const stats={chapters:rows.map(r=>({name:r.t.t,accuracy_pc:r.pc,questions_answered:r.d.max,confidence_1to5:moods[r.i]||null,mastered:mast.includes(r.i)})),recent_exams:hist.slice(-6)};
     let plan=null;
     try{
-      const r=await fetch("/api/mark",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"plan",stats})});
+      const r=await fetch("/api/mark",{method:"POST",headers:{"Content-Type":"application/json",...(window.chemAuthHeader?await window.chemAuthHeader():{})},body:JSON.stringify({action:"plan",stats})});
       if(r.ok)plan=(await r.json()).plan;
     }catch(e){}
     if(!plan){
@@ -2902,6 +2902,7 @@ if(!CFG.url||!CFG.anon){
 (async()=>{
 const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
 const sb=createClient(CFG.url,CFG.anon);
+window.chemAuthHeader=async()=>{const {data:{session}}=await sb.auth.getSession();return session?{Authorization:"Bearer "+session.access_token}:{};};
 window.chemPremium=false; window.applyPracLocks(); if(typeof renderQuiz==="function")renderQuiz();
 
 const KEYS=["chemlab-mastered","chemlab-quiz","chemlab-prac","chemlab-hunt-best","chemlab-quiz-beststreak","chemlab-mood"];

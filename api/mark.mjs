@@ -50,9 +50,32 @@ Write a personalised 2-week catch-up plan in plain text (no markdown headers, us
 - End with one concrete measurable goal for the fortnight.
 Keep it under 350 words. Address the student as "you".`;
 
+// Premium-only: verify the caller's Supabase JWT and premium flag before spending
+// Anthropic credits. Local mode (no Supabase env) skips the check.
+async function requirePremium(req) {
+  const url = process.env.SUPABASE_URL, key = process.env.SUPABASE_SERVICE_ROLE;
+  if (!url || !key) return { ok: true };
+  const token = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+  if (!token) return { ok: false, status: 401, error: 'sign in required' };
+  const uRes = await fetch(`${url}/auth/v1/user`, {
+    headers: { apikey: key, Authorization: `Bearer ${token}` },
+  });
+  if (!uRes.ok) return { ok: false, status: 401, error: 'invalid session' };
+  const user = await uRes.json();
+  const pRes = await fetch(`${url}/rest/v1/profiles?id=eq.${user.id}&select=premium`, {
+    headers: { apikey: key, Authorization: `Bearer ${key}` },
+  });
+  const premium = pRes.ok && !!(((await pRes.json())[0]) || {}).premium;
+  if (!premium) return { ok: false, status: 402, error: 'premium required' };
+  return { ok: true };
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
   if (!process.env.ANTHROPIC_API_KEY) return res.status(501).json({ fallback: true });
+
+  const gate = await requirePremium(req);
+  if (!gate.ok) return res.status(gate.status).json({ error: gate.error });
 
   const client = new Anthropic();
   const body = req.body || {};
