@@ -1851,7 +1851,7 @@ function checkoutUrl(base){
   if(user.email)u.searchParams.set("prefilled_email",user.email);
   return u.toString();
 }
-let tab="in", plan="m";
+let tab="up", plan="m";
 const pwScore=v=>{let c=0;if(v.length>=8)c++;if(v.length>=12)c++;if(/[A-Z]/.test(v)&&/[a-z]/.test(v))c++;if(/\d/.test(v))c++;if(/[^A-Za-z0-9]/.test(v))c++;return Math.min(c,4);};
 const RANKS=[["F","Feeble","#8a8f98"],["D","Dull","#c46a4a"],["C","Common","#e08a2e"],["B","Brave","#e0b52e"],["A","Heroic","#3fae6a"],["S","Super","#2fa8c9"],["SS","Legendary","#9b59d0"],["SS+","MYTHIC","#e8b923"]];
 function pwRank(v){
@@ -1897,7 +1897,7 @@ document.addEventListener("keydown",e=>{
 const authModal=document.querySelector("#authmodal");
 const acctModal=document.querySelector("#acctmodal");
 window.openAccount=function(){
-  if(!user){openAuth("in");return;}
+  if(!user){openAuth("up");return;}
   render(); acctModal.hidden=false;
 };
 function closeAcct(){if(acctModal)acctModal.hidden=true;}
@@ -1913,8 +1913,8 @@ function renderAuth(){
   box.innerHTML=`
     <h3 style="font-size:20px;margin:0 0 14px">${tab==="in"?"Welcome back":"Join ChemLab"}</h3>
     <div class="acct-tabs">
-      <button id="t-in" class="${tab==="in"?"on":""}">Sign in</button>
       <button id="t-up" class="${tab==="up"?"on":""}">Create account</button>
+      <button id="t-in" class="${tab==="in"?"on":""}">Sign in</button>
     </div>
     <div class="field"><label for="a-email">Email</label><input id="a-email" type="email" autocomplete="email" placeholder="you@example.com"></div>
     <div class="field"><label for="a-pass">Password</label>
@@ -1924,10 +1924,15 @@ function renderAuth(){
     </div>
     <div class="aerr" id="a-err"></div>
     <button class="btn" id="a-go" style="width:100%;padding:11px">${tab==="in"?"Sign in":"Create account"}</button>
-    <p style="font-size:12.5px;color:var(--ink-soft);margin:14px 0 0;text-align:center">⚗️ progress syncs · 🔥 streaks saved · <a href="/privacy.html">privacy</a></p>`;
+    <p style="font-size:13px;margin:14px 0 0;text-align:center">${tab==="in"
+      ?'New to ChemLab? <a href="#" id="sw-up">Create a free account</a>'
+      :'Already have an account? <a href="#" id="sw-in">Sign in</a>'}</p>
+    <p style="font-size:12.5px;color:var(--ink-soft);margin:10px 0 0;text-align:center">⚗️ progress syncs · 🔥 streaks saved · <a href="/privacy.html">privacy</a></p>`;
   const q=sel=>box.querySelector(sel);
   q("#t-in").onclick=()=>{tab="in";renderAuth();};
   q("#t-up").onclick=()=>{tab="up";renderAuth();};
+  const swU=q("#sw-up"); if(swU)swU.onclick=e=>{e.preventDefault();tab="up";renderAuth();};
+  const swI=q("#sw-in"); if(swI)swI.onclick=e=>{e.preventDefault();tab="in";renderAuth();};
   q("#a-eye").onclick=()=>{const f=q("#a-pass");f.type=f.type==="password"?"text":"password";};
   q("#a-pass").addEventListener("input",()=>{
     const v=q("#a-pass").value;
@@ -1995,8 +2000,8 @@ function render(){
       <h3 style="margin-bottom:6px">You're signed out</h3>
       <p style="color:var(--ink-soft);font-size:14.5px;max-width:38ch;margin:0 auto 16px">Sign in to sync your progress across devices and manage your subscription.</p>
       <p style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-        <button class="btn" id="acct-open-in">Log in</button>
-        <button class="btn ghost" id="acct-open-up">Create account</button></p>
+        <button class="btn" id="acct-open-up">Create a free account</button>
+        <button class="btn ghost" id="acct-open-in">Log in</button></p>
     </div>`;
     $("#acct-open-in").onclick=()=>openAuth("in");
     $("#acct-open-up").onclick=()=>openAuth("up");
