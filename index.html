@@ -373,6 +373,12 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
 </nav>
 <main>
 <div class="topbar"><div id="acct-corner"></div></div>
+<div class="modal" id="authmodal" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-label="Sign in or create account" style="max-width:430px">
+    <button class="modal-x" id="authmodal-x" aria-label="Close">×</button>
+    <div id="authbox" style="padding:24px"></div>
+  </div>
+</div>
 
 <section class="view on" id="v-home">
   <div class="eyebrow">Free to start · AQA · OCR · Edexcel</div>
@@ -1799,15 +1805,68 @@ document.addEventListener("click",e=>{
   if(m&&!e.target.closest(".corner"))m.classList.remove("open");
 });
 document.addEventListener("keydown",e=>{
-  if(e.key==="Escape"){const m=document.querySelector("#corner-menu");if(m)m.classList.remove("open");}
+  if(e.key==="Escape"){
+    const m=document.querySelector("#corner-menu"); if(m)m.classList.remove("open");
+    closeAuth();
+  }
 });
+const authModal=document.querySelector("#authmodal");
+function openAuth(t){tab=t;renderAuth();authModal.hidden=false;
+  const f=authModal.querySelector("#a-email"); if(f)f.focus();}
+function closeAuth(){if(authModal)authModal.hidden=true;}
+document.querySelector("#authmodal-x").addEventListener("click",closeAuth);
+authModal.addEventListener("click",e=>{if(e.target===authModal)closeAuth();});
+function renderAuth(){
+  const box=authModal.querySelector("#authbox");
+  box.innerHTML=`
+    <h3 style="font-size:20px;margin:0 0 14px">${tab==="in"?"Welcome back":"Join ChemLab"}</h3>
+    <div class="acct-tabs">
+      <button id="t-in" class="${tab==="in"?"on":""}">Sign in</button>
+      <button id="t-up" class="${tab==="up"?"on":""}">Create account</button>
+    </div>
+    <div class="field"><label for="a-email">Email</label><input id="a-email" type="email" autocomplete="email" placeholder="you@example.com"></div>
+    <div class="field"><label for="a-pass">Password</label>
+      <div class="pwwrap"><input id="a-pass" type="password" autocomplete="${tab==="in"?"current":"new"}-password" placeholder="${tab==="up"?"8+ characters":"••••••••"}"><button class="eye" id="a-eye" type="button" aria-label="Show password">👁</button></div>
+      ${tab==="up"?'<div class="strength"><i id="a-str"></i></div>':""}
+    </div>
+    <div class="aerr" id="a-err"></div>
+    <button class="btn" id="a-go" style="width:100%;padding:11px">${tab==="in"?"Sign in":"Create account"}</button>
+    <p style="font-size:12.5px;color:var(--ink-soft);margin:14px 0 0;text-align:center">⚗️ progress syncs · 🔥 streaks saved · <a href="/privacy.html">privacy</a></p>`;
+  const q=sel=>box.querySelector(sel);
+  q("#t-in").onclick=()=>{tab="in";renderAuth();};
+  q("#t-up").onclick=()=>{tab="up";renderAuth();};
+  q("#a-eye").onclick=()=>{const f=q("#a-pass");f.type=f.type==="password"?"text":"password";};
+  q("#a-pass").addEventListener("input",()=>{
+    const bar=q("#a-str"); if(!bar)return;
+    const sc=pwScore(q("#a-pass").value);
+    bar.style.width=(sc*25)+"%";
+    bar.style.background=["var(--danger)","var(--danger)","var(--warn)","var(--cu)","var(--ok)"][sc];
+  });
+  const go=async()=>{
+    const email=q("#a-email").value.trim(), password=q("#a-pass").value;
+    const btn=q("#a-go"); q("#a-err").textContent="";
+    btn.innerHTML='<span class="spin"></span>'+(tab==="in"?"Signing in…":"Creating account…"); btn.disabled=true;
+    const {data,error}=await (tab==="in"?sb.auth.signInWithPassword({email,password}):sb.auth.signUp({email,password}));
+    if(error){
+      btn.disabled=false; btn.textContent=tab==="in"?"Sign in":"Create account";
+      q("#a-err").textContent=error.message;
+      const card=authModal.querySelector(".modal-card");
+      card.classList.remove("shake"); void card.offsetWidth; card.classList.add("shake");
+      return;
+    }
+    if(tab==="up")burstFrom(btn);
+    closeAuth(); refresh();
+  };
+  q("#a-go").onclick=go;
+  q("#a-pass").addEventListener("keydown",e=>{if(e.key==="Enter")go();});
+}
 function renderCorner(){
   const c=document.querySelector("#acct-corner"); if(!c)return;
   if(!user){
     c.innerHTML=`<button class="btn ghost" id="corner-in" style="padding:7px 16px;font-size:13.5px">Log in</button>
       <button class="btn" id="corner-up" style="padding:7px 16px;font-size:13.5px">Sign up free</button>`;
-    $("#corner-in").onclick=()=>{tab="in";render();showView("account");};
-    $("#corner-up").onclick=()=>{tab="up";render();showView("account");};
+    $("#corner-in").onclick=()=>openAuth("in");
+    $("#corner-up").onclick=()=>openAuth("up");
     return;
   }
   c.innerHTML=`<div class="corner">
@@ -1826,50 +1885,16 @@ function renderCorner(){
 }
 function render(){
   if(!user){
-    acct.innerHTML=`<div class="card acct-card">
-      <div class="acct-tabs">
-        <button id="t-in" class="${tab==="in"?"on":""}">Sign in</button>
-        <button id="t-up" class="${tab==="up"?"on":""}">Create account</button>
-      </div>
-      <div class="field"><label for="a-email">Email</label><input id="a-email" type="email" autocomplete="email" placeholder="you@example.com"></div>
-      <div class="field"><label for="a-pass">Password</label>
-        <div class="pwwrap"><input id="a-pass" type="password" autocomplete="${tab==="in"?"current":"new"}-password" placeholder="${tab==="up"?"8+ characters":"••••••••"}"><button class="eye" id="a-eye" type="button" aria-label="Show password">👁</button></div>
-        ${tab==="up"?'<div class="strength"><i id="a-str"></i></div>':""}
-      </div>
-      <div class="aerr" id="a-err"></div>
-      <button class="btn" id="a-go">${tab==="in"?"Sign in":"Create account"}</button>
-      <div class="minibar" style="margin-top:18px">
-        <div class="ministat"><b>⚗️</b><span>progress syncs</span></div>
-        <div class="ministat"><b>🔥</b><span>streaks saved</span></div>
-        <div class="ministat"><b>★</b><span>premium unlocks</span></div>
-      </div>
-      <p style="font-size:12.5px;color:var(--ink-soft);margin:8px 0 0">No tracking, no ads, EU-hosted, delete anytime — <a href="/privacy.html">privacy policy</a>.</p>
+    acct.innerHTML=`<div class="card acct-card" style="text-align:center;padding:34px 24px">
+      <div style="font-size:34px;margin-bottom:6px">⚗️</div>
+      <h3 style="margin-bottom:6px">You're signed out</h3>
+      <p style="color:var(--ink-soft);font-size:14.5px;max-width:38ch;margin:0 auto 16px">Sign in to sync your progress across devices and manage your subscription.</p>
+      <p style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button class="btn" id="acct-open-in">Log in</button>
+        <button class="btn ghost" id="acct-open-up">Create account</button></p>
     </div>`;
-    $("#t-in").onclick=()=>{tab="in";render();};
-    $("#t-up").onclick=()=>{tab="up";render();};
-    $("#a-eye").onclick=()=>{const f=$("#a-pass");f.type=f.type==="password"?"text":"password";};
-    $("#a-pass").addEventListener("input",()=>{
-      const bar=$("#a-str"); if(!bar)return;
-      const sc=pwScore($("#a-pass").value);
-      bar.style.width=(sc*25)+"%";
-      bar.style.background=["var(--danger)","var(--danger)","var(--warn)","var(--cu)","var(--ok)"][sc];
-    });
-    const go=async()=>{
-      const email=$("#a-email").value.trim(), password=$("#a-pass").value;
-      const btn=$("#a-go"); $("#a-err").textContent="";
-      btn.innerHTML='<span class="spin"></span>'+(tab==="in"?"Signing in…":"Creating account…"); btn.disabled=true;
-      const {data,error}=await (tab==="in"?sb.auth.signInWithPassword({email,password}):sb.auth.signUp({email,password}));
-      if(error){
-        btn.disabled=false; btn.textContent=tab==="in"?"Sign in":"Create account";
-        $("#a-err").textContent=error.message;
-        const card=acct.querySelector(".card"); card.classList.remove("shake"); void card.offsetWidth; card.classList.add("shake");
-        return;
-      }
-      if(tab==="up")burstFrom(btn);
-      refresh();
-    };
-    $("#a-go").onclick=go;
-    $("#a-pass").addEventListener("keydown",e=>{if(e.key==="Enter")go();});
+    $("#acct-open-in").onclick=()=>openAuth("in");
+    $("#acct-open-up").onclick=()=>openAuth("up");
     return;
   }
   const since=new Date(user.created_at).toLocaleDateString("en-GB",{month:"short",year:"numeric"});
