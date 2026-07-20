@@ -1624,8 +1624,17 @@ function setupCanvas(c){
   const ctx=c.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0);
   return [ctx,w,h];
 }
-const store=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));window.dispatchEvent(new CustomEvent("chemlab:changed"))}catch(e){}};
-const load=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}};
+/* Signed-out visitors keep progress in memory only — it works for the session but
+   is never written to disk. The auth module turns persistence on at sign-in. */
+const MEM={};
+window.chemPersist=false;
+window.chemStoreSync={
+  persistOn(){window.chemPersist=true;for(const k in MEM){try{localStorage.setItem(k,MEM[k])}catch(e){}}},
+  persistOff(){window.chemPersist=false;},
+  drop(k){delete MEM[k];}
+};
+const store=(k,v)=>{try{const j=JSON.stringify(v);MEM[k]=j;if(window.chemPersist)localStorage.setItem(k,j);window.dispatchEvent(new CustomEvent("chemlab:changed"))}catch(e){}};
+const load=(k,d)=>{try{const v=JSON.parse((k in MEM)?MEM[k]:localStorage.getItem(k));return v==null?d:v}catch(e){return d}};
 function burst(x,y,n=14){
   if(reduced)return;
   const cols=[cssVar("--li"),cssVar("--na"),cssVar("--k"),cssVar("--cu"),cssVar("--bunsen")];
@@ -2636,6 +2645,14 @@ function openTestPick(){
 }
 
 /* ---------- topic stats ---------- */
+function updateProgressNav(){
+  const has=Object.keys(load("chemlab-topicstats",{})).length>0||load("chemlab-examhist",[]).length>0;
+  const b=document.querySelector('nav.rail button[data-v="progress"]');
+  if(b)b.style.display=has?"":"none";
+  if(!has){const v=document.querySelector("#v-progress");if(v&&v.classList.contains("on"))showView("home");}
+}
+updateProgressNav();
+window.addEventListener("chemlab:changed",updateProgressNav);
 function recTopic(t,got,max){
   if(t==null)return;
   const st=load("chemlab-topicstats",{});
@@ -2893,6 +2910,7 @@ const CFG=window.CHEMLAB_CONFIG;
 const $=s=>document.querySelector(s);
 const acct=$("#acct");
 if(!CFG.url||!CFG.anon){
+  window.chemStoreSync&&window.chemStoreSync.persistOn();
   acct.innerHTML=`<div class="card acct-card"><h3>Accounts are almost here</h3>
   <p>Cloud accounts, synced progress and Premium are being wired up. Until then everything is free and your progress lives on this device.</p></div>`;
   const c=document.querySelector("#acct-corner");
@@ -2907,7 +2925,7 @@ window.chemPremium=false; window.applyPracLocks(); if(typeof renderQuiz==="funct
 
 const KEYS=["chemlab-mastered","chemlab-quiz","chemlab-prac","chemlab-hunt-best","chemlab-quiz-beststreak","chemlab-mood"];
 const lget=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}};
-const lset=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+const lset=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));window.chemStoreSync&&window.chemStoreSync.drop(k)}catch(e){}};
 function snapshot(){const o={};KEYS.forEach(k=>o[k]=lget(k,null));return o;}
 function merge(cloud,local){
   const out={};
@@ -2941,6 +2959,7 @@ async function refresh(){
   const {data:{session}}=await sb.auth.getSession();
   user=session?.user||null;
   if(user){
+    window.chemStoreSync&&window.chemStoreSync.persistOn();
     const {data:p}=await sb.from("profiles").select("premium,progress,nickname,avatar,avatar_hue").eq("id",user.id).maybeSingle();
     prof=p||{};
     premium=!!p?.premium;
@@ -2949,6 +2968,7 @@ async function refresh(){
     localStorage.setItem("chemlab-signedin","1");
   }else{
     premium=false;
+    window.chemStoreSync&&window.chemStoreSync.persistOff();
     if(localStorage.getItem("chemlab-signedin")){wipeLocal();location.reload();return;}
   }
   window.chemPremium=!!(user&&premium);
