@@ -632,12 +632,19 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
 </section>
 
 <section class="view" id="v-quiz">
-  <div class="eyebrow">Quizzes &amp; exams</div>
-  <h1>Test your knowledge</h1>
-  <p class="lede">Exam-style multiple choice with explanations, shuffled every session. Protect your streak. 🔥</p>
+  <div class="eyebrow">Quick-fire</div>
+  <h1>Quick-fire quiz</h1>
+  <p class="lede">One question at a time with instant marking, explanations and streaks — shuffled every session. Protect your streak. 🔥</p>
+  <div class="controls" style="margin:0 0 12px"><div class="ctrl"><label for="q-topic">Practise</label>
+    <select id="q-topic"></select></div></div>
+  <div class="quiz-card" id="quizcard"></div>
+</section>
+
+<section class="view" id="v-exam">
+  <div class="eyebrow">Exam practice</div>
+  <h1>Exam-like questions</h1>
+  <p class="lede">Original questions in real exam formats, on a real exam clock — 2 minutes per mark. Written answers are marked by an AI examiner who explains exactly where the marks were lost.</p>
   <div class="sim" id="examcard">
-    <h2>Exam-like questions</h2>
-    <p class="hint">Original questions in real exam formats, on a real exam clock — 2 minutes per mark. Written answers are marked by an AI examiner who explains exactly where the marks were lost.</p>
     <div class="controls">
       <div class="ctrl"><label for="ex-type">Question type</label><select id="ex-type">
         <option value="mcq">Multiple choice</option>
@@ -650,10 +657,6 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
     </div>
     <div id="ex-area"></div>
   </div>
-  <h2 class="serif" id="quickfire" style="font-size:22px;margin:8px 0 6px;scroll-margin-top:70px">Quick-fire quiz</h2>
-  <div class="controls" style="margin:0 0 12px"><div class="ctrl"><label for="q-topic">Practise</label>
-    <select id="q-topic"></select></div></div>
-  <div class="quiz-card" id="quizcard"></div>
 </section>
 
 <section class="view" id="v-progress">
@@ -1599,14 +1602,17 @@ function burst(x,y,n=14){
 function burstFrom(el){const r=el.getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2);}
 
 /* ---------- navigation ---------- */
-$$("nav.rail button[data-v]").forEach(b=>b.addEventListener("click",()=>showView(b.dataset.v)));
+$$("nav.rail button[data-v]").forEach(b=>b.addEventListener("click",()=>{
+  if(b.dataset.v==="quiz"){openTestPick();return;}
+  showView(b.dataset.v);
+}));
 function showView(v){
-  $$("nav.rail button[data-v]").forEach(b=>b.classList.toggle("on",b.dataset.v===v));
+  $$("nav.rail button[data-v]").forEach(b=>b.classList.toggle("on",b.dataset.v===v||(v==="exam"&&b.dataset.v==="quiz")));
   $$("section.view").forEach(s=>s.classList.toggle("on",s.id==="v-"+v));
   window.scrollTo({top:0});
   if(v==="home")renderDash();
   if(v==="progress")renderProgress();
-  if(v==="quiz"&&!(typeof EX!=="undefined"&&EX&&!EX.done))showTestPick();
+
   redrawAll();
 }
 
@@ -1622,7 +1628,7 @@ $("#homecards").innerHTML=HOME.map(h=>`<div class="card link" tabindex="0" role=
   <span class="tagline" style="background:color-mix(in srgb,var(${h[2]}) 14%,transparent);color:var(${h[2]})">${h[3]}</span>
   <h3>${h[0]}</h3><p>${h[4]}</p></div>`).join("");
 $$("#homecards .card").forEach(c=>{
-  const go=()=>showView(c.dataset.goto);
+  const go=()=>{if(c.dataset.goto==="quiz"){openTestPick();return;}showView(c.dataset.goto);};
   c.addEventListener("click",go);
   c.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();go();}});
 });
@@ -2552,9 +2558,12 @@ $("#testpick").addEventListener("click",e=>{if(e.target.id==="testpick")closeTes
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeTestPick();});
 $$("#testpick .pickcard").forEach(b=>b.addEventListener("click",()=>{
   closeTestPick();
-  const target=b.dataset.pick==="exam"?document.querySelector("#examcard"):document.querySelector("#quickfire");
-  if(target)setTimeout(()=>target.scrollIntoView({behavior:"smooth",block:"start"}),60);
+  showView(b.dataset.pick==="exam"?"exam":"quiz");
 }));
+function openTestPick(){
+  if(typeof EX!=="undefined"&&EX&&!EX.done){showView("exam");return;}
+  showTestPick();
+}
 
 /* ---------- topic stats ---------- */
 function recTopic(t,got,max){
