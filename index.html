@@ -248,6 +248,20 @@ ul.chk{list-style:none;padding-left:0!important;margin:8px 0}
 @keyframes flok{0%{box-shadow:0 0 0 3px var(--ok)}100%{box-shadow:0 0 0 0 transparent}}
 @keyframes flno{0%,100%{transform:none}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 .confetti-bit{position:fixed;width:8px;height:8px;border-radius:2px;pointer-events:none;z-index:99}
+.hero-h{font-size:clamp(30px,4.6vw,44px)!important;max-width:22ch}
+.hero-cta{display:flex;gap:12px;flex-wrap:wrap;margin:20px 0 10px}
+.statrow{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 26px}
+.statrow span{font-size:12.5px;font-weight:600;letter-spacing:.03em;color:var(--ink-soft);
+  border:1px solid var(--line);border-radius:99px;padding:5px 13px;background:var(--panel)}
+ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
+.spot li{border:1px solid var(--line);border-radius:8px;padding:9px 12px;margin-bottom:6px;cursor:pointer;font-size:14.5px;background:var(--panel2)}
+.spot li:hover{border-color:var(--bunsen)}
+.spot li.pick{border-color:var(--bunsen);box-shadow:inset 3px 0 0 var(--bunsen)}
+.spot li.hit{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 10%,var(--panel2))}
+.spot li.miss{border-color:var(--warn);background:color-mix(in srgb,var(--warn) 10%,var(--panel2))}
+.spot li.false{border-color:var(--danger);background:color-mix(in srgb,var(--danger) 8%,var(--panel2))}
+.spot .why{font-size:13px;color:var(--ink-soft);margin-top:6px;border-top:1px dashed var(--line);padding-top:6px}
+.spot.checked li{cursor:default}
 .modal{position:fixed;inset:0;background:rgba(8,14,18,.55);display:grid;place-items:center;z-index:50;padding:18px;backdrop-filter:blur(3px)}
 .modal[hidden]{display:none}
 .modal-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);max-width:600px;width:100%;max-height:85vh;overflow:auto;position:relative;animation:pop .18s ease}
@@ -277,6 +291,16 @@ ul.chk{list-style:none;padding-left:0!important;margin:8px 0}
 .price-box span{display:block;font-size:12px;color:var(--ink-soft)}
 
 @media (max-width:760px){
+  canvas.plot{height:250px}
+  .ctrl input[type=range]{width:130px}
+  .sim{padding:15px}
+  .quiz-card{padding:18px}
+  .view>h1{font-size:25px}
+  .hero-h{font-size:29px!important}
+  .modal-card{max-height:92vh}
+  #eldetail .bigsym{font-size:40px}
+  .controls{gap:12px 18px}
+  .topic>button,.prac>button{padding:14px}
   .app{flex-direction:column}
   nav.rail{width:100%;flex-direction:row;height:auto;position:static;overflow-x:auto;
     border-right:0;border-bottom:1px solid var(--line);padding:10px 12px;gap:2px}
@@ -308,8 +332,14 @@ ul.chk{list-style:none;padding-left:0!important;margin:8px 0}
 <main>
 
 <section class="view on" id="v-home">
-  <h1>Chemistry, from first principles to the lab bench.</h1>
-  <p class="lede">A study companion for A-level chemistry (AQA · OCR · Edexcel). Learn the theory, run the simulations, master the required practicals — with values checked against IUPAC, NIST and the Royal Society of Chemistry.</p>
+  <div class="eyebrow">Free to start · AQA · OCR · Edexcel</div>
+  <h1 class="hero-h">Chemistry, from first principles to the lab bench.</h1>
+  <p class="lede" style="font-size:17px;max-width:56ch">Learn the theory the way mark schemes want it, play with live simulations, and walk into every required practical knowing the mistakes examiners see every year. Every value checked against the RSC, CLEAPSS, NIST and IUPAC.</p>
+  <p class="hero-cta">
+    <button class="btn" data-goto="learn" style="font-size:15.5px;padding:12px 24px">Start learning — it's free</button>
+    <button class="btn ghost" data-goto="lab" style="padding:12px 20px">Try a simulation</button>
+  </p>
+  <div class="statrow" id="statrow"></div>
   <div class="grid cols3" id="homecards"></div>
   <div id="dash"></div>
 </section>
@@ -334,6 +364,8 @@ ul.chk{list-style:none;padding-left:0!important;margin:8px 0}
   <p class="lede">All 118 elements. Click any element for its electron configuration, and a flame-test colour where one exists. Then see how fast you are in Element Hunt.</p>
   <div class="hunt">
     <button class="btn" id="hunt-btn">🎯 Element Hunt</button>
+    <select id="hunt-diff" style="font:inherit;padding:6px 8px;border-radius:7px;border:1px solid var(--line);background:var(--panel);color:var(--ink)">
+      <option value="easy">Easy</option><option value="hard">Hard</option></select>
     <span class="ask" id="hunt-ask">Find 8 elements from their clues, against the clock.</span>
     <span class="streak" id="hunt-score"></span>
   </div>
@@ -364,6 +396,8 @@ ul.chk{list-style:none;padding-left:0!important;margin:8px 0}
   <div class="eyebrow">Test yourself</div>
   <h1>Quiz</h1>
   <p class="lede">Exam-style multiple choice with explanations, shuffled every session. Protect your streak. 🔥</p>
+  <div class="controls" style="margin:0 0 12px"><div class="ctrl"><label for="q-topic">Practise</label>
+    <select id="q-topic"></select></div></div>
   <div class="quiz-card" id="quizcard"></div>
 </section>
 
@@ -557,7 +591,45 @@ const TOPICS=[
 <h4>Group 7 (halogens)</h4>
 <ul><li>Oxidising power decreases down the group: Cl₂ displaces Br⁻ and I⁻; Br₂ displaces only I⁻.</li>
 <li>Halide test: acidified silver nitrate → AgCl white (dissolves in dilute NH₃), AgBr cream (dissolves in conc. NH₃), AgI yellow (insoluble in NH₃).</li>
-<li>Reducing power of halides increases down the group — with conc. H₂SO₄, Cl⁻ gives HCl only; Br⁻ also gives SO₂; I⁻ gives H₂S, S and I₂.</li></ul>`}];
+<li>Reducing power of halides increases down the group — with conc. H₂SO₄, Cl⁻ gives HCl only; Br⁻ also gives SO₂; I⁻ gives H₂S, S and I₂.</li></ul>`},
+{c:"--li",t:"Thermodynamics",s:"Born–Haber cycles, entropy, Gibbs free energy",b:`
+<div class="defbox"><b>Lattice enthalpy of formation</b> — the enthalpy change when one mole of a solid ionic compound is formed from its gaseous ions. Always exothermic (large and negative).</div>
+<h4>Born–Haber cycles</h4>
+<ul><li>Route 1 (direct): formation. Route 2: atomise both elements → ionise the metal → electron affinity of the non-metal → lattice formation. Hess: the routes are equal.</li>
+<li>NaCl check: ΔH°f −411 = (+107 atomisation Na) + (+496 IE₁) + (+122 atomisation ½Cl₂) + (−349 EA) + lattice → lattice ≈ <b>−787 kJ mol⁻¹</b>.</li>
+<li>Real lattices vs the perfect ionic model: agreement is good for NaCl; large differences (e.g. AgI) mean <b>covalent character</b> — a small, highly charged cation polarises the anion.</li></ul>
+<h4>Entropy and feasibility</h4>
+<span class="eq">ΔG = ΔH − TΔS &nbsp;·&nbsp; feasible when ΔG ≤ 0 &nbsp;·&nbsp; switch-over at T = ΔH/ΔS</span>
+<ul><li>Entropy S rises with disorder: solid &lt; liquid &lt; gas, and with more moles of gas.</li>
+<li>Units trap: ΔS is usually J K⁻¹ mol⁻¹ — divide by 1000 before mixing with ΔH in kJ.</li>
+<li>An endothermic reaction can still be feasible if TΔS outweighs ΔH (why ice melts above 0 °C).</li></ul>`},
+{c:"--na",t:"Transition metals",s:"Complexes, colour, catalysis, reactions of aqueous ions",b:`
+<div class="defbox"><b>Transition metal</b> — a d-block element that forms at least one stable ion with a partially filled d-subshell. Sc (d⁰ ion) and Zn (d¹⁰ ion) don't count.</div>
+<h4>Four characteristic properties</h4>
+<ul><li>Variable oxidation states · coloured ions · catalytic activity · complex formation.</li></ul>
+<h4>Complexes</h4>
+<ul><li>A <b>ligand</b> donates a lone pair to the metal ion (co-ordinate bond); the <b>co-ordination number</b> is the number of bonds. [Cu(H₂O)₆]²⁺ is octahedral, 6.</li>
+<li>Bidentate: ethanedioate, ethane-1,2-diamine. Hexadentate: EDTA⁴⁻. Swapping monodentate for multidentate ligands is entropy-driven (<b>chelate effect</b> — more particles released).</li></ul>
+<h4>Colours to know cold</h4>
+<ul><li class="mono">[Cu(H₂O)₆]²⁺ pale blue · +NH₃(excess) deep royal blue · Fe²⁺(aq) pale green · Fe³⁺(aq) yellow-brown</li>
+<li class="mono">Hydroxide ppts: Cu(OH)₂ blue · Fe(OH)₂ green (browns on standing in air) · Fe(OH)₃ orange-brown</li>
+<li>Colour arises when d-electrons absorb visible light jumping between split d-levels: ΔE = hν. Change the ligand, oxidation state or co-ordination number and the colour changes.</li></ul>
+<h4>Catalysis</h4>
+<ul><li>Heterogeneous: Fe (Haber), V₂O₅ (Contact process). Homogeneous: Fe²⁺ catalysing S₂O₈²⁻ + I⁻. Autocatalysis: Mn²⁺ in MnO₄⁻/C₂O₄²⁻ — the reaction speeds up as product forms.</li></ul>`},
+{c:"--cu",t:"Analysis & spectroscopy",s:"IR, mass spectra, ¹H and ¹³C NMR, chromatography",b:`
+<h4>Infrared</h4>
+<ul><li class="mono">C=O 1680–1750 cm⁻¹ (sharp) · O–H alcohol 3230–3550 (broad) · O–H acid 2500–3000 (very broad) · fingerprint region &lt;1500 identifies the exact compound</li></ul>
+<h4>Mass spectra</h4>
+<ul><li>M⁺ peak → Mr. Common fragment losses: 15 (CH₃), 17 (OH), 29 (C₂H₅ or CHO), 45 (COOH).</li>
+<li>M and M+2 in ratio 3:1 → one Cl; 1:1 → one Br.</li></ul>
+<h4>¹H NMR</h4>
+<ul><li>Reference TMS at δ = 0; solvent CDCl₃ (no ¹H signal).</li>
+<li>Number of signals = number of H environments; integration ratio = ratio of H atoms.</li>
+<li><b>n+1 rule</b>: a signal splits into (n+1) peaks, where n = H atoms on adjacent carbons. Quartet ⇒ next to CH₃; triplet ⇒ next to CH₂.</li>
+<li>¹³C NMR: one signal per carbon environment — count them first in any structure question.</li></ul>
+<h4>Chromatography</h4>
+<span class="eq">Rf = distance moved by spot ÷ distance moved by solvent front</span>
+<p>TLC (required practical 12): separation depends on relative affinity for the stationary vs mobile phase. Never let the solvent reach the top of the plate.</p>`}];
 
 /* ---------- required practicals ---------- */
 const PRACLIST=[
@@ -651,6 +723,45 @@ errors:[["Warming Tollens' over a flame or storing it","Water bath only, and rin
 ["Cross-contaminated droppers","One clean pipette per reagent, or every tube goes orange."]],
 exp:"Full result table: alkene decolourises Br₂ water; aldehyde: DNPH ppt + silver mirror + Fehling's brick-red + dichromate green; ketone: DNPH ppt only; 1°/2° alcohol: fizzes with Na, dichromate green; 3° alcohol: fizzes with Na, dichromate stays orange; carboxylic acid: fizzes with NaHCO₃. Bonus: the iodoform test (I₂/KI + NaOH, warm gently) gives a yellow CHI₃ precipitate for CH₃C=O compounds and CH₃CH(OH)– alcohols — it distinguishes ethanol (positive) from methanol (negative). Disposal: Tollens' mixtures go down the foul-water drain immediately after use (RSC) — stored residues form explosive silver compounds."}];
 
+/* ---------- spot the mistake ---------- */
+const SPOT=[
+[["Rinse the burette with distilled water just before filling it with the titrant.",1,"Water dilutes the titrant on the walls — rinse with the solution it will hold."],
+ ["Use a pipette filler to transfer 25.0 cm³ of alkali into the conical flask.",0],
+ ["Add about 10 cm³ of indicator so the colour change is easy to see.",1,"Indicators are weak acids themselves — 2–3 drops only."],
+ ["Near the endpoint, add dropwise with constant swirling.",0],
+ ["Read the burette from the top of the meniscus, holding it at an angle.",1,"Bottom of the meniscus, at eye level, on a white tile."],
+ ["Repeat until two titres agree within 0.10 cm³ and average those.",0]],
+[["Record the temperature every minute for 3 minutes before adding the solid.",0],
+ ["Add the solid at minute 4 and make sure you record the temperature at exactly minute 4.",1,"Nothing is recorded at the minute of mixing — the mixture isn't uniform yet."],
+ ["Use the highest temperature reached to calculate ΔT.",1,"Extrapolate both best-fit lines back to the time of mixing; ΔT is the gap there."],
+ ["Use q = mcΔT with m as the mass of the solution being heated.",0],
+ ["Add the mass of the solid to m before calculating.",1,"AQA's handbook is explicit: do not add on the mass of the solid."],
+ ["A temperature rise means the reaction is exothermic, so ΔH is negative.",0]],
+[["Measure the thiosulfate into the tube and warm it in a water bath to the target temperature.",0],
+ ["Assume the mixture is at the water-bath temperature when you start timing.",1,"Measure the mixture's own temperature — use the mean of start and end."],
+ ["Add the acid, start timing, and stop when the cross is no longer visible from above.",0],
+ ["Plot time against temperature to show the trend.",1,"Convert to rate = 1/t first — plotting raw time is the most common examiner-reported error."],
+ ["Do one run at 70 °C to extend the temperature range.",1,"Never above 55 °C — hot acidified thiosulfate releases much more toxic SO₂."],
+ ["Tip each finished mixture into the sodium carbonate stop-bath.",0]],
+[["Add anti-bumping granules before heating.",0],
+ ["Place the thermometer bulb in the boiling liquid.",1,"The bulb sits level with the side-arm to read the vapour actually distilling over."],
+ ["Connect the cooling water so it enters at the top of the condenser.",1,"Counter-current cooling: water in at the bottom, out at the top."],
+ ["Collect the fraction boiling below 100 °C.",0],
+ ["Stopper the receiving flask tightly so no vapour escapes.",1,"A sealed apparatus builds pressure and can shatter — one point must stay open."],
+ ["Dry the organic layer over anhydrous CaCl₂ until it runs clear.",0]],
+[["Make Tollens' reagent fresh and warm it in a hot water bath.",0],
+ ["Store the leftover Tollens' reagent for next lesson.",1,"Stored residues form explosive silver compounds — rinse away immediately."],
+ ["Warm the suspected aldehyde with Fehling's and look for a brick-red precipitate.",0],
+ ["Add AgNO₃ straight to the haloalkane/NaOH mixture without acidifying.",1,"Leftover OH⁻ gives a false precipitate — acidify with dilute HNO₃ first."],
+ ["Record 'no visible change' as the observation for a ketone with Tollens'.",0],
+ ["Skip writing observations and just record the conclusion.",1,"Examiners award observations (exact colours, precipitates) — conclusions alone lose marks."]]];
+function spotHtml(i){
+  return `<h4>Spot the mistakes — 3 planted 🕵️</h4>
+  <p style="font-size:14px;color:var(--ink-soft);max-width:70ch;margin:4px 0 8px">A student wrote this method. Tap every step you think is wrong, then check.</p>
+  <ul class="spot" data-p="${i}">${SPOT[i].map((st,j)=>`<li data-j="${j}">${st[0]}</li>`).join("")}</ul>
+  <p><button class="btn ghost spot-check" data-p="${i}">Check my answers</button> <span class="streak spot-res" id="spotres${i}"></span></p>`;
+}
+
 /* ---------- quiz ---------- */
 const QUIZ=[
 {q:"What is the electron configuration of a Cu atom?",o:["[Ar] 3d⁹ 4s²","[Ar] 3d¹⁰ 4s¹","[Ar] 3d¹⁰ 4s²","[Ar] 3d⁸ 4s²"],a:1,e:"Copper is an exception: a full 3d subshell plus 4s¹ is lower in energy than 3d⁹4s²."},
@@ -677,6 +788,52 @@ const QUIZ=[
 {q:"The Arrhenius equation predicts that a plot of ln k against 1/T has gradient:",o:["Ea/R","−Ea/R","−R/Ea","ln A"],a:1,e:"ln k = ln A − Ea/(RT): straight line, gradient −Ea/R, intercept ln A."},
 {q:"Which molecule has the highest boiling point?",o:["Pentane","2-methylbutane","2,2-dimethylpropane","They are equal"],a:0,e:"All are C₅H₁₂; the straight chain has the greatest surface contact, so the strongest induced dipole–dipole forces."},
 {q:"A buffer is made from ethanoic acid and sodium ethanoate. Adding a little NaOH:",o:["Raises pH sharply","Is neutralised by CH₃COOH, so pH barely changes","Is neutralised by CH₃COO⁻","Destroys the buffer"],a:1,e:"OH⁻ + CH₃COOH → CH₃COO⁻ + H₂O; the reservoir of weak acid removes the added base and the [HA]/[A⁻] ratio barely moves."}];
+const QTOPIC=[0,0,1,6,6,6,5,5,4,4,7,7,8,8,1,3,9,9,2,8,8,4,1,6];
+const QUIZ2=[
+{t:0,q:"How many electrons does a Ti²⁺ ion have? (Z = 22)",o:["18","20","22","24"],a:1,e:"22 − 2 = 20. The two 4s electrons are lost first."},
+{t:0,q:"Which species has the same electron configuration as argon?",o:["S²⁻","Na⁺","Mg²⁺","Al³⁺"],a:0,e:"S (16) + 2 = 18 electrons = Ar. The others match neon (10)."},
+{t:0,q:"Chlorine is 75% ³⁵Cl and 25% ³⁷Cl. Its Ar is…",o:["35.0","35.5","36.0","36.5"],a:1,e:"(35×75 + 37×25)/100 = 35.5."},
+{t:1,q:"The shape of SF₆ is…",o:["tetrahedral","trigonal bipyramidal","octahedral","square planar"],a:2,e:"Six bonding pairs, no lone pairs: octahedral, 90°."},
+{t:1,q:"Which molecule has a permanent dipole?",o:["CO₂","CCl₄","CHCl₃","BF₃"],a:2,e:"The others are symmetrical, so bond dipoles cancel; CHCl₃ is not."},
+{t:1,q:"The bond angle in CO₂ is…",o:["104.5°","109.5°","120°","180°"],a:3,e:"Two double-bond regions repel to opposite sides: linear."},
+{t:2,q:"Moles in 4.8 g of magnesium (Ar = 24)?",o:["0.05","0.1","0.2","0.5"],a:2,e:"n = m/M = 4.8/24 = 0.20 mol."},
+{t:2,q:"Volume of 0.50 mol of gas at 298 K and 100 kPa?",o:["1.24 dm³","12.4 dm³","24.8 dm³","124 dm³"],a:1,e:"V = nRT/p = 0.5 × 8.31 × 298 ÷ 100000 = 0.0124 m³ = 12.4 dm³."},
+{t:2,q:"Empirical formula CH₂O, Mr = 60. Molecular formula?",o:["CH₂O","C₂H₄O₂","C₃H₆O₃","C₂H₆O"],a:1,e:"CH₂O has mass 30; 60/30 = 2, so double every atom."},
+{t:2,q:"0.025 mol dissolved in 250 cm³ gives a concentration of…",o:["0.01 mol dm⁻³","0.05 mol dm⁻³","0.1 mol dm⁻³","0.25 mol dm⁻³"],a:2,e:"c = n/V = 0.025 ÷ 0.250 = 0.10 mol dm⁻³."},
+{t:3,q:"Bond-enthalpy calculations differ from Hess-law values because…",o:["Hess's law is approximate","bond enthalpies are means over many compounds","of heat loss","of catalysts"],a:1,e:"A tabulated C–H value is an average across thousands of molecules, not your exact one."},
+{t:3,q:"50 g of water warms by 10 K. q = ? (c = 4.18 J g⁻¹ K⁻¹)",o:["209 J","2090 J","20 900 J","41.8 J"],a:1,e:"q = mcΔT = 50 × 4.18 × 10 = 2090 J."},
+{t:3,q:"The standard enthalpy of formation of O₂(g) is…",o:["−393 kJ mol⁻¹","+142 kJ mol⁻¹","zero","unknowable"],a:2,e:"Formation of an element in its standard state from itself: zero by definition."},
+{t:4,q:"Units of k when the reaction is second order overall?",o:["s⁻¹","mol dm⁻³ s⁻¹","dm³ mol⁻¹ s⁻¹","dm⁶ mol⁻² s⁻¹"],a:2,e:"rate = k[A][B]: rearrange and the units cancel to dm³ mol⁻¹ s⁻¹."},
+{t:4,q:"Doubling [A] makes the rate 4× faster. Order with respect to A?",o:["0","1","2","3"],a:2,e:"2ⁿ = 4 → n = 2."},
+{t:4,q:"The species appearing in the rate equation are those in…",o:["the overall equation","the rate-determining step (and before it)","the fastest step","the products"],a:1,e:"Only species involved up to and including the slow step affect the measured rate."},
+{t:4,q:"A zero-order reactant means…",o:["it isn't consumed","rate is unaffected by its concentration","the reaction has stopped","k = 0"],a:1,e:"Its concentration doesn't appear in the rate equation — often because it's not in the rate-determining step."},
+{t:5,q:"Kc units for N₂ + 3H₂ ⇌ 2NH₃?",o:["no units","mol dm⁻³","mol⁻² dm⁶","mol² dm⁻⁶"],a:2,e:"[NH₃]²/([N₂][H₂]³): (mol dm⁻³)² ÷ (mol dm⁻³)⁴ = mol⁻² dm⁶."},
+{t:5,q:"At dynamic equilibrium…",o:["concentrations are equal","both reactions stop","forward and reverse rates are equal","Kc = 1"],a:2,e:"Rates equal, concentrations constant (not necessarily equal) — in a closed system."},
+{t:5,q:"Adding an inert gas at constant volume…",o:["shifts right","shifts left","shifts to fewer moles","does not move the position"],a:3,e:"Partial pressures/concentrations of the reacting gases are unchanged."},
+{t:6,q:"Kw at 298 K equals…",o:["1.0 × 10⁻⁷","1.0 × 10⁻¹⁴","1.74 × 10⁻⁵","14"],a:1,e:"Kw = [H⁺][OH⁻] = 1.0 × 10⁻¹⁴ mol² dm⁻⁶ at 298 K."},
+{t:6,q:"pH of 0.05 mol dm⁻³ Ba(OH)₂?",o:["1.0","12.7","13.0","1.3"],a:2,e:"[OH⁻] = 0.10 → pOH = 1 → pH = 13."},
+{t:6,q:"Which pair makes a buffer?",o:["HCl + NaCl","ethanoic acid + sodium ethanoate","NaOH + NaCl","HCl + NaOH"],a:1,e:"A weak acid plus its conjugate base salt — reservoirs of both HA and A⁻."},
+{t:6,q:"Diluting a strong acid ×10 changes its pH by…",o:["−1","+1","×10","no change"],a:1,e:"[H⁺] falls tenfold, so pH rises by exactly 1 unit (e.g. 1 → 2)."},
+{t:7,q:"Oxidation state of sulfur in SO₄²⁻?",o:["+2","+4","+6","−2"],a:2,e:"4 × (−2) + S = −2 → S = +6."},
+{t:7,q:"Standard hydrogen electrode conditions?",o:["1 mol dm⁻³ H⁺, 100 kPa H₂, 298 K","2 mol dm⁻³ H⁺, 200 kPa, 273 K","any, it's the reference","pure water, 100 kPa, 298 K"],a:0,e:"Defined at 1 mol dm⁻³ H⁺, 100 kPa hydrogen, 298 K, platinum electrode — E° = 0 by definition."},
+{t:7,q:"The strongest oxidising agent has…",o:["the most negative E°","the most positive E°","E° = 0","the biggest half-equation"],a:1,e:"A very positive E° means a strong tendency to be reduced — i.e. to oxidise something else."},
+{t:8,q:"Major product of propene + HBr?",o:["1-bromopropane","2-bromopropane","1,2-dibromopropane","propan-2-ol"],a:1,e:"Markovnikov: the secondary carbocation is more stable, so Br ends up on the middle carbon."},
+{t:8,q:"Mechanism of methane + Cl₂ in UV light?",o:["electrophilic addition","nucleophilic substitution","free-radical substitution","elimination"],a:2,e:"UV homolysis of Cl₂ starts a radical chain: initiation, propagation, termination."},
+{t:8,q:"Reagent to convert a haloalkane to a nitrile?",o:["NH₃ in ethanol","KCN in ethanol","NaOH(aq)","HCN"],a:1,e:"CN⁻ substitutes the halogen, adding a carbon — key chain-lengthening step."},
+{t:8,q:"Ethanol → ethanoic acid needs…",o:["LiAlH₄","acidified K₂Cr₂O₇, distil immediately","excess acidified K₂Cr₂O₇, heat under reflux","steam and H₃PO₄"],a:2,e:"Reflux with excess oxidant takes the alcohol through the aldehyde to the acid."},
+{t:8,q:"E/Z isomerism requires…",o:["a chiral centre","restricted rotation and two different groups on each C","an –OH group","a benzene ring"],a:1,e:"The C=C can't rotate; each alkene carbon must carry two different groups."},
+{t:9,q:"The test for sulfate ions is…",o:["acidified AgNO₃ → white ppt","acidified BaCl₂ → white ppt","limewater → milky","NaOH → brown ppt"],a:1,e:"Ba²⁺ + SO₄²⁻ → BaSO₄, a white precipitate; acidify first to remove carbonate interference."},
+{t:9,q:"Which reacts most vigorously with water?",o:["Mg","Ca","Sr","Ba"],a:3,e:"Group 2 reactivity increases down the group — barium reacts vigorously even with cold water."},
+{t:10,q:"In the NaCl Born–Haber cycle, the lattice enthalpy of formation is about…",o:["−411 kJ mol⁻¹","−349 kJ mol⁻¹","−787 kJ mol⁻¹","+496 kJ mol⁻¹"],a:2,e:"−411 − (107 + 496 + 122 − 349) = −787 kJ mol⁻¹."},
+{t:10,q:"ΔS is most positive for…",o:["gas → solid","liquid → solid","solid → gas","no change of state"],a:2,e:"Sublimation gives the biggest jump in disorder."},
+{t:10,q:"The temperature at which feasibility switches is…",o:["T = ΔG/ΔS","T = ΔH/ΔS","T = ΔS/ΔH","298 K always"],a:1,e:"Set ΔG = 0 in ΔG = ΔH − TΔS and solve for T. Watch the J vs kJ units."},
+{t:11,q:"Adding excess NH₃ to [Cu(H₂O)₆]²⁺ gives…",o:["a white precipitate","a deep royal-blue solution","a green solution","no change"],a:1,e:"Partial ligand substitution forms [Cu(NH₃)₄(H₂O)₂]²⁺ — deep blue."},
+{t:11,q:"Sc³⁺ compounds are colourless because…",o:["scandium is not a metal","the 3d subshell is empty, so no d–d transitions","they absorb all light","scandium is radioactive"],a:1,e:"Colour needs electrons moving between split d-orbitals; d⁰ (and d¹⁰) ions have no such transition."},
+{t:11,q:"EDTA⁴⁻ is a…",o:["monodentate ligand","bidentate ligand","tetradentate ligand","hexadentate ligand"],a:3,e:"It bonds through six donor atoms — one EDTA replaces six water ligands (chelate effect)."},
+{t:12,q:"A very broad IR absorption from 2500–3000 cm⁻¹ indicates…",o:["an alcohol O–H","a carboxylic acid O–H","a C=O","a C–H"],a:1,e:"The acid O–H is the broadest absorption, overlapping the C–H region."},
+{t:12,q:"A quartet in ¹H NMR sits next to…",o:["CH₃ (3 H)","CH₂ (2 H)","CH (1 H)","no protons"],a:0,e:"n+1 rule: 4 peaks means 3 neighbouring protons."},
+{t:12,q:"M and M+2 peaks in a 3:1 ratio mean…",o:["two chlorines","one chlorine","one bromine","an isotope error"],a:1,e:"³⁵Cl:³⁷Cl ≈ 3:1, so one Cl gives M and M+2 in that ratio (Br gives 1:1)."}];
+QUIZ2.forEach(x=>{QUIZ.push({q:x.q,o:x.o,a:x.a,e:x.e});QTOPIC.push(x.t);});
 
 /* ---------- sources (accredited) ---------- */
 const SOURCES=[
@@ -731,11 +888,11 @@ function showView(v){
 
 /* ---------- home ---------- */
 const HOME=[
-["Learn the theory","learn","--li","10 topic guides","Definitions worded for mark schemes, trends with real values, the anomalies examiners love."],
+["Learn the theory","learn","--li","13 topic guides","Definitions worded for mark schemes, trends with real values, the anomalies examiners love."],
 ["Run the simulations","lab","--cu","4 live models","Titration curves, Maxwell–Boltzmann, energy profiles and a particle-level gas — computed from the real equations."],
 ["Explore the elements","periodic","--na","118 elements","Electron configurations, categories and flame-test colours at a click."],
-["Master the practicals","prac","--k","5 deep walkthroughs","Method, CLEAPSS-based safety, the errors examiners report, and the results you should get."],
-["Test yourself","quiz","--bunsen","24 exam-style questions","Instant marking with full explanations."],
+["Master the practicals","prac","--k","5 deep walkthroughs","Method checklists, CLEAPSS-based safety, examiner-reported errors — and spot-the-mistake challenges."],
+["Test yourself","quiz","--bunsen","67 exam-style questions","Topic practice, streaks, instant marking with full explanations."],
 ["Check the sources","sources","--ink-soft","Accredited only","RSC, AQA, OCR, CLEAPSS, NIST and IUPAC references behind every number."]];
 $("#homecards").innerHTML=HOME.map(h=>`<div class="card link" tabindex="0" role="button" data-goto="${h[1]}">
   <span class="tagline" style="background:color-mix(in srgb,var(${h[2]}) 14%,transparent);color:var(${h[2]})">${h[3]}</span>
@@ -745,6 +902,9 @@ $$("#homecards .card").forEach(c=>{
   c.addEventListener("click",go);
   c.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();go();}});
 });
+$("#statrow").innerHTML=[TOPICS.length+" topic guides","4 live simulations","118 elements","5 practical deep-dives",QUIZ.length+" quiz questions"]
+  .map(x=>`<span>${x}</span>`).join("");
+$$(".hero-cta button").forEach(b=>b.addEventListener("click",()=>showView(b.dataset.goto)));
 function renderDash(){
   const mastered=load("chemlab-mastered",[]).length;
   const qz=load("chemlab-quiz",{score:0,n:0});
@@ -765,7 +925,7 @@ function renderDash(){
 }
 
 /* ---------- learn ---------- */
-const TCODES=["3.1.1","3.1.3","3.1.2","3.1.4","3.1.5 · 3.1.9","3.1.6 · 3.1.10","3.1.12","3.1.7 · 3.1.11","3.3","3.2"];
+const TCODES=["3.1.1","3.1.3","3.1.2","3.1.4","3.1.5 · 3.1.9","3.1.6 · 3.1.10","3.1.12","3.1.7 · 3.1.11","3.3","3.2","3.1.8","3.2.5 · 3.2.6","3.3.6 · 3.3.15 · 3.3.16"];
 const QC=[
 [{q:"Which electrons does a transition metal lose first when it ionises?",o:["3d","4s","3p","3s"],a:1},
  {q:"In TOF mass spectrometry, acceleration gives every ion the same…",o:["speed","mass","kinetic energy","charge"],a:2}],
@@ -786,7 +946,13 @@ const QC=[
 [{q:"Markovnikov: H adds to the carbon that already has…",o:["more hydrogens","fewer hydrogens","the halogen","a double bond"],a:0},
  {q:"Warming a ketone with Tollens' reagent gives…",o:["a silver mirror","a brick-red precipitate","no visible change","a green solution"],a:2}],
 [{q:"Highest melting point in period 3?",o:["Na","Al","Si","S₈"],a:2},
- {q:"Which silver halide dissolves in dilute ammonia?",o:["AgCl","AgBr","AgI","none of them"],a:0}]];
+ {q:"Which silver halide dissolves in dilute ammonia?",o:["AgCl","AgBr","AgI","none of them"],a:0}],
+[{q:"Lattice enthalpy of formation is always…",o:["endothermic","exothermic","zero","positive for ionic solids"],a:1},
+ {q:"A reaction is feasible when…",o:["ΔG ≤ 0","ΔH < 0","ΔS < 0","T is high"],a:0}],
+[{q:"Why isn't zinc a transition metal?",o:["It's not in the d-block","Zn²⁺ has a full 3d¹⁰ subshell","It has no oxidation states","It forms no compounds"],a:1},
+ {q:"Co-ordination number of [Cu(H₂O)₆]²⁺?",o:["2","4","6","12"],a:2}],
+[{q:"A sharp IR absorption at 1715 cm⁻¹ suggests…",o:["O–H","C=O","C–H","N–H"],a:1},
+ {q:"A triplet in ¹H NMR means the adjacent carbon carries…",o:["1 H","2 H","3 H","no H"],a:1}]];
 $("#topics").innerHTML=TOPICS.map((t,i)=>{
   const qc=QC[i].map((q,j)=>`<div class="q">${q.q}</div><div>${q.o.map((o,k)=>`<button data-t="${i}" data-j="${j}" data-k="${k}">${o}</button>`).join("")}</div>`).join("");
   return `<div class="topic" id="topic${i}">
@@ -845,23 +1011,29 @@ function showElement(z){
     </table></div>`;
 }
 /* element hunt game */
-const HUNTS=[["the element with configuration [Ar] 3d⁵ 4s¹",24],["the element with configuration [Ar] 3d¹⁰ 4s¹",29],
-["the element whose flame test is lilac",19],["the element whose flame test is crimson red",3],
-["the element whose flame test is apple green",56],["the halogen in period 4",35],
-["the noble gas in period 3",18],["the alkali metal in period 5",37],
-["the metalloid in period 2",5],["the most electronegative element of all",9],
-["the metal oxidised in a zinc–copper cell",30],["the giant covalent element at period 3's melting-point peak",14],
-["the element whose flame test is intense yellow-orange",11],["the halogen that is a grey-black solid at room temperature",53],
-["the group 2 metal in period 3",12],["the lightest noble gas",2]];
+const HUNT_POOLS={
+easy:[["the element whose flame test is lilac",19],["the element whose flame test is crimson red",3],
+["the element whose flame test is intense yellow-orange",11],["the element whose flame test is apple green",56],
+["the noble gas in period 3",18],["the lightest noble gas",2],["the alkali metal in period 5",37],
+["the halogen in period 4",35],["the group 2 metal in period 3",12],["the most electronegative element of all",9],
+["the metalloid in period 2",5],["the halogen that is a grey-black solid at room temperature",53]],
+hard:[["the element with configuration [Ar] 3d⁵ 4s¹",24],["the element with configuration [Ar] 3d¹⁰ 4s¹",29],
+["the period 2 element whose first ionisation energy breaks the trend after nitrogen",8],
+["the period 3 element whose outer electron enters 3p, dropping its ionisation energy below magnesium's",13],
+["the giant covalent element at period 3's melting-point peak",14],["the metal oxidised in a zinc–copper cell",30],
+["the transition metal whose 2+ ion is [Ar] 3d⁹",29],["the element with three unpaired 2p electrons",7],
+["the d-block element excluded from the transition metals because its ion is d¹⁰",30],
+["the group 2 metal whose sulfate is the classic insoluble white precipitate",56]]};
 let hunt=null;
 function huntNext(){
   if(!hunt)return;
   if(hunt.i>=hunt.qs.length){
     const t=Math.round((performance.now()-hunt.t0)/1000);
-    const best=load("chemlab-hunt-best",0);
-    const isBest=hunt.score>best;
-    if(isBest)store("chemlab-hunt-best",hunt.score);
-    $("#hunt-ask").textContent=`Done — ${hunt.score}/${hunt.qs.length} in ${t}s${isBest?" · new personal best! 🎉":""}`;
+    const dkey="chemlab-hunt-best-"+hunt.diff;
+    const isBest=hunt.score>load(dkey,0)||(hunt.score===load(dkey,0)&&t<load(dkey+"-t",1e9));
+    if(isBest){store(dkey,hunt.score);store(dkey+"-t",t);}
+    if(hunt.score>load("chemlab-hunt-best",0))store("chemlab-hunt-best",hunt.score);
+    $("#hunt-ask").textContent=`Done — ${hunt.score}/${hunt.qs.length} in ${t}s on ${hunt.diff}${isBest?" · new personal best! 🎉":""}`;
     $("#hunt-score").textContent="";
     $("#hunt-btn").textContent="🎯 Play again";
     hunt=null; return;
@@ -870,7 +1042,8 @@ function huntNext(){
   $("#hunt-score").textContent=`${hunt.score} pt · clue ${hunt.i+1}/${hunt.qs.length}`;
 }
 $("#hunt-btn").addEventListener("click",()=>{
-  hunt={qs:[...HUNTS].sort(()=>Math.random()-.5).slice(0,8),i:0,score:0,t0:performance.now()};
+  const diff=$("#hunt-diff").value;
+  hunt={qs:[...HUNT_POOLS[diff]].sort(()=>Math.random()-.5).slice(0,8),i:0,score:0,t0:performance.now(),diff};
   $("#hunt-btn").textContent="🎯 Playing…";
   huntNext();
 });
@@ -943,6 +1116,7 @@ $("#pracs").innerHTML=PRACS.map((p,i)=>`<div class="prac" id="prac${i}">
     ${p.errors.map(e=>`<div class="errbox"><b>${e[0]}</b>${e[1]}</div>`).join("")}
     <h4>What you should get</h4>
     <div class="expected">${p.exp}</div>
+    ${spotHtml(i)}
   </div></div>`).join("");
 $$(".prac>button").forEach(b=>b.addEventListener("click",()=>{
   const t=b.parentElement;
@@ -978,6 +1152,31 @@ $$(".chk li").forEach(li=>li.addEventListener("click",()=>{
   }
 }));
 PRACS.forEach((_,i)=>refreshPrac(i));
+$$(".spot li").forEach(li=>li.addEventListener("click",()=>{
+  if(li.closest(".spot").classList.contains("checked"))return;
+  li.classList.toggle("pick");
+}));
+$$(".spot-check").forEach(b=>b.addEventListener("click",()=>{
+  const i=+b.dataset.p, ul=document.querySelector(`.spot[data-p="${i}"]`);
+  if(ul.classList.contains("checked")){
+    ul.classList.remove("checked");
+    ul.querySelectorAll("li").forEach(li=>{li.className="";const w=li.querySelector(".why");if(w)w.remove();});
+    b.textContent="Check my answers"; document.querySelector("#spotres"+i).textContent="";
+    return;
+  }
+  ul.classList.add("checked");
+  let found=0,total=0;
+  ul.querySelectorAll("li").forEach(li=>{
+    const st=SPOT[i][+li.dataset.j], wrong=!!st[1], picked=li.classList.contains("pick");
+    if(wrong){total++;
+      if(picked){found++;li.classList.add("hit");}else li.classList.add("miss");
+      li.insertAdjacentHTML("beforeend",`<div class="why">${st[2]}</div>`);
+    } else if(picked) li.classList.add("false");
+  });
+  document.querySelector("#spotres"+i).textContent=`You found ${found}/${total}`+(found===total?" — perfect! 🎉":"");
+  if(found===total)burstFrom(b);
+  b.textContent="Try again";
+}));
 
 /* ---------- sources ---------- */
 $("#srclist").innerHTML=SOURCES.map(s=>`<div class="card"><h3>${s[0]}</h3><p>${s[1]}</p>
@@ -986,9 +1185,15 @@ $("#srclist").innerHTML=SOURCES.map(s=>`<div class="card"><h3>${s[0]}</h3><p>${s
 /* ---------- quiz ---------- */
 let qi=0, qstreak=0;
 let qscore=load("chemlab-quiz",{score:0,n:0}).score, qanswered=load("chemlab-quiz",{score:0,n:0}).n;
-const QORDER=[...QUIZ.keys()].sort(()=>Math.random()-.5);
+let QPOOL=[...QUIZ.keys()].sort(()=>Math.random()-.5);
+$("#q-topic").innerHTML='<option value="-1">All topics — mixed</option>'+TOPICS.map((t,i)=>`<option value="${i}">${t.t}</option>`).join("");
+$("#q-topic").addEventListener("input",()=>{
+  const t=+$("#q-topic").value;
+  QPOOL=[...QUIZ.keys()].filter(i=>t<0||QTOPIC[i]===t).sort(()=>Math.random()-.5);
+  qi=0; qstreak=0; renderQuiz();
+});
 function renderQuiz(){
-  if(!window.chemPremium && (qi%QUIZ.length)>=6){
+  if(!window.chemPremium && qi>=6){
     $("#quizcard").innerHTML=`
       <span class="tagline" style="background:color-mix(in srgb,var(--na) 16%,transparent);color:var(--na)">Free preview finished</span>
       <div class="qtext">That's the 6 free questions — nice work 🎉</div>
@@ -997,12 +1202,12 @@ function renderQuiz(){
       <span class="score">Session score: ${qscore}/${qanswered}</span></div>`;
     return;
   }
-  const q=QUIZ[QORDER[qi%QUIZ.length]];
+  const q=QUIZ[QPOOL[qi%QPOOL.length]];
   const beststreak=load("chemlab-quiz-beststreak",0);
   $("#quizcard").innerHTML=`
-    <span class="tagline" style="background:var(--bunsen-soft);color:var(--bunsen)">Question ${qi%QUIZ.length+1} of ${QUIZ.length}</span>
+    <span class="tagline" style="background:var(--bunsen-soft);color:var(--bunsen)">Question ${qi%QPOOL.length+1} of ${QPOOL.length}</span>
     <div style="display:flex;align-items:center;gap:12px;margin:10px 0 2px">
-      <div class="pbar"><i style="width:${(qi%QUIZ.length)/QUIZ.length*100}%"></i></div>
+      <div class="pbar"><i style="width:${(qi%QPOOL.length)/QPOOL.length*100}%"></i></div>
       <span class="streak" id="qstreak">🔥 ${qstreak}${beststreak?` · best ${beststreak}`:""}</span>
     </div>
     <div class="qtext">${q.q}</div>
@@ -1351,7 +1556,32 @@ function merge(cloud,local){
   return out;
 }
 function applyLocal(o){KEYS.forEach(k=>{if(o[k]!=null)lset(k,o[k])});
-  try{refreshMaster();PRACS.forEach((_,i)=>refreshPrac(i));renderDash();}catch(e){}}
+  try{refreshMaster();PRACS.forEach((_,i)=>refreshPrac(i));
+$$(".spot li").forEach(li=>li.addEventListener("click",()=>{
+  if(li.closest(".spot").classList.contains("checked"))return;
+  li.classList.toggle("pick");
+}));
+$$(".spot-check").forEach(b=>b.addEventListener("click",()=>{
+  const i=+b.dataset.p, ul=document.querySelector(`.spot[data-p="${i}"]`);
+  if(ul.classList.contains("checked")){
+    ul.classList.remove("checked");
+    ul.querySelectorAll("li").forEach(li=>{li.className="";const w=li.querySelector(".why");if(w)w.remove();});
+    b.textContent="Check my answers"; document.querySelector("#spotres"+i).textContent="";
+    return;
+  }
+  ul.classList.add("checked");
+  let found=0,total=0;
+  ul.querySelectorAll("li").forEach(li=>{
+    const st=SPOT[i][+li.dataset.j], wrong=!!st[1], picked=li.classList.contains("pick");
+    if(wrong){total++;
+      if(picked){found++;li.classList.add("hit");}else li.classList.add("miss");
+      li.insertAdjacentHTML("beforeend",`<div class="why">${st[2]}</div>`);
+    } else if(picked) li.classList.add("false");
+  });
+  document.querySelector("#spotres"+i).textContent=`You found ${found}/${total}`+(found===total?" — perfect! 🎉":"");
+  if(found===total)burstFrom(b);
+  b.textContent="Try again";
+}));renderDash();}catch(e){}}
 
 let user=null, premium=false, pushTimer=null;
 async function pushProgress(){
