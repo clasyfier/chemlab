@@ -2253,12 +2253,12 @@ $("#sims").innerHTML=`
 </div>
 <div class="sim" id="sim-shape">
   <h2>Molecule shapes — VSEPR explorer</h2>
-  <p class="hint">Choose how many bonding and lone pairs surround the central atom; the geometry, bond angle and an example molecule appear. Lone pairs repel more, squeezing the angles.</p>
+  <p class="hint">Choose how many bonding and lone pairs surround the central atom — then <b>drag the 3D model to spin it</b> and see the geometry from any angle. Lone pairs repel more, squeezing the angles.</p>
   <div class="controls">
     <div class="ctrl"><label for="sh-bp">Bonding pairs</label><select id="sh-bp"><option>2</option><option>3</option><option selected>4</option><option>5</option><option>6</option></select></div>
     <div class="ctrl"><label for="sh-lp">Lone pairs</label><select id="sh-lp"><option selected>0</option><option>1</option><option>2</option></select></div>
   </div>
-  <canvas class="plot" id="sh-plot" style="height:300px"></canvas>
+  <canvas class="plot" id="sh-plot" style="height:340px"></canvas>
   <div class="readout">
     <div class="stat"><div class="k">Shape</div><div class="v" id="sh-name">Tetrahedral</div></div>
     <div class="stat"><div class="k">Bond angle</div><div class="v" id="sh-ang">109.5°</div></div>
@@ -2581,54 +2581,106 @@ $("#bal-check").addEventListener("click",()=>{
 });
 balStart();
 
-/* molecule shapes */
+/* molecule shapes — true 3D model: drag to rotate, inertia, idle spin */
 const GEOMS={
- "2-0":{n:"Linear",a:"180°",ex:"CO₂",b:[[1,0],[-1,0]],lp:[]},
- "3-0":{n:"Trigonal planar",a:"120°",ex:"BF₃",b:[[0,-1],[-0.87,0.5],[0.87,0.5]],lp:[]},
- "4-0":{n:"Tetrahedral",a:"109.5°",ex:"CH₄",b:[[0,-1],[-0.9,0.55],[0.9,0.55],[0.16,0.34]],lp:[],w:3},
- "3-1":{n:"Trigonal pyramidal",a:"107°",ex:"NH₃",b:[[-0.85,0.6],[0.85,0.6],[0.1,0.4]],lp:[[0,-1]],w:2},
- "2-2":{n:"Bent",a:"104.5°",ex:"H₂O",b:[[-0.75,0.66],[0.75,0.66]],lp:[[-0.5,-0.87],[0.5,-0.87]]},
- "5-0":{n:"Trigonal bipyramidal",a:"120° and 90°",ex:"PCl₅",b:[[0,-1],[0,1],[-0.95,0.12],[0.6,-0.28],[0.62,0.4]],lp:[]},
- "6-0":{n:"Octahedral",a:"90°",ex:"SF₆",b:[[0,-1],[0,1],[-0.95,0.12],[0.95,-0.12],[-0.5,-0.42],[0.5,0.42]],lp:[]},
- "4-2":{n:"Square planar",a:"90°",ex:"XeF₄",b:[[-0.95,0.12],[0.95,-0.12],[-0.5,-0.42],[0.5,0.42]],lp:[[0,-1],[0,1]]}};
+ "2-0":{n:"Linear",a:"180°",ex:"CO₂",el:["C","O"],b:[[1,0,0],[-1,0,0]],lp:[]},
+ "3-0":{n:"Trigonal planar",a:"120°",ex:"BF₃",el:["B","F"],b:[[0,1,0],[0.866,-0.5,0],[-0.866,-0.5,0]],lp:[]},
+ "4-0":{n:"Tetrahedral",a:"109.5°",ex:"CH₄",el:["C","H"],b:[[0.577,0.577,0.577],[0.577,-0.577,-0.577],[-0.577,0.577,-0.577],[-0.577,-0.577,0.577]],lp:[]},
+ "3-1":{n:"Trigonal pyramidal",a:"107°",ex:"NH₃",el:["N","H"],b:[[0.943,-0.333,0],[-0.471,-0.333,0.816],[-0.471,-0.333,-0.816]],lp:[[0,1,0]]},
+ "2-2":{n:"Bent",a:"104.5°",ex:"H₂O",el:["O","H"],b:[[0.791,-0.612,0],[-0.791,-0.612,0]],lp:[[0,0.612,0.791],[0,0.612,-0.791]]},
+ "5-0":{n:"Trigonal bipyramidal",a:"120° and 90°",ex:"PCl₅",el:["P","Cl"],b:[[0,1,0],[0,-1,0],[1,0,0],[-0.5,0,0.866],[-0.5,0,-0.866]],lp:[]},
+ "6-0":{n:"Octahedral",a:"90°",ex:"SF₆",el:["S","F"],b:[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]],lp:[]},
+ "4-2":{n:"Square planar",a:"90°",ex:"XeF₄",el:["Xe","F"],b:[[1,0,0],[-1,0,0],[0,0,1],[0,0,-1]],lp:[[0,1,0],[0,-1,0]]}};
+const m3mul=(A,B)=>A.map(r=>[0,1,2].map(j=>r[0]*B[0][j]+r[1]*B[1][j]+r[2]*B[2][j]));
+const m3v=(A,v)=>[A[0][0]*v[0]+A[0][1]*v[1]+A[0][2]*v[2],A[1][0]*v[0]+A[1][1]*v[1]+A[1][2]*v[2],A[2][0]*v[0]+A[2][1]*v[1]+A[2][2]*v[2]];
+const rotX=a=>[[1,0,0],[0,Math.cos(a),-Math.sin(a)],[0,Math.sin(a),Math.cos(a)]];
+const rotY=a=>[[Math.cos(a),0,Math.sin(a)],[0,1,0],[-Math.sin(a),0,Math.cos(a)]];
+let shMat=m3mul(rotX(-0.32),rotY(0.55)), shG=GEOMS["4-0"];
+let shDrag=false,shLX=0,shLY=0,shVX=0,shVY=0,shIdleAt=0,shCtx=null,shW=0,shH=0;
 function drawShape(){
-  const c=$("#sh-plot"); if(!c.clientWidth)return;
-  const [ctx,w,h]=setupCanvas(c);
-  ctx.clearRect(0,0,w,h);
   const bp=+$("#sh-bp").value, lpn=+$("#sh-lp").value;
-  const g=GEOMS[bp+"-"+lpn];
-  if(!g){
+  shG=GEOMS[bp+"-"+lpn]||null;
+  $("#sh-name").textContent=shG?shG.n:"—";
+  $("#sh-ang").textContent=shG?shG.a:"—";
+  $("#sh-ex").textContent=shG?shG.ex:"—";
+}
+function shSphere(ctx,x,y,r,col,z){
+  ctx.fillStyle=col;
+  ctx.beginPath(); ctx.arc(x,y,r,0,7); ctx.fill();
+  let g=ctx.createRadialGradient(x-r*0.38,y-r*0.42,r*0.08,x,y,r);
+  g.addColorStop(0,"rgba(255,255,255,.62)"); g.addColorStop(0.5,"rgba(255,255,255,.08)"); g.addColorStop(1,"rgba(0,0,0,.24)");
+  ctx.fillStyle=g;
+  ctx.beginPath(); ctx.arc(x,y,r,0,7); ctx.fill();
+  const dim=Math.max(0,Math.min(0.32,(0.5-z*0.5)*0.32));   // atoms further away sit in shade
+  if(dim>0.02){ctx.fillStyle=`rgba(20,24,34,${dim})`;ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fill();}
+}
+function shRender(){
+  requestAnimationFrame(shRender);
+  const c=$("#sh-plot"); if(!c||!c.clientWidth||document.hidden)return;
+  const rc=c.getBoundingClientRect();
+  if(rc.bottom<0||rc.top>innerHeight)return;
+  const dpr=window.devicePixelRatio||1;
+  if(!shCtx||c.width!==Math.round(c.clientWidth*dpr)){[shCtx,shW,shH]=setupCanvas(c);}
+  const ctx=shCtx,w=shW,h=shH;
+  if(!shDrag){
+    if(Math.abs(shVX)>0.0004||Math.abs(shVY)>0.0004){       // inertia after a flick
+      shMat=m3mul(rotY(shVX),m3mul(rotX(shVY),shMat)); shVX*=0.955; shVY*=0.955;
+    }else if(performance.now()-shIdleAt>2600){               // gentle idle spin
+      shMat=m3mul(rotY(0.0035),shMat);
+    }
+  }
+  ctx.clearRect(0,0,w,h);
+  if(!shG){
     ctx.font="14px -apple-system,sans-serif"; ctx.fillStyle=cssVar("--ink-soft");
-    ctx.fillText("That combination isn't on the A-level specification — try another.",30,h/2);
-    $("#sh-name").textContent="—"; $("#sh-ang").textContent="—"; $("#sh-ex").textContent="—";
+    ctx.textAlign="center"; ctx.fillText("That combination isn't on the A-level specification — try another.",w/2,h/2); ctx.textAlign="left";
     return;
   }
-  const cx=w/2, cy=h/2, R=Math.min(w,h)*0.34;
-  g.lp.forEach(v=>{
-    const x=cx+v[0]*R*0.72, y=cy+v[1]*R*0.72;
-    ctx.fillStyle=cssVar("--k"); ctx.globalAlpha=.4;
-    ctx.beginPath(); ctx.ellipse(x,y,20,13,Math.atan2(v[1],v[0])+1.5708,0,7); ctx.fill();
-    ctx.globalAlpha=1;
-    ctx.fillStyle=cssVar("--ink");
-    ctx.beginPath(); ctx.arc(x-4,y,2.4,0,7); ctx.fill();
-    ctx.beginPath(); ctx.arc(x+4,y,2.4,0,7); ctx.fill();
+  const cx=w/2, cy=h/2, R=Math.min(w,h)*0.335, f=3.4;
+  const proj=p=>{const s=f/(f-p[2]);return[cx+p[0]*R*s,cy-p[1]*R*s,s];};
+  const items=[];
+  const [ccx,ccy,cs]=proj([0,0,0]);
+  items.push({z:0,draw(){shSphere(ctx,ccx,ccy,21*cs,cssVar("--bunsen"),0);
+    ctx.fillStyle="#fff";ctx.font=`800 ${13*cs}px -apple-system,sans-serif`;ctx.textAlign="center";ctx.textBaseline="middle";
+    ctx.fillText(shG.el[0],ccx,ccy+0.5);ctx.textAlign="left";ctx.textBaseline="alphabetic";}});
+  shG.b.forEach(v=>{
+    const p=m3v(shMat,v), [sx,sy,s2]=proj(p);
+    items.push({z:p[2]*0.5,draw(){                           // bond stick
+      ctx.strokeStyle=cssVar("--ink-soft");ctx.globalAlpha=0.42+0.4*(p[2]*0.5+0.5);
+      ctx.lineWidth=4.6*((cs+s2)/2);ctx.lineCap="round";
+      ctx.beginPath();ctx.moveTo(ccx,ccy);ctx.lineTo(sx,sy);ctx.stroke();ctx.globalAlpha=1;}});
+    items.push({z:p[2],draw(){shSphere(ctx,sx,sy,14.5*s2,cssVar("--cu"),p[2]);
+      ctx.fillStyle="#fff";ctx.font=`800 ${10.5*s2}px -apple-system,sans-serif`;ctx.textAlign="center";ctx.textBaseline="middle";
+      ctx.fillText(shG.el[1],sx,sy+0.5);ctx.textAlign="left";ctx.textBaseline="alphabetic";}});
   });
-  g.b.forEach((v,i)=>{
-    const short=(g.w!==undefined&&i===g.w);
-    const L=short?R*0.55:R;
-    const x=cx+v[0]*L, y=cy+v[1]*L;
-    ctx.strokeStyle=cssVar("--ink-soft"); ctx.lineWidth=short?7:3.5;
-    ctx.globalAlpha=short?0.55:1;
-    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(x,y); ctx.stroke();
-    ctx.globalAlpha=1;
-    ctx.fillStyle=cssVar("--cu");
-    ctx.beginPath(); ctx.arc(x,y,15,0,7); ctx.fill();
+  shG.lp.forEach(v=>{
+    const p=m3v(shMat,v.map(x=>x*0.62)), [sx,sy,s2]=proj(p);
+    items.push({z:p[2],draw(){
+      const ang=Math.atan2(sy-ccy,sx-ccx);
+      ctx.fillStyle=cssVar("--k");ctx.globalAlpha=0.28+0.14*(p[2]*0.5+0.5);
+      ctx.beginPath();ctx.ellipse(sx,sy,23*s2,13.5*s2,ang,0,7);ctx.fill();ctx.globalAlpha=1;
+      ctx.fillStyle=cssVar("--ink");
+      const px=-Math.sin(ang),py=Math.cos(ang);
+      ctx.beginPath();ctx.arc(sx+px*5*s2,sy+py*5*s2,2.3*s2,0,7);ctx.fill();
+      ctx.beginPath();ctx.arc(sx-px*5*s2,sy-py*5*s2,2.3*s2,0,7);ctx.fill();}});
   });
-  ctx.fillStyle=cssVar("--bunsen");
-  ctx.beginPath(); ctx.arc(cx,cy,20,0,7); ctx.fill();
-  $("#sh-name").textContent=g.n; $("#sh-ang").textContent=g.a; $("#sh-ex").textContent=g.ex;
+  items.sort((a,b)=>a.z-b.z).forEach(it=>it.draw());
 }
+(()=>{
+  const c=$("#sh-plot"); if(!c)return;
+  c.style.touchAction="none"; c.style.cursor="grab";
+  c.addEventListener("pointerdown",e=>{shDrag=true;shLX=e.clientX;shLY=e.clientY;shVX=shVY=0;c.setPointerCapture(e.pointerId);c.style.cursor="grabbing";e.preventDefault();});
+  c.addEventListener("pointermove",e=>{
+    if(!shDrag)return;
+    const dx=(e.clientX-shLX)*0.011, dy=(e.clientY-shLY)*0.011;
+    shMat=m3mul(rotY(dx),m3mul(rotX(dy),shMat));
+    shVX=0.6*shVX+0.4*dx; shVY=0.6*shVY+0.4*dy;   // smoothed for flick inertia
+    shLX=e.clientX; shLY=e.clientY;
+  });
+  const up=()=>{if(!shDrag)return;shDrag=false;shIdleAt=performance.now();c.style.cursor="grab";const cap=v=>Math.max(-0.055,Math.min(0.055,v));shVX=cap(shVX);shVY=cap(shVY);};
+  c.addEventListener("pointerup",up); c.addEventListener("pointercancel",up);
+})();
 ["sh-bp","sh-lp"].forEach(id=>$("#"+id).addEventListener("input",drawShape));
+requestAnimationFrame(shRender);
 
 /* ---------- test-type chooser ---------- */
 function showTestPick(){ const m=$("#testpick"); if(m)m.hidden=false; }
