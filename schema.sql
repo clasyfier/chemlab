@@ -3,6 +3,9 @@ create table if not exists public.profiles (
   id uuid references auth.users on delete cascade primary key,
   email text,
   premium boolean not null default false,
+  nickname text,
+  avatar text,
+  avatar_hue int,
   payment_customer_id text,
   progress jsonb not null default '{}',
   updated_at timestamptz not null default now()
@@ -16,7 +19,7 @@ create policy "update own profile" on public.profiles for update using (auth.uid
 
 -- users may update their progress but never their own premium flag
 revoke update on public.profiles from authenticated;
-grant  update (progress, email, updated_at) on public.profiles to authenticated;
+grant  update (progress, email, nickname, avatar, avatar_hue, updated_at) on public.profiles to authenticated;
 
 -- auto-create a profile row on signup
 create or replace function public.handle_new_user()

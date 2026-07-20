@@ -330,6 +330,13 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
 .setlbl{margin:0 0 6px;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft)}
 .setcard{margin-bottom:14px}
 .setcard h3{font-size:16px;margin-bottom:12px}
+.avpick,.avhues{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.av-e{width:44px;height:44px;font-size:22px;border-radius:50%;border:2px solid var(--line);background:var(--panel2);display:grid;place-items:center;transition:transform .1s,border-color .1s;padding:0}
+.av-e:hover{border-color:var(--bunsen);transform:scale(1.1)}
+.av-e.on{border-color:var(--bunsen);background:var(--bunsen-soft)}
+.av-h{width:26px;height:26px;border-radius:50%;border:2px solid transparent;transition:transform .1s;padding:0}
+.av-h:hover{transform:scale(1.18)}
+.av-h.on{border-color:var(--ink);box-shadow:0 0 0 2px var(--panel)}
 .price-box b{font-size:20px;font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
 .price-box span{display:block;font-size:12px;color:var(--ink-soft)}
 
@@ -1765,7 +1772,7 @@ $$(".spot-check").forEach(b=>b.addEventListener("click",()=>{
   b.textContent="Try again";
 }));renderDash();}catch(e){}}
 
-let user=null, premium=false, pushTimer=null;
+let user=null, premium=false, prof={}, pushTimer=null;
 async function pushProgress(){
   if(!user)return;
   await sb.from("profiles").update({progress:snapshot(),updated_at:new Date().toISOString()}).eq("id",user.id);
@@ -1779,7 +1786,8 @@ async function refresh(){
   const {data:{session}}=await sb.auth.getSession();
   user=session?.user||null;
   if(user){
-    const {data:p}=await sb.from("profiles").select("premium,progress").eq("id",user.id).maybeSingle();
+    const {data:p}=await sb.from("profiles").select("premium,progress,nickname,avatar,avatar_hue").eq("id",user.id).maybeSingle();
+    prof=p||{};
     premium=!!p?.premium;
     const merged=merge(p?.progress||{},snapshot());
     applyLocal(merged); pushProgress();
@@ -1797,9 +1805,12 @@ function checkoutUrl(base){
 let tab="in", plan="m";
 const pwScore=v=>{let c=0;if(v.length>=8)c++;if(v.length>=12)c++;if(/[A-Z]/.test(v)&&/[a-z]/.test(v))c++;if(/\d/.test(v))c++;if(/[^A-Za-z0-9]/.test(v))c++;return Math.min(c,4);};
 const avatarFor=(email,sm)=>{
-  const hue=[...email].reduce((a,ch)=>a+ch.charCodeAt(0)*7,0)%360;
-  return `<span class="avatar${sm?" sm":""}" style="background:hsl(${hue},48%,44%)">${email[0].toUpperCase()}</span>`;
+  const hue=(prof&&prof.avatar_hue!=null)?prof.avatar_hue:[...email].reduce((a,ch)=>a+ch.charCodeAt(0)*7,0)%360;
+  const inner=(prof&&prof.avatar)?prof.avatar:((prof&&prof.nickname)||email)[0].toUpperCase();
+  return `<span class="avatar${sm?" sm":""}" style="background:hsl(${hue},48%,44%)">${inner}</span>`;
 };
+const AV_EMOJI=["⚗️","🧪","🔬","⚛️","🧫","🌡️","🔥","💥","🧲","🥼","❄️","🌋"];
+const AV_HUES=[8,35,90,145,175,210,260,300];
 document.addEventListener("click",e=>{
   const m=document.querySelector("#corner-menu");
   if(m&&!e.target.closest(".corner"))m.classList.remove("open");
@@ -1872,7 +1883,7 @@ function renderCorner(){
   c.innerHTML=`<div class="corner">
     <button id="corner-av" aria-haspopup="true" aria-label="Account menu" style="background:none;border:0;padding:0">${avatarFor(user.email||"?",true)}</button>
     <div class="corner-menu" id="corner-menu">
-      <div class="cm-head"><b>${user.email}</b>${premium?' <span class="premium-pill" style="padding:2px 8px;font-size:11px">★ Premium</span>':""}</div>
+      <div class="cm-head"><b>${prof.nickname||user.email}</b>${prof.nickname?`<div style="font-size:11.5px;color:var(--ink-soft)">${user.email}</div>`:""}${premium?' <span class="premium-pill" style="padding:2px 8px;font-size:11px">★ Premium</span>':""}</div>
       <button class="cm-item" id="cm-settings">⚙️&nbsp; Account settings</button>
       ${premium?"":'<button class="cm-item" id="cm-upgrade" style="color:var(--na);font-weight:600">★&nbsp; Upgrade to Premium</button>'}
       <button class="cm-item" id="cm-out">↩&nbsp; Sign out</button>
@@ -1905,14 +1916,24 @@ function render(){
   <div class="card acct-card setcard">
     <h3>Profile</h3>
     <div class="acct-head">${avatarFor(user.email||"?")}
-      <div><b>${user.email}</b>${premium?' <span class="premium-pill">★ Premium</span>':' <span style="font-size:12px;color:var(--ink-soft)">· Free plan</span>'}
-      <div style="font-size:12.5px;color:var(--ink-soft)">Member since ${since}</div></div></div>
+      <div><b>${prof.nickname||user.email}</b>${premium?' <span class="premium-pill">★ Premium</span>':' <span style="font-size:12px;color:var(--ink-soft)">· Free plan</span>'}
+      <div style="font-size:12.5px;color:var(--ink-soft)">${prof.nickname?user.email+" · ":""}Member since ${since}</div></div></div>
     <div class="minibar">
       <div class="ministat"><b>${mast}/${TOPICS.length}</b><span>topics mastered</span></div>
       <div class="ministat"><b>${acc}</b><span>quiz accuracy</span></div>
       <div class="ministat"><b>${hb}/8</b><span>hunt best</span></div>
     </div>
     <div style="border-top:1px solid var(--line);padding-top:12px;margin-top:6px">
+      <h4 class="setlbl">Nickname</h4>
+      <p style="display:flex;gap:8px;flex-wrap:wrap;margin:6px 0">
+        <input id="nick" maxlength="24" value="${prof.nickname||""}" placeholder="e.g. MoleMaster"
+          style="font:inherit;padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);min-width:200px">
+        <button class="btn ghost" id="nick-save">Save</button></p>
+      <h4 class="setlbl" style="margin-top:14px">Profile picture</h4>
+      <div class="avpick">${AV_EMOJI.map(e=>`<button class="av-e${prof.avatar===e?" on":""}" data-e="${e}" aria-label="Avatar ${e}">${e}</button>`).join("")}</div>
+      <div class="avhues">${AV_HUES.map(h=>`<button class="av-h${prof.avatar_hue===h?" on":""}" data-h="${h}" style="background:hsl(${h},50%,45%)" aria-label="Colour"></button>`).join("")}</div>
+    </div>
+    <div style="border-top:1px solid var(--line);padding-top:12px;margin-top:12px">
       <h4 class="setlbl">Change password</h4>
       <p style="display:flex;gap:8px;flex-wrap:wrap;margin:6px 0">
         <input id="pw-new" type="password" autocomplete="new-password" placeholder="New password (8+ characters)"
@@ -1959,6 +1980,20 @@ function render(){
   </div>`;
   const rb=$("#a-refresh"); if(rb)rb.onclick=refresh;
   const plm=$("#pl-m"); if(plm){plm.onclick=()=>{plan="m";render();}; $("#pl-y").onclick=()=>{plan="y";render();};}
+  async function saveProf(patch,fx){
+    const {error}=await sb.from("profiles").update(patch).eq("id",user.id);
+    if(error)return;
+    Object.assign(prof,patch);
+    render(); renderCorner();
+    if(fx)burstFrom(document.querySelector(".acct-head .avatar")||acct);
+  }
+  $("#nick-save").onclick=()=>{
+    const v=$("#nick").value.trim().slice(0,24);
+    saveProf({nickname:v||null});
+  };
+  $("#nick").addEventListener("keydown",e=>{if(e.key==="Enter")$("#nick-save").click();});
+  acct.querySelectorAll(".av-e").forEach(b=>b.onclick=()=>saveProf({avatar:prof.avatar===b.dataset.e?null:b.dataset.e},true));
+  acct.querySelectorAll(".av-h").forEach(b=>b.onclick=()=>saveProf({avatar_hue:+b.dataset.h},true));
   $("#pw-save").onclick=async()=>{
     const v=$("#pw-new").value;
     if(v.length<8){$("#pw-msg").textContent="Use at least 8 characters.";return;}
