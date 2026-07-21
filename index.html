@@ -358,7 +358,40 @@ ul.chk{list-style:none;padding-left:0!important;margin:8px 0}
 @keyframes flok{0%{box-shadow:0 0 0 3px var(--ok)}100%{box-shadow:0 0 0 0 transparent}}
 @keyframes flno{0%,100%{transform:none}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 .confetti-bit{position:fixed;width:8px;height:8px;border-radius:2px;pointer-events:none;z-index:99}
-.hero-h{font-size:clamp(30px,4.6vw,44px)!important;max-width:22ch}
+.hero-h{font-size:clamp(30px,4.6vw,44px)!important;max-width:22ch;
+  background:linear-gradient(100deg,var(--ink) 0%,var(--ink) 38%,var(--bunsen) 50%,var(--cu) 58%,var(--ink) 70%,var(--ink) 100%);
+  background-size:280% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:heroshine 8s linear infinite}
+@keyframes heroshine{0%{background-position:120% 0}100%{background-position:-160% 0}}
+@media (prefers-reduced-motion:reduce){.hero-h{animation:none;background:none;color:var(--ink)}}
+#hero-bg{position:absolute;top:0;left:0;width:100%;height:480px;pointer-events:none;z-index:0;
+  -webkit-mask-image:linear-gradient(180deg,#000 55%,transparent);mask-image:linear-gradient(180deg,#000 55%,transparent)}
+#v-home{position:relative}
+.hero-grid{position:relative;z-index:1;display:grid;grid-template-columns:1fr auto;gap:26px;align-items:start}
+@media (max-width:860px){.hero-grid{grid-template-columns:1fr}}
+.eq-type{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:14px;color:var(--ink-soft);margin:16px 0 4px;min-height:20px}
+.eq-caret{display:inline-block;width:8px;height:15px;background:var(--bunsen);margin-left:2px;vertical-align:-2px;animation:eqblink 1s steps(1) infinite}
+@keyframes eqblink{50%{opacity:0}}
+.eotd{width:210px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:var(--shadow)}
+.eotd .sym{width:74px;height:74px;border-radius:14px;display:grid;place-items:center;font-size:30px;font-weight:800;color:#fff;position:relative;margin-bottom:10px}
+.eotd .sym small{position:absolute;top:5px;left:7px;font-size:9.5px;font-weight:700;opacity:.85}
+.eotd h4{margin:0 0 2px;font-size:16px}
+.eotd .meta{font-size:11.5px;color:var(--ink-soft);line-height:1.55}
+.eotd .cat{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:99px;margin-top:6px}
+.eotd a{display:inline-block;margin-top:9px;font-size:12px;font-weight:700;color:var(--bunsen);cursor:pointer}
+@media (max-width:860px){.eotd{width:100%}.eotd .sym{width:60px;height:60px;font-size:24px}}
+.card.link{position:relative;transition:transform .18s ease,box-shadow .18s ease;transform-style:preserve-3d}
+.card.link:hover{box-shadow:0 12px 32px rgba(15,25,40,.14)}
+.card.link::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .25s;
+  background:radial-gradient(220px circle at var(--mx,50%) var(--my,50%),color-mix(in srgb,var(--bunsen) 14%,transparent),transparent 70%)}
+.card.link:hover::after{opacity:1}
+.cicon{font-size:23px;display:inline-block;margin-bottom:6px;animation:cfloat 3.4s ease-in-out infinite alternate}
+.card.link:nth-child(2n) .cicon{animation-delay:-1.2s}
+.card.link:nth-child(3n) .cicon{animation-delay:-2.1s}
+@keyframes cfloat{from{transform:translateY(0)}to{transform:translateY(-5px)}}
+@media (prefers-reduced-motion:reduce){.cicon,.eq-caret{animation:none}}
+.statrow span{transition:transform .15s,color .15s}
+.statrow span:hover{transform:translateY(-2px);color:var(--ink)}
 .hero-cta{display:flex;gap:12px;flex-wrap:wrap;margin:20px 0 10px}
 .statrow{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 26px}
 .statrow span{font-size:12.5px;font-weight:600;letter-spacing:.03em;color:var(--ink-soft);
@@ -647,13 +680,20 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
 </div>
 
 <section class="view on" id="v-home">
-  <div class="eyebrow">Free to start · AQA · OCR · Edexcel</div>
-  <h1 class="hero-h">Chemistry, from first principles to the lab bench.</h1>
-  <p class="lede" style="font-size:17px;max-width:56ch">Learn the theory the way mark schemes want it, play with live simulations, and walk into every required practical knowing the mistakes examiners see every year. Every value checked against the RSC, CLEAPSS, NIST and IUPAC.</p>
-  <p class="hero-cta">
-    <button class="btn" data-goto="learn" style="font-size:15.5px;padding:12px 24px">Start learning — it's free</button>
-    <button class="btn ghost" data-goto="lab" style="padding:12px 20px">Try a simulation</button>
-  </p>
+  <canvas id="hero-bg" aria-hidden="true"></canvas>
+  <div class="hero-grid">
+    <div>
+      <div class="eyebrow">Free to start · AQA · OCR · Edexcel</div>
+      <h1 class="hero-h">Chemistry, from first principles to the lab bench.</h1>
+      <p class="lede" style="font-size:17px;max-width:56ch">Learn the theory the way mark schemes want it, play with live simulations, and walk into every required practical knowing the mistakes examiners see every year. Every value checked against the RSC, CLEAPSS, NIST and IUPAC.</p>
+      <p class="hero-cta">
+        <button class="btn" data-goto="learn" style="font-size:15.5px;padding:12px 24px">Start learning — it's free</button>
+        <button class="btn ghost" data-goto="lab" style="padding:12px 20px">Try a simulation</button>
+      </p>
+      <div class="eq-type">⚗️ <span id="eqtype"></span><span class="eq-caret"></span></div>
+    </div>
+    <div id="eotd"></div>
+  </div>
   <div class="statrow" id="statrow"></div>
   <div class="grid cols3" id="homecards"></div>
   <div id="dash"></div>
@@ -1717,7 +1757,9 @@ const HOME=[
 ["Master the practicals","prac","--k","5 deep walkthroughs","Method checklists, CLEAPSS-based safety, examiner-reported errors — and spot-the-mistake challenges."],
 ["Test your knowledge","quiz","--bunsen","Quizzes + timed exams","195 quiz questions, plus timed exam papers marked by an AI examiner."],
 ["Check the sources","sources","--ink-soft","Accredited only","RSC, AQA, OCR, CLEAPSS, NIST and IUPAC references behind every number."]];
-$("#homecards").innerHTML=HOME.map(h=>`<div class="card link" tabindex="0" role="button" data-goto="${h[1]}">
+const HOME_ICONS=["📚","⚗️","⚛️","🥽","📝","🔍"];
+$("#homecards").innerHTML=HOME.map((h,hi)=>`<div class="card link" tabindex="0" role="button" data-goto="${h[1]}">
+  <span class="cicon">${HOME_ICONS[hi]||"✨"}</span><br>
   <span class="tagline" style="background:color-mix(in srgb,var(${h[2]}) 14%,transparent);color:var(${h[2]})">${h[3]}</span>
   <h3>${h[0]}</h3><p>${h[4]}</p></div>`).join("");
 $$("#homecards .card").forEach(c=>{
@@ -1728,6 +1770,117 @@ $$("#homecards .card").forEach(c=>{
 $("#statrow").innerHTML=[TOPICS.length+" topic guides","7 interactive simulations","118 elements","5 practical deep-dives",QUIZ.length+" quiz questions"]
   .map(x=>`<span>${x}</span>`).join("");
 $$(".hero-cta button").forEach(b=>b.addEventListener("click",()=>showView(b.dataset.goto)));
+
+/* ---------- hero: drifting atoms that bond into constellations ---------- */
+(()=>{
+  const c=$("#hero-bg"); if(!c)return;
+  let ctx=null,w=0,h=0,mx=-1e4,my=-1e4;
+  const SYMS=["H","C","O","N","Na","Cl","Mg","S","Fe","K"];
+  const ATOMS=Array.from({length:46},(_,i)=>({
+    x:Math.random(),y:Math.random(),
+    vx:(Math.random()-0.5)*14,vy:(Math.random()-0.5)*14,
+    r:i%5===0?7:2.4+Math.random()*2.2,
+    sym:i%5===0?SYMS[(i/5|0)%SYMS.length]:null,
+    ph:Math.random()*6.28}));
+  let last=0;
+  function frame(ts){
+    requestAnimationFrame(frame);
+    if(!$("#v-home").classList.contains("on")||document.hidden)return;
+    const rc=c.getBoundingClientRect();
+    if(rc.bottom<0)return;
+    const dpr=window.devicePixelRatio||1;
+    if(!ctx||c.width!==Math.round(c.clientWidth*dpr)){[ctx,w,h]=setupCanvas(c);}
+    let dt=(ts-last)/1000; if(!(dt>0))dt=0; dt=Math.min(0.05,dt); last=ts;
+    ctx.clearRect(0,0,w,h);
+    const ink=cssVar("--ink-soft");
+    for(const a of ATOMS){
+      if(!reduced&&dt>0){
+        a.x+=a.vx*dt/w; a.y+=a.vy*dt/h;
+        if(a.x<0||a.x>1)a.vx*=-1; if(a.y<0||a.y>1)a.vy*=-1;
+        a.x=Math.max(0,Math.min(1,a.x)); a.y=Math.max(0,Math.min(1,a.y));
+        const dx=a.x*w-mx, dy=a.y*h-my, d=Math.hypot(dx,dy);
+        if(d<110&&d>1){a.x+=dx/d*22*dt/w; a.y+=dy/d*22*dt/h;}
+      }
+    }
+    /* transient bonds */
+    ctx.lineWidth=1;
+    for(let i=0;i<ATOMS.length;i++)for(let j=i+1;j<ATOMS.length;j++){
+      const a=ATOMS[i],b=ATOMS[j];
+      const dx=(a.x-b.x)*w, dy=(a.y-b.y)*h, d=Math.hypot(dx,dy);
+      if(d<95){
+        ctx.strokeStyle=ink; ctx.globalAlpha=0.16*(1-d/95);
+        ctx.beginPath();ctx.moveTo(a.x*w,a.y*h);ctx.lineTo(b.x*w,b.y*h);ctx.stroke();
+      }
+    }
+    ctx.globalAlpha=1;
+    for(const a of ATOMS){
+      const tw=0.55+0.3*Math.sin((reduced?0:performance.now()/900)+a.ph);
+      if(a.sym){
+        ctx.fillStyle=cssVar("--panel");ctx.strokeStyle=cssVar("--bunsen");ctx.lineWidth=1.4;ctx.globalAlpha=0.75;
+        ctx.beginPath();ctx.arc(a.x*w,a.y*h,10,0,7);ctx.fill();ctx.stroke();
+        ctx.fillStyle=cssVar("--bunsen");ctx.font="800 9px -apple-system,sans-serif";
+        ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(a.sym,a.x*w,a.y*h+0.5);
+        ctx.textAlign="left";ctx.textBaseline="alphabetic";ctx.globalAlpha=1;
+      }else{
+        ctx.fillStyle=ink;ctx.globalAlpha=tw*0.5;
+        ctx.beginPath();ctx.arc(a.x*w,a.y*h,a.r,0,7);ctx.fill();ctx.globalAlpha=1;
+      }
+    }
+  }
+  addEventListener("pointermove",e=>{const r=c.getBoundingClientRect();mx=e.clientX-r.left;my=e.clientY-r.top;},{passive:true});
+  requestAnimationFrame(frame);
+})();
+
+/* ---------- self-balancing equation typewriter ---------- */
+(()=>{
+  const el=$("#eqtype"); if(!el)return;
+  const EQS=["CH₄ + 2O₂ → CO₂ + 2H₂O","N₂ + 3H₂ ⇌ 2NH₃","2Na + Cl₂ → 2NaCl",
+    "CaCO₃ → CaO + CO₂","Cr₂O₇²⁻ + 14H⁺ + 6e⁻ → 2Cr³⁺ + 7H₂O","2H₂O₂ → 2H₂O + O₂"];
+  if(reduced){el.textContent=EQS[0];return;}
+  let ei=0,pos=0,mode="type";
+  (function step(){
+    const eq=EQS[ei];
+    if(mode==="type"){
+      pos++; el.textContent=eq.slice(0,pos);
+      if(pos>=eq.length){mode="hold";setTimeout(step,2400);return;}
+      setTimeout(step,42);
+    }else if(mode==="hold"){mode="del";step();}
+    else{
+      pos-=2; el.textContent=eq.slice(0,Math.max(0,pos));
+      if(pos<=0){mode="type";ei=(ei+1)%EQS.length;setTimeout(step,350);return;}
+      setTimeout(step,16);
+    }
+  })();
+})();
+
+/* ---------- element of the day ---------- */
+(()=>{
+  const box=$("#eotd"); if(!box)return;
+  const d=new Date();
+  const z=((d.getFullYear()*372+d.getMonth()*31+d.getDate())%118)+1;
+  const e=ELEMENTS[z-1], cat=catOf(z), [catName,color]=CAT_META[cat];
+  box.innerHTML=`<div class="eotd">
+    <div class="sym" style="background:linear-gradient(135deg,${color},color-mix(in srgb,${color} 60%,#1c2733))"><small>${z}</small>${e.sym}</div>
+    <h4>${e.name}</h4>
+    <div class="meta">Element of the day<br>A<sub>r</sub> ${e.mass}</div>
+    <span class="cat" style="background:color-mix(in srgb,${color} 16%,transparent);color:${color}">${catName}</span><br>
+    <a data-goto="periodic">Explore it in the periodic table →</a>
+  </div>`;
+  box.querySelector("a").addEventListener("click",()=>showView("periodic"));
+})();
+
+/* ---------- 3D tilt cards ---------- */
+$$("#homecards .card").forEach(card=>{
+  card.addEventListener("pointermove",e=>{
+    if(reduced)return;
+    const r=card.getBoundingClientRect();
+    const px=(e.clientX-r.left)/r.width, py=(e.clientY-r.top)/r.height;
+    card.style.transform=`perspective(700px) rotateY(${(px-0.5)*7}deg) rotateX(${(0.5-py)*7}deg) translateY(-2px)`;
+    card.style.setProperty("--mx",(px*100)+"%");
+    card.style.setProperty("--my",(py*100)+"%");
+  });
+  card.addEventListener("pointerleave",()=>{card.style.transform="";});
+});
 function renderDash(){
   const mastered=load("chemlab-mastered",[]).length;
   const qz=load("chemlab-quiz",{score:0,n:0});
@@ -1736,7 +1889,7 @@ function renderDash(){
   const totalSteps=PRACS.reduce((s,p)=>s+p.steps.length,0);
   const doneSteps=Object.values(prac).reduce((s,a)=>s+(a||[]).filter(Boolean).length,0);
   const best=load("chemlab-hunt-best",0);
-  const ring=(p,c,txt,k)=>`<div class="ringcard"><div class="ring" style="--p:${Math.min(100,p)};--rc:var(${c})"><b>${txt}</b></div><div class="k">${k}</div></div>`;
+  const ring=(p,c,txt,k)=>`<div class="ringcard"><div class="ring" data-p="${Math.min(100,p)}" style="--p:0;--rc:var(${c})"><b>${txt}</b></div><div class="k">${k}</div></div>`;
   $("#dash").innerHTML=`<div class="card" style="margin-top:14px"><h3>Your progress</h3>
     <p style="margin-top:2px">Everything below is earned in the app — quick checks, ticked lab steps, quiz streaks and hunts. It stays on this device.</p>
     <div class="ringrow">
@@ -1745,6 +1898,14 @@ function renderDash(){
     ${ring(totalSteps?doneSteps/totalSteps*100:0,"--na",doneSteps+"/"+totalSteps,"lab steps ticked")}
     ${ring(best/8*100,"--k",best+"/8","element hunt best")}
     </div></div>`;
+  const rings=$$("#dash .ring");
+  if(reduced){rings.forEach(r=>r.style.setProperty("--p",r.dataset.p));return;}
+  const t0=performance.now();
+  (function tick(){
+    const t=Math.min(1,(performance.now()-t0)/900), e=1-Math.pow(1-t,3);
+    rings.forEach(r=>r.style.setProperty("--p",(+r.dataset.p*e).toFixed(1)));
+    if(t<1)requestAnimationFrame(tick);
+  })();
 }
 
 /* ---------- learn ---------- */
