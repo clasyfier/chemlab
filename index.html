@@ -2560,6 +2560,26 @@ function drawGas(dt=0){
     const th=1.85, y1=GAS_DY[1]*H[1];                 // hinge along the top edge, flap swung outward
     doorPts=dc.map(([x,y,z])=>[x+(y1-y)*Math.sin(th),y1-(y1-y)*Math.cos(th),z]);
   }else doorPts=dc;
+  /* the door wall is a glass pane — with a real hole in it when the flap is open */
+  const face=[[H[0],-H[1],-H[2]],[H[0],H[1],-H[2]],[H[0],H[1],H[2]],[H[0],-H[1],H[2]]].map(p=>m3v(gasMat,p));
+  const holePts=dc.map(p=>m3v(gasMat,p));
+  items.push({z:face.reduce((a,p)=>a+p[2],0)/4,draw(){
+    ctx.beginPath();
+    face.forEach((p,i)=>{const [x,y]=proj(p);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
+    ctx.closePath();
+    if(gasDoor){
+      holePts.forEach((p,i)=>{const [x,y]=proj(p);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
+      ctx.closePath();
+    }
+    ctx.fillStyle="color-mix(in srgb,"+cssVar("--cu")+" 11%,transparent)";
+    ctx.fill("evenodd");
+    if(gasDoor){
+      ctx.strokeStyle=cssVar("--cu");ctx.lineWidth=1.8;ctx.setLineDash([5,4]);
+      ctx.beginPath();
+      holePts.forEach((p,i)=>{const [x,y]=proj(p);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
+      ctx.closePath();ctx.stroke();ctx.setLineDash([]);
+    }
+  }});
   const rD=doorPts.map(p=>m3v(gasMat,p));
   const doorZ=rD.reduce((a,p)=>a+p[2],0)/4;
   items.push({z:doorZ,draw(){
