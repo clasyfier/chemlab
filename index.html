@@ -2228,7 +2228,7 @@ $("#sims").innerHTML=`
   <div class="stat"><div class="k">Mean speed scale</div><div class="v" id="g-s">—</div></div></div>
 </div><div class="sim" id="sim-atom">
   <h2>Build an atom</h2>
-  <p class="hint">Add protons, neutrons and electrons and watch the element, mass number, charge and shells respond — protons decide the element; electrons decide the charge. <b>Drag the atom to spin it in 3D</b>, and <b>hold a button down</b> to sprint through the periodic table: all 118 elements are in there, hydrogen to oganesson.</p>
+  <p class="hint">Add protons, neutrons and electrons and watch the element, mass number, charge and shells respond — protons decide the element; electrons decide the charge. <b>Drag the atom to spin it in 3D</b>, and <b>hold a button down</b> to sprint through the periodic table: all 118 elements are in there, hydrogen to oganesson. The Geiger-style meter on the left rates how radioactive your nuclide is — and predicts how it would decay.</p>
   <div class="controls">
     <div class="ctrl"><label>Protons</label><p style="display:flex;gap:6px;margin:0"><button class="btn ghost" data-at="p-">−</button><span class="val" id="at-p" style="min-width:24px;text-align:center;font-size:16px">1</span><button class="btn ghost" data-at="p+">+</button></p></div>
     <div class="ctrl"><label>Neutrons</label><p style="display:flex;gap:6px;margin:0"><button class="btn ghost" data-at="n-">−</button><span class="val" id="at-n" style="min-width:24px;text-align:center;font-size:16px">0</span><button class="btn ghost" data-at="n+">+</button></p></div>
@@ -2520,7 +2520,30 @@ function shellFill(e){
   while(sh.length&&!sh[sh.length-1])sh.pop();
   return sh;
 }
-let atMat=null,atDrag=false,atLX=0,atLY=0,atVX=0,atVY=0,atIdleAt=0,atCtx=null,atW=0,atH=0,atNucl=[],atShells=[];
+let atMat=null,atDrag=false,atLX=0,atLY=0,atVX=0,atVY=0,atIdleAt=0,atCtx=null,atW=0,atH=0,atNucl=[],atShells=[],atRadDisp=0;
+/* how far is this nuclide from the valley of stability? (semi-empirical mass formula) */
+function atRadio(Z,N){
+  const A=Z+N;
+  const zs=A/(1.98+0.0155*Math.pow(A,2/3));
+  const d=Math.abs(Z-zs);
+  let sc=d*16*(1+3/A);
+  if(Z>82)sc+=(Z-82)*2.2+12;
+  if(Z===43||Z===61)sc=Math.max(sc,38);
+  if(Z>=104)sc+=15;
+  sc=Math.max(0,Math.min(100,sc));
+  let label,col,mode="";
+  if(sc<12){label="stable";col=cssVar("--ok");}
+  else if(sc<30){label="long-lived";col="#9b9b3a";}
+  else if(sc<55){label="radioactive";col="#f0a94a";}
+  else if(sc<80){label="highly radioactive";col="#e07b2f";}
+  else{label="extremely radioactive";col="#d84a3c";}
+  if(sc>=12){
+    if(Z>82&&Z-zs<2)mode="α decay likely";
+    else if(Z<zs)mode="β⁻ decay likely — neutron-rich";
+    else mode="β⁺ / EC likely — proton-rich";
+  }
+  return {sc,label,col,mode};
+}
 function atRebuild(){
   atShells=shellFill(atomE);
   const N=atomP+atomN; atNucl=[];
@@ -2623,6 +2646,37 @@ function atRender(){
   ctx.fillStyle=cssVar("--ink-soft");ctx.fillText("protons",14,20);ctx.fillStyle=PCOL;ctx.fillRect(70,12,9,9);
   ctx.fillStyle=cssVar("--ink-soft");ctx.fillText("neutrons",14,38);ctx.fillStyle=NCOL;ctx.fillRect(76,30,9,9);
   ctx.fillStyle=cssVar("--ink-soft");ctx.fillText("electrons",14,56);ctx.fillStyle=ECOL;ctx.fillRect(80,48,9,9);
+
+  /* radioactivity meter, left side */
+  const rad=atRadio(atomP,atomN);
+  atRadDisp+=(rad.sc-atRadDisp)*0.08;
+  const jit=rad.sc>14?(Math.sin(now/53)+Math.sin(now/89))*rad.sc*0.018:0;   // geiger tremble
+  const lvl=Math.max(0,Math.min(100,atRadDisp+jit));
+  const mX=28,mT=104,mB=h-40,mH=mB-mT;
+  ctx.fillStyle="rgba(127,127,127,.08)";
+  frRoundRect(ctx,10,70,60,mB-70+26,10); ctx.fill();
+  const pulse=rad.sc>55?1+0.13*Math.sin(now/110):1;
+  ctx.save();ctx.translate(mX+5,86);ctx.scale(pulse,pulse);
+  ctx.font="17px -apple-system,sans-serif";ctx.textAlign="center";
+  ctx.globalAlpha=0.35+rad.sc/160;ctx.fillStyle=rad.col;ctx.fillText("☢",0,6);ctx.restore();ctx.globalAlpha=1;
+  const g3=ctx.createLinearGradient(0,mB,0,mT);
+  g3.addColorStop(0,cssVar("--ok"));g3.addColorStop(0.5,"#f0a94a");g3.addColorStop(1,"#d84a3c");
+  ctx.fillStyle=g3; frRoundRect(ctx,mX,mT,10,mH,5); ctx.fill();
+  ctx.strokeStyle="rgba(127,127,127,.35)";ctx.lineWidth=1;
+  for(let i=1;i<5;i++){const ty=mB-i/5*mH;ctx.beginPath();ctx.moveTo(mX,ty);ctx.lineTo(mX+10,ty);ctx.stroke();}
+  const ny=mB-lvl/100*mH;
+  ctx.fillStyle=cssVar("--ink");
+  ctx.beginPath();ctx.moveTo(mX-10,ny-5);ctx.lineTo(mX-2,ny);ctx.lineTo(mX-10,ny+5);ctx.closePath();ctx.fill();
+  ctx.strokeStyle=cssVar("--ink");ctx.lineWidth=1.8;
+  ctx.beginPath();ctx.moveTo(mX-1,ny);ctx.lineTo(mX+11,ny);ctx.stroke();
+  ctx.save();ctx.translate(mX+27,(mT+mB)/2);ctx.rotate(-Math.PI/2);
+  ctx.font="800 11px -apple-system,sans-serif";ctx.textAlign="center";
+  ctx.fillStyle=rad.col;ctx.fillText(rad.label.toUpperCase(),0,0);ctx.restore();
+  if(rad.mode){
+    ctx.font="10.5px -apple-system,sans-serif";ctx.fillStyle=cssVar("--ink-soft");
+    ctx.textAlign="left";ctx.fillText(rad.mode,12,h-8);
+  }
+  ctx.textAlign="left";
 }
 (()=>{
   const c=$("#at-plot"); if(!c)return;
