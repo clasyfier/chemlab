@@ -1602,7 +1602,7 @@ QUIZ3.forEach(x=>{QUIZ.push({q:x.q,o:x.o,a:x.a,e:x.e});QTOPIC.push(x.t);});
 /* ---------- sources (accredited) ---------- */
 const SOURCES=[
 ["RSC Practical videos (16–18)","Royal Society of Chemistry demonstration videos covering every A-level technique, including all the practicals in this app.","https://edu.rsc.org/practical/practical-videos-16-18-years/4012343.article"],
-["PhET Interactive Simulations (University of Colorado Boulder)","Free research-based science simulations — the inspiration for ChemLab's Build-an-Atom, equation balancer and molecule-shapes sims.","https://phet.colorado.edu/en/simulations/filter?subjects=chemistry"],
+["PhET Interactive Simulations (University of Colorado Boulder)","Free research-based science simulations — the inspiration for ChemLab's Build-an-Atom, refinery and molecule-shapes sims.","https://phet.colorado.edu/en/simulations/filter?subjects=chemistry"],
 ["RSC Titration screen experiment","The RSC's own interactive titration simulator — good companion practice to the simulation here.","https://edu.rsc.org/concentration-of-solutions-and-titration/titration-screen-experiment/2077.article"],
 ["AQA A-level Chemistry (7405) — assessment resources","Past papers, mark schemes and examiner reports: the highest-value practice material there is.","https://www.aqa.org.uk/subjects/chemistry/a-level/chemistry-7405/assessment-resources"],
 ["AQA Required Practical Handbook (7404/7405)","The official methods for all 12 required practicals — the walkthroughs in this app follow its exemplars.","https://filestore.aqa.org.uk/resources/chemistry/AQA-7404-7405-PHBK.PDF"],
@@ -1671,7 +1671,7 @@ function showView(v){
 /* ---------- home ---------- */
 const HOME=[
 ["Learn the theory","learn","--li","13 topic guides","Definitions worded for mark schemes, trends with real values, the anomalies examiners love."],
-["Run the simulations","lab","--cu","7 interactive sims","Build atoms, balance equations, explore VSEPR shapes, titration curves, Maxwell–Boltzmann and more."],
+["Run the simulations","lab","--cu","7 interactive sims","Build atoms, refine crude oil, spin 3D VSEPR shapes, titration curves, Maxwell–Boltzmann and more."],
 ["Explore the elements","periodic","--na","118 elements","Electron configurations, categories and flame-test colours at a click."],
 ["Master the practicals","prac","--k","5 deep walkthroughs","Method checklists, CLEAPSS-based safety, examiner-reported errors — and spot-the-mistake challenges."],
 ["Test your knowledge","quiz","--bunsen","Quizzes + timed exams","195 quiz questions, plus timed exam papers marked by an AI examiner."],
@@ -2011,7 +2011,7 @@ window.applyPracLocks=function(){
     const go=el.querySelector(".chapgo");
     if(go)go.textContent=locked?"🔒 Premium":"Study ▸";
   });
-  ["sim-atom","sim-bal","sim-titr","sim-mb","sim-shape"].forEach(id=>{
+  ["sim-atom","sim-frac","sim-titr","sim-mb","sim-shape"].forEach(id=>{
     const el=document.getElementById(id); if(!el)return;
     el.classList.toggle("locked",!prem);
     let ov=el.querySelector(".simlock");
@@ -2201,15 +2201,15 @@ $("#sims").innerHTML=`
     <div class="stat"><div class="k">Shells</div><div class="v" id="at-sh">1</div></div>
   </div>
 </div>
-<div class="sim" id="sim-bal">
-  <h2>Balance the equation</h2>
-  <p class="hint">Adjust the coefficients until every element has the same count on both sides — the tallies show your progress, PhET-style. Balanced in smallest whole numbers wins.</p>
-  <div id="bal-eq" style="display:flex;flex-wrap:wrap;gap:8px 6px;align-items:center;font-size:19px;margin:14px 0"></div>
-  <div class="tblwrap"><table class="notetable" id="bal-tally"></table></div>
+<div class="sim" id="sim-frac">
+  <h2>Fractionating column — refine the crude</h2>
+  <p class="hint">Crude oil is a mixture of hydrocarbons, separated by boiling point: the column is <b>hot at the bottom (~350&nbsp;°C) and cool at the top (~25&nbsp;°C)</b>. Vapours rise until they reach a tray cold enough to condense them. <b>Click the tray that matches each rising molecule</b> — long chains condense low down, short chains near the top, and the shortest never condense at all: they leave the top as refinery gas.</p>
+  <canvas class="plot" id="fr-plot" style="height:430px"></canvas>
   <div class="readout" style="align-items:center">
-    <button class="btn" id="bal-check">Check</button>
-    <span class="streak" id="bal-msg"></span>
-    <span class="streak" id="bal-score" style="margin-left:auto"></span>
+    <button class="btn" id="fr-start">Start refining</button>
+    <div class="stat"><div class="k">Score</div><div class="v" id="fr-score">0</div></div>
+    <div class="stat"><div class="k">Streak</div><div class="v" id="fr-streak">0</div></div>
+    <div class="stat"><div class="k">Best barrel</div><div class="v" id="fr-best">—</div></div>
   </div>
 </div>
 <div class="sim" id="sim-titr">
@@ -2524,62 +2524,230 @@ $$("[data-at]").forEach(b=>b.addEventListener("click",()=>{
   drawAtom();
 }));
 
-/* balance the equation */
-const BALEQS=[
- {sp:["H₂","O₂","H₂O"],nr:2,at:[{H:2},{O:2},{H:2,O:1}],sol:[2,1,2]},
- {sp:["N₂","H₂","NH₃"],nr:2,at:[{N:2},{H:2},{N:1,H:3}],sol:[1,3,2]},
- {sp:["CH₄","O₂","CO₂","H₂O"],nr:2,at:[{C:1,H:4},{O:2},{C:1,O:2},{H:2,O:1}],sol:[1,2,1,2]},
- {sp:["Al","HCl","AlCl₃","H₂"],nr:2,at:[{Al:1},{H:1,Cl:1},{Al:1,Cl:3},{H:2}],sol:[2,6,2,3]},
- {sp:["Fe","O₂","Fe₂O₃"],nr:2,at:[{Fe:1},{O:2},{Fe:2,O:3}],sol:[4,3,2]},
- {sp:["C₃H₈","O₂","CO₂","H₂O"],nr:2,at:[{C:3,H:8},{O:2},{C:1,O:2},{H:2,O:1}],sol:[1,5,3,4]}];
-let balI=0, balCo=[], balDone=0;
-function balCounts(){
-  const eq=BALEQS[balI], L={}, R={};
-  eq.at.forEach((atoms,i)=>{
-    const tgt=i<eq.nr?L:R;
-    for(const el in atoms) tgt[el]=(tgt[el]||0)+balCo[i]*atoms[el];
+/* fractionating column — refine-the-crude game */
+const FRACS=[
+ {n:"Refinery gases",lo:1,hi:4,t:"< 40 °C",use:"bottled gas",col:"#6aaede"},
+ {n:"Petrol",lo:5,hi:9,t:"40–100 °C",use:"cars",col:"#57b877"},
+ {n:"Kerosene",lo:10,hi:16,t:"160–250 °C",use:"jet fuel",col:"#b9a544"},
+ {n:"Diesel",lo:17,hi:20,t:"250–300 °C",use:"lorries & trains",col:"#d98f4d"},
+ {n:"Fuel oil",lo:21,hi:34,t:"300–350 °C",use:"ships & power stations",col:"#cf6a48"},
+ {n:"Bitumen",lo:35,hi:99,t:"> 350 °C · residue",use:"roads & roofs",col:"#8a6d5c"}];
+const FR_BP={1:-162,2:-89,3:-42,4:-1,5:36,6:69,7:98,8:126,9:151,10:174,12:216,14:254,16:287,18:316,20:343,24:391,28:432,32:466,38:498};
+const FR_POOL=[1,2,3,4,5,6,7,8,9,10,12,14,16,18,20,24,28,32,38];
+const FR_TOTAL=15, FRSUB="₀₁₂₃₄₅₆₇₈₉";
+const frSub=n=>String(n).split("").map(d=>FRSUB[+d]).join("");
+const frForm=c=>`C${frSub(c)}H${frSub(2*c+2)}`;
+const frFracOf=c=>FRACS.findIndex(f=>c>=f.lo&&c<=f.hi);
+let frRun=false,frDone=false,frMol=null,frCount=0,frRight=0,frScore=0,frStreak=0,frFills=[0,0,0,0,0,0],frFx=[],frMsg=null,frSpawnAt=0,frSeed=0,frLastTs=0,frCtx=null,frW=0,frH=0;
+function frHud(){
+  $("#fr-score").textContent=frScore; $("#fr-streak").textContent=frStreak;
+  const b=load("chemlab-frac-best",null); $("#fr-best").textContent=b==null?"—":b;
+}
+function frSay(txt,color){frMsg={txt,color,until:performance.now()+2600};}
+function frGeom(){
+  const colL=frW*0.27,colR=frW*0.47,colT=24,colB=frH-78,rowH=(colB-colT)/6;
+  return {colL,colR,colT,colB,rowH};
+}
+function frSpawn(){
+  const c=FR_POOL[Math.floor(Math.random()*FR_POOL.length)];
+  const g=frGeom();
+  frMol={c,y:g.colB-6,seed:Math.random()*7,vy:(46+frCount*3.2)*(frH/430)};
+}
+function frCollect(i,perfect){
+  const g=frGeom(), f=FRACS[i];
+  frRight++; frStreak++;
+  const pts=(perfect?15:10)+(frStreak>=5?5:0);
+  frScore+=pts;
+  frFills[i]++;
+  const my=g.colT+i*g.rowH+g.rowH/2;
+  frFx.push({k:"drop",x0:(g.colL+g.colR)/2,y0:frMol?frMol.y:my,x1:g.colR+40,y1:my,t0:performance.now(),col:f.col});
+  frFx.push({k:"float",txt:"+"+pts+(perfect?" ✨":""),x:g.colR+46,y:my-8,t0:performance.now(),col:"var(--ok)"});
+  frSay(perfect?`Perfect condensation — ${f.n}! ✨`:`${frForm(frMol.c)} condensed into ${f.n.toLowerCase()} ✓`,"ok");
+  if(frStreak>0&&frStreak%5===0){const rc=$("#fr-plot").getBoundingClientRect();burst(rc.left+g.colR+60,rc.top+my,16);}
+  frMol=null; frNext();
+}
+function frNext(){
+  frCount++; frHud();
+  if(frCount>=FR_TOTAL){
+    frDone=true; frRun=false;
+    const b=load("chemlab-frac-best",null);
+    if(b==null||frScore>b)store("chemlab-frac-best",frScore);
+    frHud(); $("#fr-start").textContent="Refine another barrel";
+  } else frSpawnAt=performance.now()+650;
+}
+function frClickRow(i){
+  if(!frRun||!frMol)return;
+  const want=frFracOf(frMol.c), g=frGeom();
+  if(i===want){
+    const rowMid=g.colT+i*g.rowH+g.rowH/2;
+    frCollect(i,Math.abs(frMol.y-rowMid)<g.rowH*0.65);
+  }else{
+    frStreak=0; frScore=Math.max(0,frScore-5); frHud();
+    const bp=FR_BP[frMol.c]!=null?FR_BP[frMol.c]+" °C":"≈500 °C";
+    frSay(`${frForm(frMol.c)} boils at ${bp} — it condenses ${i<want?"further down, where it's hotter":"higher up, where it's cooler"}.`,"warn");
+    frFx.push({k:"flash",row:i,t0:performance.now()});
+  }
+}
+function frStart(){
+  frRun=true; frDone=false; frMol=null; frCount=0; frRight=0; frScore=0; frStreak=0;
+  frFills=[0,0,0,0,0,0]; frFx=[]; frMsg=null;
+  frSpawnAt=performance.now()+700; frHud();
+  $("#fr-start").textContent="Restart barrel";
+  frSay("Barrel loaded — vapours rising!","ok");
+}
+function frRoundRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+function frRender(ts){
+  requestAnimationFrame(frRender);
+  const c=$("#fr-plot"); if(!c||!c.clientWidth||document.hidden)return;
+  const rc0=c.getBoundingClientRect();
+  if(rc0.bottom<0||rc0.top>innerHeight)return;
+  const dpr=window.devicePixelRatio||1;
+  if(!frCtx||c.width!==Math.round(c.clientWidth*dpr)){[frCtx,frW,frH]=setupCanvas(c);}
+  const ctx=frCtx,w=frW,h=frH,now=performance.now();
+  const dt=Math.min(0.05,(ts-frLastTs)/1000||0.016); frLastTs=ts;
+  ctx.clearRect(0,0,w,h);
+  const {colL,colR,colT,colB,rowH}=frGeom();
+  const ink=cssVar("--ink"),soft=cssVar("--ink-soft"),line=cssVar("--line");
+
+  /* boiler + flame */
+  const bY=colB+8;
+  ctx.fillStyle="#3a2f28"; frRoundRect(ctx,colL-14,bY,colR-colL+28,h-bY-24,8); ctx.fill();
+  for(let i=0;i<3;i++){
+    const fx=colL+18+i*((colR-colL-18)/2), fl=10+6*Math.sin(now/90+i*2.1);
+    const g2=ctx.createLinearGradient(0,h-6,0,h-24-fl);
+    g2.addColorStop(0,"#ff9d2e"); g2.addColorStop(1,"rgba(255,60,20,0)");
+    ctx.fillStyle=g2; ctx.beginPath();
+    ctx.moveTo(fx-7,h-4); ctx.quadraticCurveTo(fx,h-26-fl,fx+7,h-4); ctx.fill();
+  }
+  ctx.fillStyle=soft; ctx.font="700 10.5px -apple-system,sans-serif"; ctx.textAlign="center";
+  ctx.fillText("CRUDE OIL · ~350 °C",(colL+colR)/2,bY+16);
+  /* bubbles in the boiler */
+  for(let i=0;i<4;i++){
+    const ph=(now/900+i*0.7)%1, bx=colL+8+((i*53)%(colR-colL-8)), by=bY+26-ph*10;
+    ctx.fillStyle=`rgba(255,170,80,${0.5-ph*0.4})`; ctx.beginPath(); ctx.arc(bx,by,2.5+ph*2,0,7); ctx.fill();
+  }
+
+  /* column with temperature gradient */
+  const grad=ctx.createLinearGradient(0,colB,0,colT);
+  grad.addColorStop(0,"rgba(255,120,40,.30)"); grad.addColorStop(1,"rgba(90,160,220,.28)");
+  ctx.fillStyle=grad; frRoundRect(ctx,colL,colT,colR-colL,colB-colT,10); ctx.fill();
+  ctx.strokeStyle=line; ctx.lineWidth=1.5; frRoundRect(ctx,colL,colT,colR-colL,colB-colT,10); ctx.stroke();
+  ctx.fillStyle=soft; ctx.font="700 10px -apple-system,sans-serif";
+  ctx.save(); ctx.translate(colL-10,(colT+colB)/2); ctx.rotate(-Math.PI/2);
+  ctx.fillText("COOLER ⟵ TEMPERATURE ⟵ HOTTER",0,0); ctx.restore();
+  ctx.fillText("~25 °C",colL-26,colT+12); ctx.fillText("~350 °C",colL-28,colB-4);
+
+  /* trays + fraction shelves */
+  for(let i=0;i<6;i++){
+    const y=colT+i*rowH, f=FRACS[i], boxX=colR+16, boxW=w-boxX-8;
+    if(i>0){ /* bubble-cap tray */
+      ctx.strokeStyle=line; ctx.lineWidth=1;
+      ctx.beginPath();
+      for(let x=colL+6;x<colR-8;x+=10){ctx.moveTo(x,y);ctx.lineTo(x+6,y);}
+      ctx.stroke();
+    }
+    /* outlet arm */
+    ctx.strokeStyle=f.col; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(colR,y+rowH/2); ctx.lineTo(boxX,y+rowH/2); ctx.stroke();
+    /* shelf card */
+    const flash=frFx.find(e=>e.k==="flash"&&e.row===i&&now-e.t0<340);
+    ctx.fillStyle=flash?"rgba(216,74,60,.18)":"rgba(127,127,127,.07)";
+    frRoundRect(ctx,boxX,y+3,boxW,rowH-6,7); ctx.fill();
+    ctx.strokeStyle=flash?"#d84a3c":f.col; ctx.lineWidth=flash?2:1.2;
+    frRoundRect(ctx,boxX,y+3,boxW,rowH-6,7); ctx.stroke();
+    ctx.fillStyle=f.col; frRoundRect(ctx,boxX,y+3,4,rowH-6,2); ctx.fill();
+    ctx.textAlign="left"; ctx.fillStyle=ink;
+    ctx.font="800 12px -apple-system,sans-serif"; ctx.fillText(f.n,boxX+12,y+17);
+    ctx.fillStyle=soft; ctx.font="10.5px -apple-system,sans-serif";
+    ctx.fillText(`C${frSub(f.lo)}${f.hi<99?"–C"+frSub(f.hi):"+"} · ${f.t}`,boxX+12,y+30);
+    ctx.fillText("→ "+f.use,boxX+12,y+42);
+    /* fill meter */
+    for(let k=0;k<frFills[i];k++){
+      ctx.fillStyle=f.col; ctx.beginPath();
+      ctx.arc(boxX+boxW-12-k*11,y+rowH-14,3.6,0,7); ctx.fill();
+    }
+  }
+
+  /* effects */
+  frFx=frFx.filter(e=>{
+    const age=now-e.t0;
+    if(e.k==="drop"){
+      if(age>420)return false;
+      const p=age/420, x=e.x0+(e.x1-e.x0)*p, y=e.y0+(e.y1-e.y0)*p-26*Math.sin(Math.PI*p);
+      ctx.fillStyle=e.col; ctx.beginPath(); ctx.arc(x,y,6-2*p,0,7); ctx.fill();
+      return true;
+    }
+    if(e.k==="float"){
+      if(age>900)return false;
+      ctx.globalAlpha=1-age/900; ctx.fillStyle=cssVar("--ok");
+      ctx.font="800 13px -apple-system,sans-serif"; ctx.textAlign="left";
+      ctx.fillText(e.txt,e.x,e.y-age/38); ctx.globalAlpha=1;
+      return true;
+    }
+    return age<340; /* flash handled in shelf pass */
   });
-  return [L,R];
+
+  /* rising molecule */
+  if(frRun&&!frMol&&now>=frSpawnAt)frSpawn();
+  if(frRun&&frMol){
+    frMol.y-=frMol.vy*dt;
+    const mx=(colL+colR)/2+Math.sin(now/450+frMol.seed)*((colR-colL)/2-24);
+    if(frMol.y<=colT+8){
+      const want=frFracOf(frMol.c);
+      if(want===0){
+        frCollect(0,true);
+      }else{
+        frStreak=0; frHud();
+        frSay(`${frForm(frMol.c)} escaped! It belonged in ${FRACS[want].n.toLowerCase()} (${FRACS[want].t}).`,"danger");
+        frMol=null; frNext();
+      }
+    }else{
+      const r=19;
+      ctx.fillStyle="rgba(255,255,255,.88)";
+      ctx.beginPath(); ctx.arc(mx,frMol.y,r,0,7); ctx.fill();
+      ctx.strokeStyle=FRACS[Math.max(0,frFracOf(frMol.c))].col; ctx.lineWidth=2.5;
+      ctx.beginPath(); ctx.arc(mx,frMol.y,r,0,7); ctx.stroke();
+      ctx.fillStyle="#1c2733"; ctx.textAlign="center";
+      ctx.font="800 11.5px -apple-system,sans-serif"; ctx.fillText(frForm(frMol.c),mx,frMol.y+4);
+    }
+  }
+
+  /* HUD line: progress + message */
+  ctx.textAlign="left"; ctx.fillStyle=soft; ctx.font="700 11px -apple-system,sans-serif";
+  if(frRun||frDone)ctx.fillText(`molecule ${Math.min(frCount+(frMol?1:0),FR_TOTAL)}/${FR_TOTAL}`,10,16);
+  if(frMsg&&now<frMsg.until){
+    ctx.globalAlpha=Math.min(1,(frMsg.until-now)/500);
+    ctx.fillStyle=cssVar("--"+frMsg.color); ctx.font="700 12.5px -apple-system,sans-serif";
+    ctx.textAlign="center"; ctx.fillText(frMsg.txt,w/2,h-8); ctx.globalAlpha=1;
+  }
+  if(!frRun&&!frDone){
+    ctx.textAlign="center"; ctx.fillStyle=ink; ctx.font="800 15px -apple-system,sans-serif";
+    ctx.fillText("Press “Start refining” to load a barrel of crude",w/2,16);
+  }
+  if(frDone){
+    ctx.fillStyle="rgba(20,26,36,.78)"; frRoundRect(ctx,w/2-150,h/2-64,300,128,14); ctx.fill();
+    ctx.textAlign="center"; ctx.fillStyle="#fff";
+    ctx.font="800 18px -apple-system,sans-serif"; ctx.fillText("Barrel refined! 🛢️",w/2,h/2-32);
+    ctx.font="700 14px -apple-system,sans-serif";
+    ctx.fillText(`Score ${frScore} · ${Math.round(frRight/FR_TOTAL*100)}% routed correctly`,w/2,h/2-6);
+    ctx.font="11.5px -apple-system,sans-serif"; ctx.fillStyle="rgba(255,255,255,.75)";
+    ctx.fillText("Real columns never stop — a large refinery",w/2,h/2+18);
+    ctx.fillText("separates ~13,000 barrels of crude an hour.",w/2,h/2+32);
+  }
+  ctx.textAlign="left";
 }
-function renderBal(){
-  const eq=BALEQS[balI];
-  $("#bal-eq").innerHTML=eq.sp.map((sp,i)=>{
-    const sep=i===0?"":(i===eq.nr?'<span style="margin:0 6px">→</span>':'<span style="margin:0 4px">+</span>');
-    return `${sep}<span style="display:inline-flex;align-items:center;gap:5px">
-      <span style="display:inline-flex;flex-direction:column;gap:2px">
-        <button class="btn ghost" data-bal="${i}+" style="padding:2px 9px;font-size:13px">+</button>
-        <button class="btn ghost" data-bal="${i}-" style="padding:2px 9px;font-size:13px">−</button></span>
-      <b class="mono" style="font-size:22px;min-width:20px;text-align:center;color:var(--bunsen)">${balCo[i]}</b><span>${sp}</span></span>`;
-  }).join("");
-  const [L,R]=balCounts();
-  const els=[...new Set([...Object.keys(L),...Object.keys(R)])];
-  $("#bal-tally").innerHTML="<tr><th>Element</th><th>Left</th><th>Right</th><th></th></tr>"+
-    els.map(el=>{
-      const ok=L[el]===R[el];
-      return `<tr><td>${el}</td><td>${L[el]||0}</td><td>${R[el]||0}</td><td style="color:${ok?"var(--ok)":"var(--warn)"};font-weight:700">${ok?"⚖ balanced":"unbalanced"}</td></tr>`;
-    }).join("");
-  $("#bal-score").textContent=`equation ${balI+1}/${BALEQS.length} · solved ${balDone}`;
-  $$("[data-bal]").forEach(b=>b.addEventListener("click",()=>{
-    const i=+b.dataset.bal.slice(0,-1), d=b.dataset.bal.endsWith("+")?1:-1;
-    balCo[i]=Math.max(1,Math.min(12,balCo[i]+d));
-    $("#bal-msg").textContent="";
-    renderBal();
-  }));
-}
-function balStart(){ balCo=BALEQS[balI].sp.map(()=>1); $("#bal-msg").textContent=""; renderBal(); }
-$("#bal-check").addEventListener("click",()=>{
-  const [L,R]=balCounts();
-  const els=[...new Set([...Object.keys(L),...Object.keys(R)])];
-  const balanced=els.every(el=>L[el]===R[el]);
-  if(!balanced){$("#bal-msg").textContent="Not yet — check the orange rows.";return;}
-  const g=balCo.reduce((a,b)=>{while(b){[a,b]=[b,a%b];}return a;});
-  if(g>1){$("#bal-msg").textContent=`Balanced — but divide everything by ${g} for smallest whole numbers.`;return;}
-  balDone++; burstFrom($("#bal-check"));
-  $("#bal-msg").textContent="Balanced! ⚖️";
-  balI=(balI+1)%BALEQS.length;
-  setTimeout(balStart,1200);
-});
-balStart();
+(()=>{
+  const c=$("#fr-plot"); if(!c)return;
+  c.style.touchAction="manipulation";
+  c.addEventListener("pointerdown",e=>{
+    const r=c.getBoundingClientRect(), x=e.clientX-r.left, y=e.clientY-r.top;
+    const {colL,colT,colB,rowH}=frGeom();
+    if(x>colL&&y>=colT&&y<=colB)frClickRow(Math.min(5,Math.floor((y-colT)/rowH)));
+  });
+  $("#fr-start").addEventListener("click",frStart);
+  frHud();
+  requestAnimationFrame(frRender);
+})();
 
 /* molecule shapes — true 3D model: drag to rotate, inertia, idle spin */
 const GEOMS={
