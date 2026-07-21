@@ -2207,7 +2207,7 @@ renderQuiz();
 $("#sims").innerHTML=`
 <div class="sim" id="sim-prof">
   <h2>Reaction energy profile</h2>
-  <p class="hint">ΔH is the height difference between reactants and products; Ea is the climb to the transition state. A catalyst offers a lower path — it changes Ea, never ΔH.</p>
+  <p class="hint">Watch molecules charge the energy barrier live — only the ones with enough energy make it over the glowing transition state; the rest stall on the slope and roll home. Turn on the catalyst to open a lower two-hump route (via an intermediate) and watch the success rate jump. <b>Drag the ↕ handles</b> on the peak and the product shelf to sculpt Ea and ΔH by hand — a catalyst changes Ea, never ΔH.</p>
   <div class="controls">
     <div class="ctrl"><label for="pr-ea">Activation energy</label><input type="range" id="pr-ea" min="20" max="120" step="1" value="75"><span class="val" id="pr-ea-v">75 kJ mol⁻¹</span></div>
     <div class="ctrl"><label for="pr-dh">ΔH</label><input type="range" id="pr-dh" min="-100" max="100" step="1" value="-60"><span class="val" id="pr-dh-v">−60 kJ mol⁻¹</span></div>
@@ -2437,45 +2437,215 @@ function drawMB(){
 }));
 
 /* energy profile */
-function drawProf(){
-  const c=$("#pr-plot"); if(!c.clientWidth)return;
-  const [ctx,w,h]=setupCanvas(c);
+/* reaction energy profile — live molecular assault on the barrier */
+let prWalk=[],prFx=[],prLast=0,prSpawn=0,prCtx=null,prW=0,prH=0,prDrag=null,prHover=null;
+let prStats={mTry:0,mOk:0,cTry:0,cOk:0};
+function profE(x,Ea,dH,route){
+  const ss=t=>t<=0?0:t>=1?1:t*t*(3-2*t);
+  if(route==="cat"){
+    const p1=0.42,p2=0.58,pk=Ea*0.55,dip=Ea*0.30;
+    if(x<0.24)return 0;
+    if(x<p1)return ss((x-0.24)/(p1-0.24))*pk;
+    if(x<0.5)return pk-(pk-dip)*ss((x-p1)/(0.5-p1));
+    if(x<p2)return dip+(pk-dip)*ss((x-0.5)/(p2-0.5));
+    if(x<0.76)return pk+(dH-pk)*ss((x-p2)/(0.76-p2));
+    return dH;
+  }
+  if(x<0.24)return 0;
+  if(x<0.5)return ss((x-0.24)/0.26)*Ea;
+  if(x<0.76)return Ea+(dH-Ea)*ss((x-0.5)/0.26);
+  return dH;
+}
+function drawProf(dt=0){
+  const c=$("#pr-plot"); if(!c||!c.clientWidth)return;
+  const dpr=window.devicePixelRatio||1;
+  if(!prCtx||c.width!==Math.round(c.clientWidth*dpr)){[prCtx,prW,prH]=setupCanvas(c);}
+  const ctx=prCtx,w=prW,h=prH,now=performance.now();
   const Ea=+$("#pr-ea").value, dH=+$("#pr-dh").value, cat=$("#pr-cat").checked;
   ctx.clearRect(0,0,w,h);
   const L=52,B=34;
-  // energy scale: reactants at 0; peak at Ea; products at dH. Range:
-  const top=Math.max(Ea,dH,0)+22, bot=Math.min(0,dH)-22;
+  const top=Math.max(Ea,dH,0)+24, bot=Math.min(0,dH)-24;
   const Y=E=>(h-B)-((E-bot)/(top-bot))*(h-B-14);
-  const x0=L+10, x1=w*0.28, xp=w*0.5, x2=w*0.72, x3=w-24;
-  ctx.strokeStyle=cssVar("--line");ctx.fillStyle=cssVar("--ink-soft");ctx.font="11px ui-monospace,Menlo,monospace";
+  const X=x=>L+10+x*(w-L-34);
+  const exo=dH<0;
+  /* axes + faint grid */
+  ctx.strokeStyle=cssVar("--line");ctx.lineWidth=1;
   ctx.beginPath();ctx.moveTo(L,8);ctx.lineTo(L,h-B);ctx.lineTo(w-14,h-B);ctx.stroke();
-  ctx.fillText("enthalpy",8,18);ctx.fillText("progress of reaction",w/2-60,h-8);
-  function path(peak,color,dash){
-    ctx.strokeStyle=color;ctx.lineWidth=2.4;if(dash)ctx.setLineDash([6,5]);
-    ctx.beginPath();ctx.moveTo(x0,Y(0));ctx.lineTo(x1,Y(0));
-    ctx.bezierCurveTo(xp-40,Y(0),xp-58,Y(peak),xp,Y(peak));
-    ctx.bezierCurveTo(xp+58,Y(peak),xp+40,Y(dH),x2,Y(dH));
-    ctx.lineTo(x3,Y(dH));ctx.stroke();ctx.setLineDash([]);
+  ctx.globalAlpha=0.35;
+  for(let E=Math.ceil(bot/25)*25;E<=top;E+=25){
+    ctx.beginPath();ctx.moveTo(L,Y(E));ctx.lineTo(w-14,Y(E));ctx.stroke();
   }
-  if(cat)path(Ea*0.55,cssVar("--cu"),true);
-  path(Ea,cssVar("--bunsen"),false);
-  // annotations
-  ctx.strokeStyle=cssVar("--ink-soft");ctx.lineWidth=1;ctx.setLineDash([3,3]);
-  ctx.beginPath();ctx.moveTo(x0,Y(0));ctx.lineTo(xp+70,Y(0));ctx.stroke();
-  ctx.beginPath();ctx.moveTo(xp,Y(Ea));ctx.lineTo(xp+70,Y(Ea));ctx.stroke();ctx.setLineDash([]);
-  ctx.strokeStyle=cssVar("--li");ctx.beginPath();ctx.moveTo(xp+62,Y(0));ctx.lineTo(xp+62,Y(Ea));ctx.stroke();
-  ctx.fillStyle=cssVar("--li");ctx.fillText("Ea "+Ea+" kJ",xp+68,(Y(0)+Y(Ea))/2);
-  ctx.strokeStyle=cssVar("--na");ctx.beginPath();ctx.moveTo(x3-8,Y(0));ctx.lineTo(x3-8,Y(dH));ctx.stroke();
-  ctx.fillStyle=cssVar("--na");ctx.fillText("ΔH "+(dH>0?"+":"")+dH+" kJ",x3-78,(Y(0)+Y(dH))/2+(dH>0?-6:12));
+  ctx.globalAlpha=1;
+  ctx.fillStyle=cssVar("--ink-soft");ctx.font="11px ui-monospace,Menlo,monospace";ctx.textAlign="left";
+  ctx.fillText("enthalpy",8,18);ctx.fillText("progress of reaction",w/2-60,h-8);
+  /* landscape fill + curves */
+  const N=110;
+  const curve=r=>Array.from({length:N+1},(_,k)=>{const x=k/N;return [X(x),Y(profE(x,Ea,dH,r))];});
+  const main=curve("main");
+  const fillG=ctx.createLinearGradient(0,Y(Math.max(Ea,0)),0,h-B);
+  fillG.addColorStop(0,"rgba(232,89,12,.16)");fillG.addColorStop(1,"rgba(232,89,12,.02)");
+  ctx.beginPath();main.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));
+  ctx.lineTo(X(1),h-B);ctx.lineTo(X(0),h-B);ctx.closePath();ctx.fillStyle=fillG;ctx.fill();
+  if(cat){
+    const cc=curve("cat");
+    ctx.strokeStyle=cssVar("--cu");ctx.lineWidth=2.2;ctx.setLineDash([6,5]);ctx.lineDashOffset=-now/60;
+    ctx.beginPath();cc.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  const strokeG=ctx.createLinearGradient(X(0),0,X(1),0);
+  strokeG.addColorStop(0,"#4a8fd9");strokeG.addColorStop(0.5,"#e8590c");
+  strokeG.addColorStop(1,exo?"#2f9e63":"#7f5fd0");
+  ctx.save();
+  ctx.shadowColor="rgba(232,89,12,.55)";ctx.shadowBlur=10;
+  ctx.strokeStyle=strokeG;ctx.lineWidth=3;
+  ctx.beginPath();main.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.stroke();
+  ctx.restore();
+  /* transition state: breathing glow + ‡ */
+  const pkx=X(0.5),pky=Y(Ea);
+  const pulse=1+0.18*Math.sin(now/300);
+  const tsg=ctx.createRadialGradient(pkx,pky,1,pkx,pky,17*pulse);
+  tsg.addColorStop(0,"rgba(255,170,60,.8)");tsg.addColorStop(1,"rgba(255,140,40,0)");
+  ctx.fillStyle=tsg;ctx.beginPath();ctx.arc(pkx,pky,17*pulse,0,7);ctx.fill();
+  ctx.fillStyle=cssVar("--ink");ctx.font="800 13px -apple-system,sans-serif";ctx.textAlign="center";
+  ctx.fillText("‡",pkx,pky-14);
+  ctx.font="10px -apple-system,sans-serif";ctx.fillStyle=cssVar("--ink-soft");
+  ctx.fillText("transition state",pkx,pky-26);
+  /* marching-ant guides + energy arrows */
+  ctx.strokeStyle=cssVar("--ink-soft");ctx.lineWidth=1;ctx.setLineDash([3,3]);ctx.lineDashOffset=-now/90;
+  ctx.beginPath();ctx.moveTo(X(0),Y(0));ctx.lineTo(pkx+72,Y(0));ctx.stroke();
+  ctx.beginPath();ctx.moveTo(pkx,pky);ctx.lineTo(pkx+72,pky);ctx.stroke();ctx.setLineDash([]);
+  const arrow=(x,y1,y2,col)=>{
+    ctx.strokeStyle=col;ctx.fillStyle=col;ctx.lineWidth=1.6;
+    ctx.beginPath();ctx.moveTo(x,y1);ctx.lineTo(x,y2);ctx.stroke();
+    const s2=Math.sign(y2-y1);
+    ctx.beginPath();ctx.moveTo(x,y2);ctx.lineTo(x-4,y2-s2*7);ctx.lineTo(x+4,y2-s2*7);ctx.closePath();ctx.fill();
+  };
+  ctx.textAlign="left";ctx.font="11px ui-monospace,Menlo,monospace";
+  arrow(pkx+64,Y(0),pky,cssVar("--li"));
+  ctx.fillStyle=cssVar("--li");ctx.fillText("Ea "+Ea+" kJ",pkx+70,(Y(0)+pky)/2);
+  arrow(X(1)-6,Y(0),Y(dH),cssVar("--na"));
+  ctx.fillStyle=cssVar("--na");ctx.fillText("ΔH "+(dH>0?"+":"")+dH+" kJ",X(1)-84,(Y(0)+Y(dH))/2+(dH>0?-6:12));
   ctx.fillStyle=cssVar("--ink-soft");
-  ctx.fillText("reactants",x0,Y(0)-8);ctx.fillText("products",x2+6,Y(dH)-8);
-  ctx.fillText(dH<0?"exothermic":"endothermic",L+8,22);
+  ctx.fillText("reactants",X(0),Y(0)-8);ctx.fillText("products",X(0.78),Y(dH)-8);
+  /* exo/endo pill */
+  const pill=exo?"🔥 exothermic":"❄️ endothermic";
+  ctx.font="700 11.5px -apple-system,sans-serif";
+  const pw=ctx.measureText(pill).width+18;
+  ctx.fillStyle=exo?"rgba(216,74,60,.12)":"rgba(63,127,194,.12)";
+  frRoundRect(ctx,L+8,14,pw,20,10);ctx.fill();
+  ctx.fillStyle=exo?"#c04434":"#3f7fc2";ctx.fillText(pill,L+17,28);
+  /* molecules attacking the barrier */
+  if(dt>0&&!reduced){
+    prSpawn-=dt;
+    if(prSpawn<=0){
+      prSpawn=0.55+Math.random()*0.3;
+      const route=cat&&Math.random()<0.5?"cat":"main";
+      prWalk.push({x:-0.04,route,E:Ea*(0.30+Math.random()*1.30),ok:null,burst:false});   // one energy distribution — the catalyst just lowers the bar
+      if(route==="cat")prStats.cTry++;else prStats.mTry++;
+    }
+    for(let i=prWalk.length-1;i>=0;i--){
+      const m=prWalk[i];
+      const barrier=m.route==="cat"?Ea*0.55:Ea;
+      if(m.ok===null&&m.x>0.2&&m.E<barrier){
+        /* find stall point: climb until landscape exceeds its energy, then roll home */
+        m.ok=false;
+      }
+      const here=profE(Math.max(0,m.x),Ea,dH,m.route);
+      const ahead=profE(Math.max(0,m.x+0.01),Ea,dH,m.route);
+      const slope=(ahead-here)/(top-bot);
+      if(m.ok===false&&here>=m.E&&m.dir!==-1)m.dir=-1;
+      if(m.dir!==-1)m.dir=1;
+      const v=(0.14+Math.max(0,-slope)*0.5)*(1-Math.max(0,slope)*3.2);
+      m.x+=m.dir*Math.max(0.045,v)*dt;
+      if(m.dir===1&&!m.burst&&m.x>=0.5){
+        m.burst=true;
+        if(m.route==="cat")prStats.cOk++;else prStats.mOk++;
+        for(let k=0;k<7;k++)prFx.push({x:pkx,y:m.route==="cat"?Y(Ea*0.55):pky,vx:(Math.random()-0.5)*120,vy:-30-Math.random()*80,t0:now});
+      }
+      if(m.x>1.05||m.x<-0.06&&m.dir===-1){prWalk.splice(i,1);continue;}
+    }
+  }
+  for(const m of prWalk){
+    const e=profE(Math.max(0,Math.min(1,m.x)),Ea,dH,m.route);
+    const mx=X(Math.max(0,Math.min(1,m.x))), my=Y(e)-7;
+    const prod=m.x>0.5&&m.dir!==-1;
+    const col=prod?"#2f9e63":(m.route==="cat"?cssVar("--cu"):cssVar("--li"));
+    for(const off of prod?[[-3,-3],[3,3]]:[[-3.4,0],[3.4,0]]){
+      ctx.fillStyle=col;
+      ctx.beginPath();ctx.arc(mx+off[0],my+off[1],3.6,0,7);ctx.fill();
+      ctx.fillStyle="rgba(255,255,255,.45)";
+      ctx.beginPath();ctx.arc(mx+off[0]-1.1,my+off[1]-1.2,1.2,0,7);ctx.fill();
+    }
+  }
+  prFx=prFx.filter(f=>{
+    const age=(now-f.t0)/1000; if(age>0.65)return false;
+    const fx=f.x+f.vx*age, fy=f.y+f.vy*age+160*age*age;
+    ctx.globalAlpha=1-age/0.65;ctx.fillStyle="#ffb347";
+    ctx.beginPath();ctx.arc(fx,fy,2,0,7);ctx.fill();ctx.globalAlpha=1;
+    return true;
+  });
+  /* success scoreboard */
+  ctx.font="10.5px ui-monospace,Menlo,monospace";ctx.textAlign="right";
+  ctx.fillStyle=cssVar("--ink-soft");
+  ctx.fillText(`over the top: ${prStats.mOk}/${prStats.mTry}`,w-16,20);
+  if(cat){ctx.fillStyle=cssVar("--cu");ctx.fillText(`via catalyst: ${prStats.cOk}/${prStats.cTry}`,w-16,34);}
+  ctx.textAlign="left";
+  /* drag handles */
+  const hnd=(x,y,on)=>{
+    ctx.fillStyle=on?cssVar("--bunsen"):"rgba(127,127,127,.5)";
+    ctx.beginPath();ctx.arc(x,y,on?7:5.5,0,7);ctx.fill();
+    ctx.fillStyle="#fff";ctx.font="800 8px -apple-system,sans-serif";ctx.textAlign="center";
+    ctx.fillText("↕",x,y+3);ctx.textAlign="left";
+  };
+  hnd(pkx,pky,prHover==="ea"||prDrag==="ea");
+  hnd(X(0.93),Y(dH),prHover==="dh"||prDrag==="dh");
 }
+function prRender(ts){
+  requestAnimationFrame(prRender);
+  if(!$("#v-lab").classList.contains("on")||document.hidden)return;
+  let dt=(ts-prLast)/1000; if(!(dt>0))dt=0; prLast=ts;
+  drawProf(Math.min(0.05,dt));
+}
+(()=>{
+  const c=$("#pr-plot"); if(!c)return;
+  const pos=e=>{const r=c.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top,r};};
+  const hit=(p)=>{
+    const w=prW,h=prH,L=52,B=34;
+    const Ea=+$("#pr-ea").value,dH=+$("#pr-dh").value;
+    const top=Math.max(Ea,dH,0)+24,bot=Math.min(0,dH)-24;
+    const Y=E=>(h-B)-((E-bot)/(top-bot))*(h-B-14);
+    const X=x=>L+10+x*(w-L-34);
+    if(Math.hypot(p.x-X(0.5),p.y-Y(Ea))<16)return "ea";
+    if(Math.hypot(p.x-X(0.93),p.y-Y(dH))<16)return "dh";
+    return null;
+  };
+  const apply=(which,p)=>{
+    const h=prH,B=34;
+    const Ea=+$("#pr-ea").value,dH=+$("#pr-dh").value;
+    const top=Math.max(Ea,dH,0)+24,bot=Math.min(0,dH)-24;
+    const E=bot+((h-B-p.y)/(h-B-14))*(top-bot);
+    const sl=$(which==="ea"?"#pr-ea":"#pr-dh");
+    sl.value=Math.round(Math.max(+sl.min,Math.min(+sl.max,E)));
+    sl.dispatchEvent(new Event("input",{bubbles:true}));
+  };
+  c.addEventListener("pointerdown",e=>{
+    const p=pos(e), t=hit(p);
+    if(t){prDrag=t;c.setPointerCapture(e.pointerId);e.preventDefault();}
+  });
+  c.addEventListener("pointermove",e=>{
+    const p=pos(e);
+    if(prDrag){apply(prDrag,p);return;}
+    prHover=hit(p);
+    c.style.cursor=prHover?"ns-resize":"default";
+  });
+  const up=()=>{prDrag=null;};
+  c.addEventListener("pointerup",up);c.addEventListener("pointercancel",up);
+  requestAnimationFrame(prRender);
+})();
 ["pr-ea","pr-dh","pr-cat"].forEach(id=>$("#"+id).addEventListener("input",()=>{
   $("#pr-ea-v").textContent=$("#pr-ea").value+" kJ mol⁻¹";
   const d=+$("#pr-dh").value;
   $("#pr-dh-v").textContent=(d>0?"+":d<0?"−":"")+Math.abs(d)+" kJ mol⁻¹";
-  drawProf();
 }));
 
 /* ideal gas — 3D draggable container (box/sphere/cylinder), pump, trap door, vacuum */
