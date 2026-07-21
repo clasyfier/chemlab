@@ -280,6 +280,23 @@ canvas.plot{width:100%;height:320px;display:block;border-radius:8px;background:v
 #eldetail table{border-collapse:collapse;margin-top:10px;font-size:14.5px}
 #eldetail td{padding:5px 18px 5px 0;vertical-align:top}
 #eldetail td:first-child{color:var(--ink-soft);white-space:nowrap}
+#pttip{position:fixed;z-index:340;pointer-events:none;background:rgba(25,32,44,.94);color:#fff;border-radius:10px;padding:9px 13px;font-size:12px;line-height:1.5;max-width:230px;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+#pttip b{font-size:13.5px}
+#pttip .tcat{opacity:.75}
+#pttip .tval{color:#ffc46b;font-weight:700}
+#pt-t{-webkit-appearance:none;appearance:none;height:26px;background:transparent;cursor:pointer;--p:5%}
+#pt-t::-webkit-slider-runnable-track{height:8px;border-radius:99px;background:linear-gradient(90deg,#3b6fb3,#57b877,#f0a94a,#d84a3c,#fff) 0 0/var(--p) 100% no-repeat,var(--line)}
+#pt-t::-webkit-slider-thumb{-webkit-appearance:none;width:19px;height:19px;border-radius:50%;background:#fff;border:3px solid #d84a3c;margin-top:-5.5px;box-shadow:0 1px 5px rgba(0,0,0,.28)}
+#pt-t::-moz-range-track{height:8px;border-radius:99px;background:var(--line)}
+#pt-t::-moz-range-progress{height:8px;border-radius:99px;background:linear-gradient(90deg,#3b6fb3,#57b877,#f0a94a,#d84a3c)}
+#pt-t::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:#fff;border:3px solid #d84a3c}
+.pt.cascade .el{animation:elin .45s ease backwards;animation-delay:calc(var(--d)*16ms)}
+@keyframes elin{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
+.el.st-gas .sym{animation:elgas 2s ease-in-out infinite alternate;display:inline-block}
+@keyframes elgas{from{transform:translateY(.5px)}to{transform:translateY(-1.5px)}}
+.el.st-liq .sym{animation:elliq 1.5s ease-in-out infinite alternate;display:inline-block}
+@keyframes elliq{from{transform:skewX(-4deg)}to{transform:skewX(4deg)}}
+@media (prefers-reduced-motion:reduce){.pt.cascade .el,.el.st-gas .sym,.el.st-liq .sym{animation:none}}
 .flamechip{display:inline-flex;align-items:center;gap:7px;background:var(--panel2);border-radius:99px;padding:4px 12px;font-size:13px}
 .flamechip i{width:12px;height:16px;border-radius:50% 50% 45% 45%/60% 60% 40% 40%;display:inline-block}
 .pt .el.dim{opacity:.22}
@@ -773,7 +790,7 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
 <section class="view" id="v-periodic">
   <div class="eyebrow">Reference</div>
   <h1>Periodic table</h1>
-  <p class="lede">All 118 elements. Click any element for its electron configuration, and a flame-test colour where one exists. Then see how fast you are in Element Hunt.</p>
+  <p class="lede">All 118 elements, alive. Paint the table by electronegativity, ionisation energy, radius or melting point — or grab the temperature slider and watch every element freeze, melt and boil from absolute zero to the surface of the Sun. Hover anything for details, click for its full profile, then race the clock in Element Hunt.</p>
   <div class="hunt">
     <button class="btn" id="hunt-btn">🎯 Element Hunt</button>
     <select id="hunt-diff" style="font:inherit;padding:6px 8px;border-radius:7px;border:1px solid var(--line);background:var(--panel);color:var(--ink)">
@@ -781,10 +798,19 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
     <span class="ask" id="hunt-ask">Find 8 elements from their clues, against the clock.</span>
     <span class="streak" id="hunt-score"></span>
   </div>
+  <div class="selchips" id="pt-modes" style="margin:0 0 10px"></div>
+  <div id="pt-temp" hidden style="margin:0 0 12px;max-width:560px">
+    <input type="range" id="pt-t" min="0" max="6000" step="1" value="298" style="width:100%">
+    <div style="display:flex;justify-content:space-between;align-items:baseline">
+      <span class="val" id="pt-t-v" style="font-family:ui-monospace,Menlo,monospace;font-size:13.5px">298 K — room temperature</span>
+      <span id="pt-counts" style="font-size:12px;color:var(--ink-soft)"></span>
+    </div>
+  </div>
   <div class="pt-legend" id="ptlegend"></div>
   <div class="controls" style="margin:0 0 12px">
     <label class="toggle"><input type="checkbox" id="pt-trends"> Show group reactivity trends</label>
   </div>
+  <div id="pttip" hidden></div>
   <div class="pt-wrap"><div class="pt" id="pt"></div></div>
   <div id="trendinfo" class="grid cols2" style="display:none;margin-top:16px"></div>
   <div class="modal" id="elmodal" hidden>
@@ -1912,6 +1938,14 @@ function showView(v){
   window.scrollTo({top:0});
   if(v==="home")renderDash();
   if(v==="progress")renderProgress();
+  if(v==="periodic"&&!reduced){
+    const pt=document.querySelector("#pt");
+    if(pt){
+      $$("#pt .el").forEach(el=>{const r=parseInt(el.style.gridRow)||1,c=parseInt(el.style.gridColumn)||1;el.style.setProperty("--d",r+c);});
+      pt.classList.remove("cascade"); void pt.offsetWidth; pt.classList.add("cascade");
+      setTimeout(()=>pt.classList.remove("cascade"),1800);
+    }
+  }
 
   redrawAll();
 }
@@ -2205,6 +2239,112 @@ $("#pt").innerHTML=ELEMENTS.map(e=>{
   return `<button class="el" data-z="${e.z}" style="grid-row:${row};grid-column:${col};border-bottom:3px solid ${color}"
     title="${e.name}"><span class="z">${e.z}</span><span class="sym">${e.sym}</span><span class="nm">${e.name}</span></button>`;
 }).join("");
+/* property datasets (Z = 1..118; 0 = no reliable data). EN = Pauling ×100; IE1 kJ/mol; covalent radius pm; MP/BP K */
+const PT_EN="220,0,98,157,204,255,304,344,398,0,93,131,161,190,219,258,316,0,82,100,136,154,163,166,155,183,188,191,190,165,181,201,218,255,296,300,82,95,122,133,160,216,190,220,228,220,193,169,178,196,205,210,266,260,79,89,110,112,113,114,113,117,120,120,110,122,123,124,125,110,127,130,150,236,190,220,220,228,254,200,162,233,202,200,220,0,70,90,110,130,150,138,136,128,130,130,130,130,130,130,130,130,129".split(",").map(Number);
+const PT_IE="1312,2372,520,899,801,1086,1402,1314,1681,2081,496,738,578,786,1012,1000,1251,1521,419,590,633,659,651,653,717,762,760,737,745,906,579,762,947,941,1140,1351,403,550,600,640,652,684,702,710,720,804,731,868,558,709,834,869,1008,1170,376,503,538,534,527,533,540,545,547,593,566,573,581,589,597,603,524,659,761,770,760,840,880,870,890,1007,589,716,703,812,899,1037,393,509,499,587,568,598,605,585,578,581,601,608,619,627,635,642,470".split(",").map(Number);
+const PT_R="31,28,128,96,84,76,71,66,57,58,166,141,121,111,107,105,102,106,203,176,170,160,153,139,139,132,126,124,132,122,122,120,119,120,120,116,220,195,190,175,164,154,147,146,142,139,145,144,142,139,139,138,139,140,244,215,207,204,203,201,199,198,198,196,194,192,192,189,190,187,187,175,170,162,151,144,141,136,136,132,145,146,148,140,150,150,260,221,215,206,200,196,190,187,180,169,168,168,165".split(",").map(Number);
+const PT_MP="14,1,454,1560,2349,3823,63,54,53,25,371,923,933,1687,317,388,172,84,337,1115,1814,1941,2183,2180,1519,1811,1768,1728,1358,693,303,1211,1090,494,266,116,312,1050,1799,2128,2750,2896,2430,2607,2237,1828,1235,594,430,505,904,723,387,161,302,1000,1193,1068,1208,1297,1315,1345,1099,1585,1629,1680,1734,1802,1818,1097,1925,2506,3290,3695,3459,3306,2719,2041,1337,234,577,601,544,527,575,202,300,973,1323,2023,1841,1405,917,913,1449,1613,1259,1173,1133".split(",").map(Number);
+const PT_BP="20,4,1615,2742,4200,4300,77,90,85,27,1156,1363,2792,3538,554,718,239,87,1032,1757,3109,3560,3680,2944,2334,3134,3200,3186,2835,1180,2673,3106,887,958,332,120,961,1655,3609,4682,5017,4912,4538,4423,3968,3236,2435,1040,2345,2875,1860,1261,457,165,944,2170,3737,3716,3793,3347,3273,2067,1802,3546,3503,2840,2993,3141,2223,1469,3675,4876,5731,5828,5869,5285,4701,4098,3129,630,1746,2022,1837,1235,610,211,950,2010,3471,5061,4300,4404,4273,3501,2880,3383,2900,1743,1133".split(",").map(Number);
+const ptVal=(arr,z)=>arr[z-1]||0;
+const PT_MODES=[["cat","Categories"],["en","Electronegativity"],["ie","1st ionisation energy"],["r","Covalent radius"],["mp","Melting point"],["state","🌡 State at temperature"]];
+let ptMode="cat";
+const ptHeat=t=>t<0.5?lerpHex("#3b6fb3","#e8a13c",t*2):lerpHex("#e8a13c","#d84a3c",(t-0.5)*2);
+function ptModeInfo(z){
+  const T=+$("#pt-t").value;
+  switch(ptMode){
+    case "en":{const v=ptVal(PT_EN,z);return v?["EN "+(v/100).toFixed(2),v/100,0.7,4.0]:null;}
+    case "ie":{const v=ptVal(PT_IE,z);return v?[v+" kJ mol⁻¹",v,370,2400]:null;}
+    case "r":{const v=ptVal(PT_R,z);return v?[v+" pm",v,28,260]:null;}
+    case "mp":{const v=ptVal(PT_MP,z);return v?["melts "+v+" K",v,0,3900]:null;}
+    case "state":{
+      const mp=ptVal(PT_MP,z),bp=ptVal(PT_BP,z);
+      if(!mp||!bp)return null;
+      const st=T<mp?"solid":T<bp?"liquid":"gas";
+      return [st+" at "+T+" K",st,0,0];
+    }
+    default:return null;
+  }
+}
+function ptTempName(T){
+  if(T<50)return "near absolute zero";
+  if(T<200)return "cryogenic";
+  if(T<263)return "Antarctic winter";
+  if(T<325)return "room temperature";
+  if(T<420)return "boiling kettle";
+  if(T<1200)return "Bunsen flame territory";
+  if(T<2000)return "blast furnace";
+  if(T<3700)return "electric arc";
+  if(T<5500)return "rocket exhaust";
+  return "surface of the Sun (5772 K)";
+}
+function applyPtMode(){
+  const T=+$("#pt-t").value;
+  $("#pt-temp").hidden=ptMode!=="state";
+  $("#pt-t").style.setProperty("--p",(T/6000*100)+"%");
+  $("#pt-t-v").textContent=T+" K — "+ptTempName(T);
+  let counts={solid:0,liquid:0,gas:0};
+  $$("#pt .el").forEach(el=>{
+    const z=+el.dataset.z, e=ELEMENTS[z-1];
+    const cat=catOf(z), color=CAT_META[cat][1];
+    const nm=el.querySelector(".nm");
+    el.classList.remove("st-gas","st-liq");
+    if(ptMode==="cat"){
+      el.style.background=""; el.style.borderBottomColor=color;
+      nm.textContent=e.name;
+    }else if(ptMode==="state"){
+      const info=ptModeInfo(z);
+      if(!info){el.style.background="";el.style.borderBottomColor="var(--line)";nm.textContent="no data";return;}
+      const st=info[1];
+      counts[st]++;
+      const col=st==="solid"?"#6a7f95":st==="liquid"?"#e8944a":"#57b877";
+      el.style.background=`color-mix(in srgb,${col} ${st==="solid"?18:34}%,var(--panel))`;
+      el.style.borderBottomColor=col;
+      nm.textContent=st;
+      if(st==="gas")el.classList.add("st-gas");
+      if(st==="liquid")el.classList.add("st-liq");
+    }else{
+      const info=ptModeInfo(z);
+      if(!info){el.style.background="";el.style.borderBottomColor="var(--line)";nm.textContent="no data";return;}
+      const [txt,v,lo,hi]=info;
+      const t=Math.max(0,Math.min(1,(v-lo)/(hi-lo)));
+      const col=ptHeat(t);
+      el.style.background=`color-mix(in srgb,${col} ${12+38*t}%,var(--panel))`;
+      el.style.borderBottomColor=col;
+      nm.textContent=ptMode==="en"?(v).toFixed(2):ptMode==="ie"?v:ptMode==="r"?v+"pm":v+"K";
+    }
+  });
+  if(ptMode==="state")$("#pt-counts").textContent=`${counts.solid} solid · ${counts.liquid} liquid · ${counts.gas} gas`;
+  /* legend */
+  const lg=$("#ptlegend");
+  if(ptMode==="cat")lg.innerHTML=Object.entries(CAT_META).map(([k,v])=>`<span><i style="background:${v[1]}"></i>${v[0]}</span>`).join("");
+  else if(ptMode==="state")lg.innerHTML=`<span><i style="background:#6a7f95"></i>solid</span><span><i style="background:#e8944a"></i>liquid</span><span><i style="background:#57b877"></i>gas</span><span><i style="background:var(--line)"></i>no data</span>`;
+  else lg.innerHTML=`<span>low</span><span style="flex:0 0 140px;height:10px;border-radius:99px;background:linear-gradient(90deg,${ptHeat(0)},${ptHeat(0.5)},${ptHeat(1)})"></span><span>high</span>`;
+  /* chips */
+  $$("#pt-modes button").forEach(b=>b.classList.toggle("on",b.dataset.m===ptMode));
+}
+$("#pt-modes").innerHTML=PT_MODES.map(([m,l])=>`<button type="button" data-m="${m}"><span class="m">${l}</span></button>`).join("");
+$$("#pt-modes button").forEach(b=>b.addEventListener("click",()=>{ptMode=b.dataset.m;applyPtMode();}));
+$("#pt-t").addEventListener("input",applyPtMode);
+/* rich hover tooltip */
+(()=>{
+  const tip=$("#pttip"), pt=$("#pt");
+  pt.addEventListener("pointermove",e=>{
+    const el=e.target.closest(".el");
+    if(!el){tip.hidden=true;return;}
+    const z=+el.dataset.z, el2=ELEMENTS[z-1];
+    const cat=catOf(z), [catName,color]=CAT_META[cat];
+    const info=ptModeInfo(z);
+    tip.innerHTML=`<b>${el2.sym} · ${el2.name}</b><br>
+      <span class="tcat">#${z} · A<sub>r</sub> ${el2.mass} · ${catName}</span>
+      ${info?`<br><span class="tval">${info[0]}</span>`:""}`;
+    tip.hidden=false;
+    const tw=tip.offsetWidth,th=tip.offsetHeight;
+    tip.style.left=Math.min(innerWidth-tw-8,e.clientX+14)+"px";
+    tip.style.top=Math.max(6,e.clientY-th-12)+"px";
+  });
+  pt.addEventListener("pointerleave",()=>tip.hidden=true);
+})();
+applyPtMode();
 function showElement(z){
   const e=ELEMENTS[z-1], cat=catOf(z), [catName,color]=CAT_META[cat];
   $$(".el").forEach(el=>el.classList.toggle("sel",+el.dataset.z===z));
