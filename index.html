@@ -2579,17 +2579,18 @@ function atRender(){
     else if(now-atIdleAt>2600)atMat=m3mul(rotY(0.0022),atMat);
   }
   ctx.clearRect(0,0,w,h);
-  const cx=w/2,cy=h/2,maxR=Math.min(w,h)/2-14;
+  const meterEdge=84, symW=w>700?Math.min(240,w*0.26):0;
+  const cx=symW?meterEdge+(w-symW-meterEdge)/2:w/2, cy=h/2, maxR=Math.min(w,h)/2-14;
   const el=ELEMENTS[atomP-1];
   if(el){
-    const room=w-(cx+maxR);
     ctx.fillStyle=cssVar("--ink"); ctx.textBaseline="middle";
-    if(room>120){                                   // wide canvas: big symbol in the free right margin
+    if(symW){                                       // wide canvas: symbol column on the right
+      const sx=w-symW/2;
       ctx.textAlign="center"; ctx.globalAlpha=0.14;
-      ctx.font=`800 ${Math.round(Math.min(room*0.72,maxR*0.75))}px -apple-system,sans-serif`;
-      ctx.fillText(el.sym,cx+maxR+room/2,cy-12);
+      ctx.font=`800 ${Math.round(Math.min(symW*0.62,maxR*0.75))}px -apple-system,sans-serif`;
+      ctx.fillText(el.sym,sx,cy-12);
       ctx.globalAlpha=0.5; ctx.font="700 13px -apple-system,sans-serif";
-      ctx.fillText(el.name.toLowerCase(),cx+maxR+room/2,cy+Math.min(room*0.4,maxR*0.4));
+      ctx.fillText(el.name.toLowerCase(),sx,cy+Math.min(symW*0.34,maxR*0.4));
     }else{                                          // narrow: small badge top-right
       ctx.textAlign="right"; ctx.globalAlpha=0.4;
       ctx.font="800 26px -apple-system,sans-serif"; ctx.fillText(el.sym,w-14,26);
