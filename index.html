@@ -1732,7 +1732,8 @@ window.chemPersist=false;
 window.chemStoreSync={
   persistOn(){window.chemPersist=true;for(const k in MEM){try{localStorage.setItem(k,MEM[k])}catch(e){}}},
   persistOff(){window.chemPersist=false;},
-  drop(k){delete MEM[k];}
+  drop(k){delete MEM[k];},
+  wipe(){for(const k in MEM)delete MEM[k];}
 };
 const store=(k,v)=>{try{const j=JSON.stringify(v);MEM[k]=j;if(window.chemPersist)localStorage.setItem(k,j);window.dispatchEvent(new CustomEvent("chemlab:changed"))}catch(e){}};
 const load=(k,d)=>{try{const v=JSON.parse((k in MEM)?MEM[k]:localStorage.getItem(k));return v==null?d:v}catch(e){return d}};
@@ -4949,6 +4950,7 @@ function render(){
     <h3>Data &amp; privacy</h3>
     <p style="display:flex;gap:10px;flex-wrap:wrap;margin:4px 0">
       <button class="btn ghost" id="a-export">⬇ Download my data</button>
+      <button class="btn ghost" id="a-reset">♻️ Reset all progress</button>
       <button class="btn ghost" id="a-out">Sign out</button>
       <button class="btn ghost" id="a-delbtn" style="color:var(--danger)">Delete my account…</button></p>
     <div class="danger-zone" id="dz">
@@ -5008,6 +5010,22 @@ function render(){
     if(!error){$("#pw-msg").style.color="var(--ok)";$("#pw-new").value="";}
   };
   $("#a-out").onclick=async()=>{await sb.auth.signOut();wipeLocal();location.reload();};
+  let resetArm=null;
+  $("#a-reset").onclick=async()=>{
+    const b=$("#a-reset");
+    if(!resetArm){
+      resetArm=setTimeout(()=>{resetArm=null;b.textContent="♻️ Reset all progress";b.style.color="";},4500);
+      b.textContent="⚠️ Really reset? Every score, on all devices — click again";
+      b.style.color="var(--danger)";
+      return;
+    }
+    clearTimeout(resetArm); resetArm=null;
+    b.disabled=true; b.textContent="Resetting…";
+    Object.keys(localStorage).filter(k=>k.startsWith("chemlab-")&&k!=="chemlab-signedin").forEach(k=>localStorage.removeItem(k));
+    window.chemStoreSync&&window.chemStoreSync.wipe();
+    try{await sb.from("profiles").update({progress:{}}).eq("id",user.id);}catch(e){}
+    location.reload();
+  };
   $("#a-export").onclick=async()=>{
     const {data:{session}}=await sb.auth.getSession(); if(!session)return;
     const r=await fetch("/api/account",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+session.access_token},body:JSON.stringify({action:"export"})});
