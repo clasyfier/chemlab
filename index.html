@@ -337,6 +337,25 @@ canvas.plot{width:100%;height:320px;display:block;border-radius:8px;background:v
 .ring>b{width:66px;height:66px;border-radius:50%;background:var(--panel);display:grid;place-items:center;font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:14px;font-variant-numeric:tabular-nums}
 .ringcard{text-align:center}
 .ringcard .k{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft)}
+.prog-grid{display:grid;grid-template-columns:230px 1fr;gap:14px;margin-bottom:14px;align-items:stretch}
+@media (max-width:760px){.prog-grid{grid-template-columns:1fr}}
+.lvlcard{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;text-align:center;box-shadow:var(--shadow)}
+.lvlcard .ring{width:96px;height:96px}
+.lvlcard .ring>b{width:74px;height:74px;font-size:15px}
+.lvlname{font-weight:800;font-size:16px;margin-top:2px}
+.lvlnext{font-size:11.5px;color:var(--ink-soft);margin-top:3px}
+.pchips{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.pchip{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow);transition:transform .15s}
+.pchip:hover{transform:translateY(-2px)}
+.pchip b{display:block;font-size:22px;font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
+.pchip span{font-size:10.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+.weakrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin-top:10px}
+.weakcard{border:1.5px solid var(--line);border-radius:13px;padding:13px 15px;cursor:pointer;transition:transform .15s,border-color .15s;background:var(--panel)}
+.weakcard:hover{transform:translateY(-3px);border-color:var(--bunsen)}
+.weakcard b{font-size:14px}
+.weakcard .wbar{height:7px;border-radius:99px;background:var(--panel2);margin:9px 0 5px;overflow:hidden}
+.weakcard .wbar i{display:block;height:100%;border-radius:99px}
+.weakcard .go{font-size:11.5px;font-weight:800;color:var(--bunsen)}
 .qc{margin-top:18px;border-top:2px dashed var(--line);padding-top:12px}
 .qc h4{margin:0 0 4px}
 .qc .q{margin:12px 0 7px;font-weight:600;font-size:15px}
@@ -696,7 +715,6 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
   </div>
   <div class="statrow" id="statrow"></div>
   <div class="grid cols3" id="homecards"></div>
-  <div id="dash"></div>
 </section>
 
 <section class="view" id="v-learn">
@@ -785,7 +803,7 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
 <section class="view" id="v-progress">
   <div class="eyebrow">Analytics</div>
   <h1>Your progress</h1>
-  <p class="lede">Accuracy by chapter, your confidence ratings, and exam history — plus an AI-generated plan for catching up on whatever needs it most.</p>
+  <p class="lede">Your rank, your skill radar, your exam trajectory — hover and click everything. Plus an AI-generated plan for catching up on whatever needs it most.</p>
   <div id="prog-body"></div>
 </section>
 
@@ -1881,32 +1899,7 @@ $$("#homecards .card").forEach(card=>{
   });
   card.addEventListener("pointerleave",()=>{card.style.transform="";});
 });
-function renderDash(){
-  const mastered=load("chemlab-mastered",[]).length;
-  const qz=load("chemlab-quiz",{score:0,n:0});
-  const acc=qz.n?Math.round(qz.score/qz.n*100):0;
-  const prac=load("chemlab-prac",{});
-  const totalSteps=PRACS.reduce((s,p)=>s+p.steps.length,0);
-  const doneSteps=Object.values(prac).reduce((s,a)=>s+(a||[]).filter(Boolean).length,0);
-  const best=load("chemlab-hunt-best",0);
-  const ring=(p,c,txt,k)=>`<div class="ringcard"><div class="ring" data-p="${Math.min(100,p)}" style="--p:0;--rc:var(${c})"><b>${txt}</b></div><div class="k">${k}</div></div>`;
-  $("#dash").innerHTML=`<div class="card" style="margin-top:14px"><h3>Your progress</h3>
-    <p style="margin-top:2px">Everything below is earned in the app — quick checks, ticked lab steps, quiz streaks and hunts. It stays on this device.</p>
-    <div class="ringrow">
-    ${ring(mastered/TOPICS.length*100,"--li",mastered+"/"+TOPICS.length,"topics mastered")}
-    ${ring(acc,"--cu",acc+"%","quiz accuracy")}
-    ${ring(totalSteps?doneSteps/totalSteps*100:0,"--na",doneSteps+"/"+totalSteps,"lab steps ticked")}
-    ${ring(best/8*100,"--k",best+"/8","element hunt best")}
-    </div></div>`;
-  const rings=$$("#dash .ring");
-  if(reduced){rings.forEach(r=>r.style.setProperty("--p",r.dataset.p));return;}
-  const t0=performance.now();
-  (function tick(){
-    const t=Math.min(1,(performance.now()-t0)/900), e=1-Math.pow(1-t,3);
-    rings.forEach(r=>r.style.setProperty("--p",(+r.dataset.p*e).toFixed(1)));
-    if(t<1)requestAnimationFrame(tick);
-  })();
-}
+function renderDash(){}
 
 /* ---------- learn ---------- */
 const TCODES=["3.1.1","3.1.3","3.1.2","3.1.4","3.1.5 · 3.1.9","3.1.6 · 3.1.10","3.1.12","3.1.7 · 3.1.11","3.3","3.2","3.1.8","3.2.5 · 3.2.6","3.3.6 · 3.3.15 · 3.3.16"];
@@ -4383,39 +4376,113 @@ function exRecord(got){
 $("#ex-start").addEventListener("click",exStart);
 
 /* ---------- progress view ---------- */
+let progRows=[],progHist=[],progT0=0,progHoverR=-1,progHoverE=-1,progMX=0,progMY=0,progLoop=false;
+const PROG_LVLS=[[0,"Fresher"],[60,"Lab Assistant"],[160,"Burette Wrangler"],[320,"Mole Whisperer"],[550,"Synthesis Specialist"],[850,"Analytical Ace"],[1250,"Reaction Master"],[1800,"Nobel Candidate"]];
 function renderProgress(){
   const st=load("chemlab-topicstats",{});
   const moods=load("chemlab-mood",{});
   const mast=load("chemlab-mastered",[]);
   const hist=load("chemlab-examhist",[]);
+  const prac=load("chemlab-prac",{});
   const rows=TOPICS.map((t,i)=>{
     const d=st[i]||{got:0,max:0};
     const pc=d.max?Math.round(d.got/d.max*100):null;
     const col=pc==null?"var(--line)":pc>=75?"var(--ok)":pc>=50?"var(--warn)":"var(--danger)";
-    return {i,t,pc,d,col};
+    return {i,t,pc,d,col,mood:moods[i]||null,mast:mast.includes(i)};
   });
+  progRows=rows; progHist=hist.slice(-12); progT0=performance.now();
   const weak=rows.filter(r=>r.pc!==null&&r.pc<70).sort((a,b)=>a.pc-b.pc).slice(0,3);
   const unseen=rows.filter(r=>r.pc===null);
+  const answered=rows.reduce((a,r)=>a+r.d.max,0);
+  const doneSteps=Object.values(prac).reduce((a,x)=>a+(x||[]).filter(Boolean).length,0);
+  const examMarks=hist.reduce((a,h)=>a+h.got,0);
+  const beststreak=load("chemlab-quiz-beststreak",0);
+  const xp=answered*2+rows.reduce((a,r)=>a+r.d.got,0)*3+doneSteps*5+mast.length*40+examMarks*4;
+  let li=0; while(li<PROG_LVLS.length-1&&xp>=PROG_LVLS[li+1][0])li++;
+  const lvlFrom=PROG_LVLS[li][0], lvlTo=PROG_LVLS[li+1]?PROG_LVLS[li+1][0]:null;
+  const lvlPc=lvlTo?Math.round((xp-lvlFrom)/(lvlTo-lvlFrom)*100):100;
   $("#prog-body").innerHTML=`
-  <div class="card" style="margin-bottom:14px"><h3>Accuracy by chapter</h3>
-    ${rows.map(r=>`<div class="prog-row">
-      <span class="em">${moods[r.i]?MOODS[moods[r.i]-1][0]:""}</span>
-      <span class="nm">${r.t.t}${mast.includes(r.i)?' <span style="color:var(--ok)">✓</span>':""}</span>
-      <div class="pbar"><i style="width:${r.pc??0}%;background:${r.col}"></i></div>
-      <span class="pc">${r.pc==null?"no data":r.pc+"% ("+r.d.got+"/"+r.d.max+")"}</span>
-    </div>`).join("")}
+  <div class="prog-grid">
+    <div class="lvlcard">
+      <div class="ring" data-p="${lvlPc}" style="--p:0;--rc:var(--bunsen)"><b>${xp} xp</b></div>
+      <div class="lvlname">${PROG_LVLS[li][1]}</div>
+      <div class="lvlnext">${lvlTo?`${lvlTo-xp} xp to ${PROG_LVLS[li+1][1]}`:"maximum rank — bow before them"}</div>
+    </div>
+    <div class="pchips">
+      <div class="pchip"><b>${answered}</b><span>questions answered</span></div>
+      <div class="pchip"><b>${hist.length}</b><span>exams sat</span></div>
+      <div class="pchip"><b>${beststreak}</b><span>best streak</span></div>
+      <div class="pchip"><b>${mast.length}/${TOPICS.length}</b><span>chapters mastered</span></div>
+      <div class="pchip"><b>${doneSteps}</b><span>lab steps ticked</span></div>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:14px"><h3>Skill radar</h3>
+    <p style="margin:2px 0 4px;font-size:13.5px;color:var(--ink-soft)">Every spoke is a chapter — hover to inspect, click to open it.</p>
+    <canvas class="plot" id="prog-radar" style="height:400px"></canvas>
+  </div>
+  <div class="card" style="margin-bottom:14px"><h3>Exam trajectory</h3>
+    <canvas class="plot" id="prog-exams" style="height:200px"></canvas>
   </div>
   <div class="card" style="margin-bottom:14px"><h3>Where to focus</h3>
-    ${weak.length?`<p style="font-size:14.5px">Weakest chapters right now: ${weak.map(w=>`<b>${w.t.t}</b> (${w.pc}%)`).join(", ")}.</p>`:"<p style='font-size:14.5px'>No weak chapters detected yet — answer more questions to sharpen the picture.</p>"}
-    ${unseen.length?`<p style="font-size:13.5px;color:var(--ink-soft)">Not yet tested: ${unseen.map(u=>u.t.t).join(", ")}.</p>`:""}
-    <p style="margin-top:10px"><button class="btn" id="prog-plan">🧠 Generate my study plan</button></p>
+    ${weak.length?`<div class="weakrow">${weak.map(w=>`<div class="weakcard" data-ch="${w.i}">
+      <b>${w.t.t}</b> ${w.mood?MOODS[w.mood-1][0]:""}
+      <div class="wbar"><i style="width:${w.pc}%;background:${w.col}"></i></div>
+      <span style="font-size:12px;color:var(--ink-soft)">${w.pc}% accuracy (${w.d.got}/${w.d.max})</span><br>
+      <span class="go">Open the chapter →</span>
+    </div>`).join("")}</div>`
+    :"<p style='font-size:14.5px'>No weak chapters detected yet — answer more questions to sharpen the picture.</p>"}
+    ${unseen.length?`<p style="font-size:13px;color:var(--ink-soft);margin-top:10px">Not yet tested: ${unseen.map(u=>u.t.t).join(", ")}.</p>`:""}
+    <p style="margin-top:12px"><button class="btn" id="prog-plan">🧠 Generate my study plan</button></p>
     <div id="prog-planout"></div>
-  </div>
-  <div class="card"><h3>Exam history</h3>
-    ${hist.length?`<div class="tblwrap"><table class="notetable"><tr><th>When</th><th>Type</th><th>Questions</th><th>Score</th></tr>
-      ${hist.slice(-8).reverse().map(h=>`<tr><td>${new Date(h.ts).toLocaleDateString("en-GB")}</td><td>${h.type==="mcq"?"Multiple choice":h.type==="written"?"Written":"Practical"}</td><td>${h.n}</td><td>${h.got}/${h.max} (${Math.round(h.got/h.max*100)}%)</td></tr>`).join("")}</table></div>`
-    :"<p style='font-size:14.5px;color:var(--ink-soft)'>No exams sat yet — head to Test your knowledge and start one.</p>"}
   </div>`;
+  /* level ring count-up */
+  const ring=$("#prog-body .ring");
+  if(reduced)ring.style.setProperty("--p",ring.dataset.p);
+  else{const t0=performance.now();(function tick(){
+    const t=Math.min(1,(performance.now()-t0)/900), e=1-Math.pow(1-t,3);
+    ring.style.setProperty("--p",(+ring.dataset.p*e).toFixed(1));
+    if(t<1)requestAnimationFrame(tick);})();}
+  /* interactivity */
+  $$("#prog-body .weakcard").forEach(cD=>cD.addEventListener("click",()=>{
+    const i=+cD.dataset.ch;
+    if(topicLocked(i)){openAccount();return;}
+    openReader(i);
+  }));
+  const rc=$("#prog-radar");
+  rc.addEventListener("pointermove",e=>{
+    const r=rc.getBoundingClientRect();
+    progMX=e.clientX-r.left; progMY=e.clientY-r.top;
+    const cx=r.width/2, cy=r.height/2+6;
+    const d=Math.hypot(progMX-cx,progMY-cy);
+    if(d<8||d>Math.min(r.width,r.height)/2){progHoverR=-1;rc.style.cursor="default";return;}
+    let ang=Math.atan2(progMY-cy,progMX-cx)+Math.PI/2;
+    if(ang<0)ang+=Math.PI*2;
+    progHoverR=Math.round(ang/(Math.PI*2)*TOPICS.length)%TOPICS.length;
+    rc.style.cursor="pointer";
+  });
+  rc.addEventListener("pointerleave",()=>progHoverR=-1);
+  rc.addEventListener("click",()=>{
+    if(progHoverR<0)return;
+    if(topicLocked(progHoverR)){openAccount();return;}
+    openReader(progHoverR);
+  });
+  const ec=$("#prog-exams");
+  ec.addEventListener("pointermove",e=>{
+    const r=ec.getBoundingClientRect();
+    progMX=e.clientX-r.left; progMY=e.clientY-r.top;
+    if(!progHist.length){progHoverE=-1;return;}
+    const L=44,R2=r.width-16;
+    const n=progHist.length;
+    let best=-1,bd=26;
+    progHist.forEach((h,i)=>{
+      const x=n===1?(L+R2)/2:L+i/(n-1)*(R2-L);
+      const dd=Math.abs(progMX-x);
+      if(dd<bd){bd=dd;best=i;}
+    });
+    progHoverE=best;
+  });
+  ec.addEventListener("pointerleave",()=>progHoverE=-1);
+  if(!progLoop){progLoop=true;requestAnimationFrame(progRender);}
   $("#prog-plan").addEventListener("click",async()=>{
     const out=$("#prog-planout");
     out.innerHTML='<p class="hint" style="margin-top:10px"><span class="spin" style="border-color:rgba(0,0,0,.15);border-top-color:var(--bunsen)"></span> Building your plan…</p>';
@@ -4434,6 +4501,126 @@ function renderProgress(){
     }
     out.innerHTML=`<div class="planbox">${String(plan).replace(/</g,"&lt;")}</div>`;
   });
+}
+let progRCtx=null,progRW=0,progRH=0,progECtx=null,progEW=0,progEH=0;
+function progRender(){
+  requestAnimationFrame(progRender);
+  if(!$("#v-progress").classList.contains("on")||document.hidden)return;
+  const now=performance.now();
+  const anim=reduced?1:Math.min(1,(now-progT0)/900);
+  const ease=1-Math.pow(1-anim,3);
+  /* ---- radar ---- */
+  const rc=$("#prog-radar");
+  if(rc&&rc.clientWidth){
+    const dpr=window.devicePixelRatio||1;
+    if(!progRCtx||rc.width!==Math.round(rc.clientWidth*dpr)){[progRCtx,progRW,progRH]=setupCanvas(rc);}
+    const ctx=progRCtx,w=progRW,h=progRH;
+    ctx.clearRect(0,0,w,h);
+    const cx=w/2, cy=h/2+6, R=Math.min(w,h)/2-58, N=TOPICS.length;
+    const pt=(i,frac)=>{const a=i/N*Math.PI*2-Math.PI/2;return [cx+Math.cos(a)*R*frac,cy+Math.sin(a)*R*frac];};
+    ctx.strokeStyle=cssVar("--line");ctx.lineWidth=1;
+    for(const g of [0.25,0.5,0.75,1]){
+      ctx.globalAlpha=g===1?0.8:0.4;
+      ctx.beginPath();
+      for(let i=0;i<=N;i++){const [x,y]=pt(i%N,g);i?ctx.lineTo(x,y):ctx.moveTo(x,y);}
+      ctx.stroke();
+    }
+    ctx.globalAlpha=0.4;
+    for(let i=0;i<N;i++){const [x,y]=pt(i,1);ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(x,y);ctx.stroke();}
+    ctx.globalAlpha=1;
+    /* labels */
+    ctx.font="10px -apple-system,sans-serif";
+    for(let i=0;i<N;i++){
+      const a=i/N*Math.PI*2-Math.PI/2;
+      const [x,y]=[cx+Math.cos(a)*(R+14),cy+Math.sin(a)*(R+14)];
+      const hov=i===progHoverR;
+      ctx.fillStyle=hov?cssVar("--bunsen"):cssVar("--ink-soft");
+      ctx.font=(hov?"800 ":"")+"10px -apple-system,sans-serif";
+      ctx.textAlign=Math.abs(Math.cos(a))<0.12?"center":Math.cos(a)>0?"left":"right";
+      const nm=progRows[i]?progRows[i].t.t:"";
+      ctx.fillText((nm.length>16?nm.slice(0,15)+"…":nm)+(progRows[i]&&progRows[i].mast?" ✓":""),x,y+3);
+    }
+    /* polygon */
+    ctx.beginPath();
+    for(let i=0;i<=N;i++){
+      const r0=progRows[i%N], frac=((r0&&r0.pc!=null?r0.pc:4)/100)*ease;
+      const [x,y]=pt(i%N,Math.max(0.04,frac));
+      i?ctx.lineTo(x,y):ctx.moveTo(x,y);
+    }
+    ctx.closePath();
+    ctx.fillStyle="color-mix(in srgb,"+cssVar("--bunsen")+" 15%,transparent)";ctx.fill();
+    ctx.strokeStyle=cssVar("--bunsen");ctx.lineWidth=2;ctx.stroke();
+    /* vertex dots */
+    for(let i=0;i<N;i++){
+      const r0=progRows[i], frac=((r0&&r0.pc!=null?r0.pc:4)/100)*ease;
+      const [x,y]=pt(i,Math.max(0.04,frac));
+      const hov=i===progHoverR;
+      ctx.fillStyle=r0&&r0.pc!=null?(r0.pc>=75?"#2f9e63":r0.pc>=50?"#e0955a":"#d84a3c"):cssVar("--line");
+      ctx.beginPath();ctx.arc(x,y,hov?6:3.6,0,7);ctx.fill();
+      if(hov){ctx.strokeStyle="#fff";ctx.lineWidth=1.5;ctx.stroke();}
+    }
+    /* tooltip */
+    if(progHoverR>=0&&progRows[progHoverR]){
+      const r0=progRows[progHoverR];
+      const txt1=r0.t.t, txt2=(r0.pc==null?"no data yet":r0.pc+"% · "+r0.d.got+"/"+r0.d.max)+(r0.mood?"  "+MOODS[r0.mood-1][0]:"");
+      ctx.font="800 11.5px -apple-system,sans-serif";
+      const tw=Math.max(ctx.measureText(txt1).width,ctx.measureText(txt2).width)+22;
+      let tx=Math.min(w-tw-6,Math.max(6,progMX+14)), ty=Math.max(6,progMY-52);
+      ctx.fillStyle="rgba(25,32,44,.92)";frRoundRect(ctx,tx,ty,tw,44,9);ctx.fill();
+      ctx.fillStyle="#fff";ctx.textAlign="left";ctx.fillText(txt1,tx+11,ty+17);
+      ctx.font="10.5px -apple-system,sans-serif";ctx.fillStyle="#c8d4e2";
+      ctx.fillText(txt2+"  ·  click to open",tx+11,ty+33);
+    }
+  }
+  /* ---- exam trajectory ---- */
+  const ec=$("#prog-exams");
+  if(ec&&ec.clientWidth){
+    const dpr=window.devicePixelRatio||1;
+    if(!progECtx||ec.width!==Math.round(ec.clientWidth*dpr)){[progECtx,progEW,progEH]=setupCanvas(ec);}
+    const ctx=progECtx,w=progEW,h=progEH;
+    ctx.clearRect(0,0,w,h);
+    const L=44,R2=w-16,T=14,B=h-26;
+    ctx.strokeStyle=cssVar("--line");ctx.fillStyle=cssVar("--ink-soft");ctx.font="10px ui-monospace,Menlo,monospace";ctx.lineWidth=1;
+    for(const p of [0,50,100]){
+      const y=B-(p/100)*(B-T);
+      ctx.globalAlpha=0.45;ctx.beginPath();ctx.moveTo(L,y);ctx.lineTo(R2,y);ctx.stroke();ctx.globalAlpha=1;
+      ctx.textAlign="right";ctx.fillText(p+"%",L-6,y+3);
+    }
+    ctx.textAlign="left";
+    if(!progHist.length){
+      ctx.fillStyle=cssVar("--ink-soft");ctx.font="13px -apple-system,sans-serif";ctx.textAlign="center";
+      ctx.fillText("No exams sat yet — your scores will chart themselves here.",w/2,(T+B)/2);
+      ctx.textAlign="left";
+    }else{
+      const n=progHist.length;
+      const XP2=i=>n===1?(L+R2)/2:L+i/(n-1)*(R2-L);
+      const YP=pc=>B-(pc/100)*(B-T);
+      const upto=Math.max(1,Math.ceil(n*ease));
+      ctx.save();ctx.shadowColor=cssVar("--bunsen");ctx.shadowBlur=6;
+      ctx.strokeStyle=cssVar("--bunsen");ctx.lineWidth=2.2;ctx.beginPath();
+      progHist.slice(0,upto).forEach((hh,i)=>{
+        const x=XP2(i),y=YP(hh.got/hh.max*100);
+        i?ctx.lineTo(x,y):ctx.moveTo(x,y);
+      });
+      ctx.stroke();ctx.restore();
+      progHist.slice(0,upto).forEach((hh,i)=>{
+        const pc=Math.round(hh.got/hh.max*100), x=XP2(i),y=YP(pc);
+        const hov=i===progHoverE;
+        ctx.fillStyle=pc>=70?"#2f9e63":pc>=50?"#e0955a":"#d84a3c";
+        ctx.beginPath();ctx.arc(x,y,hov?6.5:4,0,7);ctx.fill();
+        if(hov){ctx.strokeStyle="#fff";ctx.lineWidth=1.5;ctx.stroke();}
+      });
+      if(progHoverE>=0&&progHist[progHoverE]){
+        const hh=progHist[progHoverE], pc=Math.round(hh.got/hh.max*100);
+        const txt=`${new Date(hh.ts).toLocaleDateString("en-GB")} · ${hh.type==="mcq"?"multiple choice":hh.type==="written"?"written":"practical"} · ${hh.got}/${hh.max} (${pc}%)`;
+        ctx.font="800 11px -apple-system,sans-serif";
+        const tw=ctx.measureText(txt).width+20;
+        const tx=Math.min(w-tw-6,Math.max(6,progMX-tw/2)), ty=Math.max(4,progMY-40);
+        ctx.fillStyle="rgba(25,32,44,.92)";frRoundRect(ctx,tx,ty,tw,26,8);ctx.fill();
+        ctx.fillStyle="#fff";ctx.textAlign="left";ctx.fillText(txt,tx+10,ty+17);
+      }
+    }
+  }
 }
 
 /* ---------- redraw plumbing ---------- */
