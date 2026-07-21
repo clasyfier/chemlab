@@ -2558,8 +2558,21 @@ function atRender(){
   ctx.clearRect(0,0,w,h);
   const cx=w/2,cy=h/2,maxR=Math.min(w,h)/2-14;
   const el=ELEMENTS[atomP-1];
-  if(el){ctx.font=`800 ${Math.round(maxR*0.9)}px -apple-system,sans-serif`;ctx.textAlign="center";ctx.textBaseline="middle";
-    ctx.globalAlpha=0.05;ctx.fillStyle=cssVar("--ink");ctx.fillText(el.sym,cx,cy);ctx.globalAlpha=1;ctx.textBaseline="alphabetic";}
+  if(el){
+    const room=w-(cx+maxR);
+    ctx.fillStyle=cssVar("--ink"); ctx.textBaseline="middle";
+    if(room>120){                                   // wide canvas: big symbol in the free right margin
+      ctx.textAlign="center"; ctx.globalAlpha=0.14;
+      ctx.font=`800 ${Math.round(Math.min(room*0.72,maxR*0.75))}px -apple-system,sans-serif`;
+      ctx.fillText(el.sym,cx+maxR+room/2,cy-12);
+      ctx.globalAlpha=0.5; ctx.font="700 13px -apple-system,sans-serif";
+      ctx.fillText(el.name.toLowerCase(),cx+maxR+room/2,cy+Math.min(room*0.4,maxR*0.4));
+    }else{                                          // narrow: small badge top-right
+      ctx.textAlign="right"; ctx.globalAlpha=0.4;
+      ctx.font="800 26px -apple-system,sans-serif"; ctx.fillText(el.sym,w-14,26);
+    }
+    ctx.globalAlpha=1; ctx.textBaseline="alphabetic"; ctx.textAlign="left";
+  }
   const f=4.2, proj=p=>{const s2=f/(f-p[2]/maxR);return [cx+p[0]*s2,cy-p[1]*s2,s2];};
   const nucR=Math.min(maxR*0.32, 7+5.2*Math.cbrt(atomP+atomN));
   const base=nucR+16, ns=atShells.length, gap=ns?(maxR-base)/ns:0;
@@ -2587,8 +2600,9 @@ function atRender(){
         const q=prev,pt=p3;
         items.push({z:(q[2]+pt[2])/2,draw(){
           const [x1,y1]=proj(q),[x2,y2]=proj(pt);
-          ctx.strokeStyle=LINE;ctx.globalAlpha=0.45+0.4*((q[2]+pt[2])/2/maxR+1)/2;
-          ctx.lineWidth=1.1;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.globalAlpha=1;
+          const depth=((q[2]+pt[2])/2/maxR+1)/2;
+          ctx.strokeStyle=cssVar("--ink-soft");ctx.globalAlpha=0.30+0.55*depth;
+          ctx.lineWidth=1.2+1.1*depth;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.globalAlpha=1;
         }});
       }
       prev=p3;
