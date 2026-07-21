@@ -239,6 +239,11 @@ section.view.on{display:block;animation:fadein .25s ease}
 .selchips svg.g{width:22px;height:22px;flex:0 0 22px;stroke:currentColor;fill:currentColor;color:var(--ink-soft)}
 .selchips button.on svg.g{color:var(--bunsen)}
 .selchips .sw{width:16px;height:16px;border-radius:50%;flex:0 0 16px;border:1px solid rgba(0,0,0,.15)}
+#sim-titr .controls{display:grid;grid-template-columns:repeat(2,minmax(220px,300px));gap:14px 30px;align-items:start}
+#sim-titr .selchips{display:grid;grid-template-columns:1fr 1fr;gap:6px;max-width:none}
+#sim-titr .selchips button{padding:6px 10px;white-space:nowrap}
+#sim-titr .ctrl input[type=range]{width:100%}
+@media (max-width:680px){#sim-titr .controls{grid-template-columns:1fr}}
 .toggle input[type=checkbox]{-webkit-appearance:none;appearance:none;width:38px;height:22px;border-radius:99px;background:var(--line);position:relative;cursor:pointer;margin:0;transition:background .2s;flex:0 0 38px}
 .toggle input[type=checkbox]:checked{background:var(--bunsen)}
 .toggle input[type=checkbox]::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:left .18s}
@@ -2258,11 +2263,11 @@ $("#sims").innerHTML=`
       <option value="1.74e-5" selected>Ethanoic · Ka 1.74×10⁻⁵</option>
       <option value="1.78e-4">Methanoic · Ka 1.78×10⁻⁴</option>
       <option value="6.3e-5">Benzoic · Ka 6.3×10⁻⁵</option></select></div>
-    <div class="ctrl"><label for="t-conc">Acid concentration</label><input type="range" id="t-conc" min="0.05" max="0.2" step="0.005" value="0.1"><span class="val" id="t-conc-v">0.100 mol dm⁻³</span></div>
     <div class="ctrl"><label for="t-ind">Indicator</label><select id="t-ind">
       <option value="phen" selected>Phenolphthalein (8.3–10.0)</option>
       <option value="mo">Methyl orange (3.1–4.4)</option>
       <option value="btb">Bromothymol blue (6.0–7.6)</option></select></div>
+    <div class="ctrl"><label for="t-conc">Acid concentration</label><input type="range" id="t-conc" min="0.05" max="0.2" step="0.005" value="0.1"><span class="val" id="t-conc-v">0.100 mol dm⁻³</span></div>
     <div class="ctrl"><label for="t-vol">Base added</label><input type="range" id="t-vol" min="0" max="50" step="0.1" value="0"><span class="val" id="t-vol-v">0.0 cm³</span></div>
   </div>
   <canvas class="plot" id="t-plot"></canvas>
