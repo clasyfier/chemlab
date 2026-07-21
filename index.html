@@ -2582,13 +2582,30 @@ function drawGas(dt=0){
     if(ax===1)return [rad*Math.cos(a),off,rad*Math.sin(a)];
     return [rad*Math.cos(a),rad*Math.sin(a),off];});
   if(gasShape==="sphere"){
-    loop3(ring(D.R,0)); loop3(ring(D.R,1)); loop3(ring(D.R,2));
-    loop3(ring(D.R*0.71,1,D.R*0.71)); loop3(ring(D.R*0.71,1,-D.R*0.71));
+    items.push({z:-1e9,draw(){                       // glass-ball body with highlight and rim shade
+      const [sx,sy]=proj([0,0,0]);
+      const g=ctx.createRadialGradient(sx-D.R*0.35,sy-D.R*0.42,D.R*0.08,sx,sy,D.R);
+      g.addColorStop(0,"rgba(255,255,255,.34)");g.addColorStop(0.6,"rgba(255,255,255,.05)");g.addColorStop(1,"rgba(70,95,130,.16)");
+      ctx.fillStyle=g;ctx.beginPath();ctx.arc(sx,sy,D.R,0,7);ctx.fill();
+      ctx.strokeStyle="rgba(70,95,130,.30)";ctx.lineWidth=1.4;
+      ctx.beginPath();ctx.arc(sx,sy,D.R,0,7);ctx.stroke();
+    }});
+    loop3(ring(D.R,1));                              // equator + latitude rings
+    for(const off of [0.35,-0.35,0.71,-0.71])loop3(ring(D.R*Math.sqrt(1-off*off),1,D.R*off));
+    loop3(ring(D.R,0)); loop3(ring(D.R,2));          // longitudes, incl. two tilted
+    loop3(ring(D.R,2).map(p=>m3v(rotY(0.785),p)));
+    loop3(ring(D.R,2).map(p=>m3v(rotY(-0.785),p)));
   }else if(gasShape==="cyl"){
     loop3(ring(D.r,0,D.hx)); loop3(ring(D.r,0,-D.hx));
-    for(const a of [0.79,2.36,3.93,5.50]){
+    loop3(ring(D.r,0,0)); loop3(ring(D.r,0,D.hx*0.5)); loop3(ring(D.r,0,-D.hx*0.5));
+    for(let k=0;k<8;k++){const a=0.39+k*0.785;
       seg(m3v(gasMat,[D.hx,D.r*Math.cos(a),D.r*Math.sin(a)]),m3v(gasMat,[-D.hx,D.r*Math.cos(a),D.r*Math.sin(a)]));
     }
+    const backCap=ring(D.r,0,-D.hx).map(p=>m3v(gasMat,p));
+    items.push({z:backCap.reduce((a,p)=>a+p[2],0)/backCap.length,draw(){   // glass base cap
+      ctx.beginPath();backCap.forEach((p,i)=>{const [x,y]=proj(p);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.closePath();
+      ctx.fillStyle="rgba(120,150,190,.10)";ctx.fill();
+    }});
   }else{
     const H=E, C=[];
     for(let i=0;i<8;i++)C.push([(i&1?1:-1)*H[0],(i&2?1:-1)*H[1],(i&4?1:-1)*H[2]]);
@@ -2722,7 +2739,7 @@ function gasDoorPagePos(){
 }
 function gasLoop(ts){
   requestAnimationFrame(gasLoop);
-  const dt=Math.min(0.05,(ts-gasLast)/1000||0.016); gasLast=ts;
+  let dt=(ts-gasLast)/1000; if(!(dt>0))dt=0; dt=Math.min(0.05,dt); gasLast=ts;
   if($("#v-lab").classList.contains("on")&&!document.hidden)drawGas(dt); else {gasGeom=null;gasRect=null;}
   if(!gasOut.length)return;
   const now=performance.now();
@@ -2741,7 +2758,7 @@ function gasLoop(ts){
     }else{
       /* free gas thermalises: relaxes toward room-temperature speed, with Brownian wander */
       const s0=Math.hypot(o.vx,o.vy)||1e-6, vRoom=38;
-      const s1=vRoom+(s0-vRoom)*Math.exp(-0.35*dt);
+      const s1=vRoom+(s0-vRoom)*Math.exp(-0.12*dt);
       const jr=(Math.random()-0.5)*1.5*dt;
       const nvx=o.vx/s0*s1, nvy=o.vy/s0*s1, ca=Math.cos(jr), sa=Math.sin(jr);
       o.vx=nvx*ca-nvy*sa; o.vy=nvx*sa+nvy*ca;
@@ -3768,7 +3785,7 @@ new MutationObserver(redrawAll).observe(document.documentElement,{attributes:tru
 renderDash();
 refreshMoods();
 redrawAll();
-if(!reduced){gasLoop();}
+
 </script>
 
 
