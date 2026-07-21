@@ -512,6 +512,45 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
 .acct-tabs button{border:1px solid var(--line);background:var(--panel2);border-radius:99px;padding:6px 16px;font-size:14px;color:var(--ink-soft)}
 .acct-tabs button.on{background:var(--bunsen-soft);border-color:var(--bunsen);color:var(--bunsen);font-weight:600}
 .premium-pill{display:inline-flex;align-items:center;gap:6px;background:color-mix(in srgb,var(--na) 16%,transparent);color:var(--na);border-radius:99px;padding:4px 12px;font-size:13px;font-weight:700}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.pcard{background:var(--panel);border:1.5px solid var(--line);border-radius:15px;padding:16px;cursor:pointer;box-shadow:var(--shadow);transition:transform .15s,border-color .15s;position:relative}
+.pcard:hover{transform:translateY(-3px);border-color:var(--k)}
+.pcard .picon{font-size:26px}
+.pcard .pnum{position:absolute;top:13px;right:14px;font-size:10.5px;font-weight:800;letter-spacing:.05em;color:var(--k);background:color-mix(in srgb,var(--k) 12%,transparent);padding:3px 9px;border-radius:99px}
+.pcard h3{font-size:15px;margin:7px 0 4px;line-height:1.3}
+.pcard .pmeta{font-size:11.5px;color:var(--ink-soft);display:flex;gap:10px;flex-wrap:wrap}
+.pcard .pips{letter-spacing:1px;color:var(--k)}
+.pcard .pbarr{height:6px;border-radius:99px;background:var(--panel2);margin-top:10px;overflow:hidden}
+.pcard .pbarr i{display:block;height:100%;border-radius:99px;background:var(--ok);transition:width .4s}
+.pcard .pgo{display:inline-block;margin-top:9px;font-size:12px;font-weight:800;color:var(--k)}
+.pcard.done .pgo{color:var(--ok)}
+.pcard.locked{opacity:.72}
+.pcard.locked h3,.pcard.locked .picon{opacity:.6}
+#labmode{position:fixed;inset:0;z-index:320;background:var(--ground);display:flex;flex-direction:column}
+#labmode[hidden]{display:none}
+.lab-top{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid var(--line);background:var(--panel)}
+.lab-top .num{border:1.5px solid var(--k);color:var(--k);font-weight:800;font-size:11px;border-radius:99px;padding:3px 10px;white-space:nowrap}
+.lab-top b{font-size:15px}
+.lab-prog{flex:1;height:7px;border-radius:99px;background:var(--panel2);overflow:hidden;min-width:60px}
+.lab-prog i{display:block;height:100%;background:var(--ok);border-radius:99px;transition:width .35s}
+#lm-x{background:none;border:0;font-size:26px;color:var(--ink-soft);cursor:pointer;line-height:1;padding:2px 8px}
+.lab-body{flex:1;overflow-y:auto}
+.lab-inner{max-width:700px;margin:0 auto;padding:30px 22px 40px}
+.lab-step-k{font-size:11.5px;font-weight:800;letter-spacing:.12em;color:var(--k);text-transform:uppercase}
+.lab-step-s{font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;font-size:clamp(22px,3.4vw,30px);line-height:1.25;margin:8px 0 14px}
+.lab-step-d{font-size:15.5px;line-height:1.65;color:var(--ink)}
+.lab-done-toggle{margin-top:20px;font-size:13px;color:var(--ink-soft)}
+.lab-nav{display:flex;align-items:center;gap:14px;padding:12px 18px;border-top:1px solid var(--line);background:var(--panel)}
+#lm-dots{flex:1;display:flex;justify-content:center;gap:6px;flex-wrap:wrap}
+#lm-dots button{width:11px;height:11px;border-radius:50%;border:1.5px solid var(--ink-soft);background:transparent;cursor:pointer;padding:0}
+#lm-dots button.done{background:var(--ok);border-color:var(--ok)}
+#lm-dots button.cur{border-color:var(--k);box-shadow:0 0 0 3px color-mix(in srgb,var(--k) 25%,transparent)}
+.lab-brief li{margin:5px 0;font-size:14.5px}
+.lab-details{border:1px solid var(--line);border-radius:11px;margin:8px 0;overflow:hidden}
+.lab-details summary{cursor:pointer;padding:11px 14px;font-weight:700;font-size:14px;list-style:none;display:flex;gap:8px;align-items:center}
+.lab-details summary::before{content:"▸";color:var(--k);transition:transform .15s}
+.lab-details[open] summary::before{transform:rotate(90deg)}
+.lab-details .dbody{padding:0 14px 12px;font-size:14px;line-height:1.6;color:var(--ink)}
 .prac.locked>button{cursor:pointer}
 .prac.locked h3{opacity:.6}
 .prac.locked .num{border-color:var(--ink-soft);color:var(--ink-soft);opacity:.6}
@@ -758,12 +797,25 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
 
 <section class="view" id="v-prac">
   <div class="eyebrow">Required practicals</div>
-  <h1>Master the hard experiments</h1>
-  <p class="lede">Deep walkthroughs of the most error-prone required practicals: full method, safety per CLEAPSS/RSC guidance, the mistakes examiners report every year, and the results you should expect.</p>
-  <div id="pracs"></div>
-  <h2 class="serif" style="margin:26px 0 10px;font-size:20px">The full AQA required practical list</h2>
-  <div class="card"><ol id="praclist" style="margin:6px 0;padding-left:22px;font-size:15px"></ol></div>
+  <h1>The required practicals</h1>
+  <p class="lede">All 12 AQA required practicals as guided <b>Lab Mode</b> walkthroughs — one clear step at a time, with the full detail on tap, CLEAPSS/RSC safety, the mistakes examiners report every year, and spot-the-mistake challenges at the end.</p>
+  <div class="pgrid" id="pracs"></div>
 </section>
+
+<div id="labmode" hidden>
+  <div class="lab-top">
+    <span class="num" id="lm-num"></span>
+    <b id="lm-title"></b>
+    <div class="lab-prog"><i id="lm-bar"></i></div>
+    <button id="lm-x" aria-label="Close lab mode">×</button>
+  </div>
+  <div class="lab-body"><div class="lab-inner" id="lm-body"></div></div>
+  <div class="lab-nav">
+    <button class="btn ghost" id="lm-back">◀ Back</button>
+    <div id="lm-dots"></div>
+    <button class="btn" id="lm-next">Next ▶</button>
+  </div>
+</div>
 
 <section class="view" id="v-quiz">
   <div class="eyebrow">Quick-fire</div>
@@ -1317,28 +1369,15 @@ const TOPICS=[
 <li><b>GC–MS:</b> chromatography separates the mixture, the spectrometer identifies each peak — the forensic and anti-doping workhorse.</li></ul>`}];
 
 /* ---------- required practicals ---------- */
-const PRACLIST=[
-"Make up a volumetric solution and carry out a simple acid–base titration",
-"Measurement of an enthalpy change",
-"Investigation of how the rate of a reaction changes with temperature",
-"Carry out simple test-tube reactions to identify: cations — Group 2, NH₄⁺; anions — Group 7 (halide ions), OH⁻, CO₃²⁻, SO₄²⁻",
-"Distillation of a product from a reaction",
-"Tests for alcohol, aldehyde, alkene and carboxylic acid",
-"Measuring the rate of reaction: by an initial rate method; by a continuous monitoring method",
-"Measuring the EMF of an electrochemical cell",
-"Investigate how pH changes when a weak acid reacts with a strong base and when a strong acid reacts with a weak base",
-"Preparation of: a pure organic solid and test of its purity; a pure organic liquid",
-"Carry out simple test-tube reactions to identify transition metal ions in aqueous solution",
-"Separation of species by thin-layer chromatography"];
-
 const PRACS=[
-{n:"RP 1",t:"Volumetric solution & acid–base titration",
+{n:"RP 1",t:"Volumetric solution & acid–base titration",icon:"🧪",time:"~50 min",diff:2,
 haz:[["warn","Dilute acids/alkalis — irritant"],["warn","Wear eye protection throughout"]],
-steps:["Make the standard solution: weigh the solid by difference on a 2 d.p. balance, dissolve fully in a beaker with distilled water, transfer with rinsings to a 250 cm³ volumetric flask, fill to the mark so the bottom of the meniscus sits on the line at eye level, stopper and invert ~10 times.",
-"Rinse the burette with the solution it will hold (not just water), then fill and remove the air bubble from the jet below the tap.",
-"Pipette 25.0 cm³ of the other solution into a conical flask using a pipette filler; add 2–3 drops of indicator only.",
-"Do a rough titration, then accurate runs: add dropwise near the endpoint with swirling, rinsing the flask walls with distilled water.",
-"Repeat until you have two concordant titres within 0.10 cm³; use their mean in the calculation."],
+steps:[
+{s:"Make the standard solution",d:"Weigh the solid by difference on a 2 d.p. balance, dissolve fully in a beaker with distilled water, transfer with rinsings to a 250 cm³ volumetric flask, fill to the mark so the bottom of the meniscus sits on the line at eye level, stopper and invert ~10 times."},
+{s:"Rinse and fill the burette properly",d:"Rinse the burette with the solution it will hold (not just water), then fill and remove the air bubble from the jet below the tap."},
+{s:"Pipette 25.0 cm³ — and only 2–3 drops of indicator",d:"Pipette 25.0 cm³ of the other solution into a conical flask using a pipette filler; add 2–3 drops of indicator only."},
+{s:"Rough run, then accurate dropwise runs",d:"Do a rough titration, then accurate runs: add dropwise near the endpoint with swirling, rinsing the flask walls with distilled water."},
+{s:"Stop at two concordant titres",d:"Repeat until you have two concordant titres within 0.10 cm³; use their mean in the calculation."}],
 errors:[["Rinsing the burette with water only","Water left on the walls dilutes your solution and shifts every titre. Rinse burette with the titrant and the pipette with what it will measure (AQA handbook)."],
 ["Leaving the funnel in the burette","Drips from the funnel change the reading mid-run. Remove it after filling (RSC titration guidance)."],
 ["Blowing out the pipette tip","The pipette is calibrated to retain the liquid left in the tip — drain under gravity only."],
@@ -1348,13 +1387,15 @@ errors:[["Rinsing the burette with water only","Water left on the walls dilutes 
 ["Averaging non-concordant titres","Only titres within 0.10 cm³ of each other go into the mean; discard the rough."],
 ["Air bubble in the burette jet","It escapes mid-run and inflates the apparent titre. Open the tap fully to flush it before starting."]],
 exp:"With both solutions near 0.100 mol dm⁻³ and 1:1 stoichiometry, expect a titre around 25 cm³. Uncertainty per burette reading ±0.05 cm³ (±0.10 cm³ per titre), so % uncertainty ≈ (0.10 ÷ 25.0) × 100 ≈ 0.4% — one reason a titre below ~10 cm³ is poor design. Safety note (CLEAPSS SSS 31): dilute NaOH is still an irritant, and alkali in the eye is more damaging than acid of the same concentration — eye protection throughout."},
-{n:"RP 2",t:"Measuring an enthalpy change",
+
+{n:"RP 2",t:"Measuring an enthalpy change",icon:"🌡️",time:"~45 min",diff:2,
 haz:[["warn","CuSO₄ solution — harmful to aquatic life; avoid skin contact"],["warn","Fuels/spirit burners — flammable"]],
-steps:["AQA's exemplar finds ΔH for CuSO₄(s) + 5H₂O(l) → CuSO₄·5H₂O(s) — impossible to measure directly, so you measure two dissolving enthalpies and apply Hess's law.",
-"Experiment 1: weigh 3.90–4.10 g anhydrous CuSO₄ by difference. Put 25 cm³ deionised water in a polystyrene cup (inside a beaker for stability). Record the temperature every minute for 3 minutes, stirring; add the solid at minute 4 (do not record at minute 4); keep recording every minute from 5 to 15.",
-"Experiment 2: repeat with 6.20–6.30 g of hydrated CuSO₄·5H₂O in 24 cm³ of water — the reduced volume compensates for the water of crystallisation.",
-"Plot temperature against time for each run. Draw two straight best-fit lines (before and after addition) and extrapolate both to minute 4: ΔT is the vertical gap between them at the moment of mixing — this corrects for heat exchanged during the reaction.",
-"Calculate q = m c ΔT with m = 25 g (the water only — AQA's handbook: 'do not add on the mass of the solid'), c = 4.18 J g⁻¹ K⁻¹. Then ΔH = −q ÷ n for each experiment, and ΔH₃ = ΔH₁ − ΔH₂."],
+steps:[
+{s:"Two experiments + Hess's law",d:"AQA's exemplar finds ΔH for CuSO₄(s) + 5H₂O(l) → CuSO₄·5H₂O(s) — impossible to measure directly, so you measure two dissolving enthalpies and apply Hess's law."},
+{s:"Experiment 1: the anhydrous salt",d:"Weigh 3.90–4.10 g anhydrous CuSO₄ by difference. Put 25 cm³ deionised water in a polystyrene cup (inside a beaker for stability). Record the temperature every minute for 3 minutes, stirring; add the solid at minute 4 (do not record at minute 4); keep recording every minute from 5 to 15."},
+{s:"Experiment 2: the hydrate",d:"Repeat with 6.20–6.30 g of hydrated CuSO₄·5H₂O in 24 cm³ of water — the reduced volume compensates for the water of crystallisation."},
+{s:"Extrapolate to the moment of mixing",d:"Plot temperature against time for each run. Draw two straight best-fit lines (before and after addition) and extrapolate both to minute 4: ΔT is the vertical gap between them at the moment of mixing — this corrects for heat exchanged during the reaction."},
+{s:"q = mcΔT, then Hess",d:"Calculate q = m c ΔT with m = 25 g (the water only — AQA's handbook: 'do not add on the mass of the solid'), c = 4.18 J g⁻¹ K⁻¹. Then ΔH = −q ÷ n for each experiment, and ΔH₃ = ΔH₁ − ΔH₂."}],
 errors:[["Quoting the temperature at minute 4 instead of ΔT","ΔT is the gap between the two extrapolated lines at the time of mixing — not any single reading."],
 ["Not extrapolating, or drawing S-shaped 'curves of best fit'","AQA's 2018 examiner report: two straight best-fit lines, both extrapolated to the minute of addition."],
 ["Not doubling the thermometer uncertainty","ΔT comes from two readings, so the uncertainty doubles. Only 19.3% of students got this right in 2018."],
@@ -1362,29 +1403,47 @@ errors:[["Quoting the temperature at minute 4 instead of ΔT","ΔT is the gap be
 ["Poor graph scales","Points should span more than half of each axis with room left for the extrapolation; scales don't have to start at zero."],
 ["Trying to cut % uncertainty with smaller volumes","Same ΔT, same uncertainty. The valid improvement is a larger ΔT — e.g. more concentrated reagents."]],
 exp:"Dissolving the anhydrous salt is exothermic (ΔH₁ < 0); dissolving the hydrate is endothermic (ΔH₂ > 0). A typical classroom ΔH₃ lands around −65 to −80 kJ mol⁻¹ (indicative ballpark — school values always undershoot data-book figures because of heat loss and the assumption that the solution's specific heat capacity equals water's). Safety: copper(II) sulfate is a skin/eye irritant (CLEAPSS SSS 40) — avoid contact, especially with the anhydrous powder."},
-{n:"RP 3 / 7",t:"Rates: thiosulfate cross & iodine clock",
+
+{n:"RP 3",t:"Rate vs temperature: the disappearing cross",icon:"⏱️",time:"~40 min",diff:2,
 haz:[["danger","SO₂ evolved from thiosulfate + acid — toxic; ventilate, dispose promptly"],["warn","Dilute acids — irritant"]],
-steps:["Disappearing cross (AQA reduced-scale exemplar): Na₂S₂O₃ + 2HCl → 2NaCl + SO₂ + S. Put 10.0 cm³ of 0.05 mol dm⁻³ sodium thiosulfate in a tube over a marked cross; have ~10 cm³ of 1.0 mol dm⁻³ HCl ready in a second tube.",
-"Record the start temperature, add 1 cm³ of the acid, start timing, and stop when the cross viewed from above is no longer visible. Record the final temperature and use the mean T for that run.",
-"Empty the cloudy mixture straight into an alkaline stop-bath (sodium carbonate solution with phenolphthalein — replace it when the colour fades) rather than leaving it to stand.",
-"Repeat at ≥5 temperatures — room T, ~25, ~35, ~45, ~55 °C — warming the tubes in a water bath before mixing. AQA's limit: never above 55 °C (CLEAPSS advises staying below ~50 °C, because hot acidified thiosulfate gives off more SO₂).",
-"Iodine clock (initial rates, RP7): mix H₂O₂/KI/starch with a fixed small amount of thiosulfate; time to the sudden blue-black colour. Vary one concentration, topping up with water so total volume is constant. Initial rate ∝ 1/t.",
-"Plot rate = 1/t against mean temperature; for the Arrhenius extension plot ln(1/t) against 1/T — the gradient is −Ea/R."],
+steps:[
+{s:"Set up the cross tubes",d:"Disappearing cross (AQA reduced-scale exemplar): Na₂S₂O₃ + 2HCl → 2NaCl + SO₂ + S. Put 10.0 cm³ of 0.05 mol dm⁻³ sodium thiosulfate in a tube over a marked cross; have ~10 cm³ of 1.0 mol dm⁻³ HCl ready in a second tube."},
+{s:"Mix, time, and record both temperatures",d:"Record the start temperature, add 1 cm³ of the acid, start timing, and stop when the cross viewed from above is no longer visible. Record the final temperature and use the mean T for that run."},
+{s:"Straight into the stop-bath",d:"Empty the cloudy mixture straight into an alkaline stop-bath (sodium carbonate solution with phenolphthalein — replace it when the colour fades) rather than leaving it to stand."},
+{s:"Five temperatures — never above 55 °C",d:"Repeat at ≥5 temperatures — room T, ~25, ~35, ~45, ~55 °C — warming the tubes in a water bath before mixing. AQA's limit: never above 55 °C (CLEAPSS advises staying below ~50 °C, because hot acidified thiosulfate gives off more SO₂)."},
+{s:"Plot rate = 1/t, then Arrhenius",d:"Plot rate = 1/t against mean temperature; for the Arrhenius extension plot ln(1/t) against 1/T — the gradient is −Ea/R."}],
 errors:[["Plotting time against temperature and never mentioning rate","AQA's 2019 examiner report calls this the most common reason for losing marks. Convert to rate = 1/t before plotting."],
 ["Assuming water-bath T equals mixture T","Record the mixture's own temperature at the start and end; use the mean."],
 ["Judging the endpoint inconsistently","The same person should watch the cross each time, from the same position — the dominant random error."],
 ["Changing two variables at once","Only temperature may vary: keep every concentration and volume identical between runs."],
-["Forcing a straight line through curved concentration–time data","For an initial rate, draw a tangent at t = 0 — don't fit a straight line to a curve."],
 ["Leaving mixtures to stand","Acidified thiosulfate keeps releasing toxic SO₂. Straight into the carbonate stop-bath (CLEAPSS PP141)."]],
 exp:"Time falls sharply as temperature rises — rate roughly doubles per ~10 K (AQA spec 3.1.5.3). The ln(1/t) vs 1/T plot should be a straight line; a typical classroom Ea is ~45–50 kJ mol⁻¹ (indicative ballpark). Safety: SO₂ is toxic and asthmatics must be closely monitored — well-ventilated room, reduced-scale quantities (CLEAPSS SSS 35 / PP141)."},
-{n:"RP 5",t:"Distillation: preparing an organic liquid",
+
+{n:"RP 4",t:"Test-tube identification of cations & anions",icon:"🔍",time:"~40 min",diff:1,
+haz:[["warn","Dilute acids and silver nitrate — irritant; AgNO₃ stains skin"],["warn","Barium chloride — toxic if ingested"]],
+steps:[
+{s:"Group 2 cations: NaOH, then H₂SO₄",d:"Add NaOH(aq) dropwise then in excess: Mg²⁺ gives a white precipitate insoluble in excess; Ca²⁺ a slight white precipitate; Ba²⁺ stays clear. Then with dilute H₂SO₄: Ba²⁺ gives a dense white precipitate of BaSO₄, Ca²⁺ a slight one, Mg²⁺ none — the two solubility trends run in opposite directions down the group."},
+{s:"Ammonium: warm with NaOH",d:"Warm the unknown gently with NaOH(aq) and hold damp red litmus at the mouth of the tube. Ammonia turns it blue — the only common gas that does. Warm, don't boil, or splashes of alkali reach the litmus and lie to you."},
+{s:"Carbonate: acid, then limewater",d:"Add dilute HCl — effervescence suggests CO₃²⁻. Bubble the gas through limewater: turning milky (a cloudy white precipitate of CaCO₃) confirms CO₂."},
+{s:"Sulfate: acidified barium chloride",d:"Acidify with dilute HCl first (to destroy any carbonate, which would also give a white precipitate), then add BaCl₂(aq): a white precipitate of BaSO₄ confirms sulfate."},
+{s:"Halides: acidified silver nitrate",d:"Acidify with dilute HNO₃ — never HCl, or you add the very ion you're testing for — then add AgNO₃(aq): white precipitate = chloride, cream = bromide, yellow = iodide."},
+{s:"Resolve the colours with ammonia",d:"AgCl dissolves in dilute NH₃; AgBr only in concentrated NH₃; AgI in neither — the three-rung ladder that separates ambiguous precipitate colours."},
+{s:"Hydroxide, and how to record everything",d:"OH⁻(aq) turns red litmus blue (pH 13–14 on pH paper). In every observation give colour AND state: 'white precipitate', 'effervescence', 'no visible change'."}],
+errors:[["Using HCl to acidify before silver nitrate","You just added chloride ions — a white precipitate is now guaranteed and meaningless. Acidify with dilute nitric acid."],
+["Skipping the acid before barium chloride","Carbonates also give white precipitates with Ba²⁺. Acidifying first removes them, making the test specific to sulfate."],
+["'It fizzed' with no gas test","Name the gas and its test: effervescence, gas turns limewater milky → CO₂ → carbonate."],
+["Testing in the wrong order","Carbonate before sulfate before halide — earlier ions interfere with the later tests (AQA handbook sequence)."]],
+exp:"A complete grid: Mg²⁺ white ppt with NaOH insoluble in excess, no sulfate ppt; Ba²⁺ no NaOH ppt but dense white BaSO₄; NH₄⁺ releases ammonia on warming with alkali; halides white/cream/yellow with AgNO₃, resolved by dilute vs concentrated ammonia."},
+
+{n:"RP 5",t:"Distillation: preparing an organic liquid",icon:"⚗️",time:"~60 min",diff:3,
 haz:[["danger","Concentrated phosphoric(V) acid — corrosive; gloves and goggles"],["danger","Cyclohexene and other organic vapours — highly flammable; fume cupboard, no naked flames"],["warn","Anti-bumping granules required"]],
-steps:["AQA's exemplar: dehydrate cyclohexanol to cyclohexene. Put ~20 cm³ cyclohexanol into a weighed 50 cm³ pear-shaped flask and re-weigh (mass by difference). Add ~8 cm³ concentrated phosphoric(V) acid dropwise with frequent shaking.",
-"Add anti-bumping granules and assemble the distillation apparatus: still head with the thermometer bulb level with the side-arm opening, water condenser sloping down to a cooled receiver. Water enters the condenser at the bottom and leaves at the top. Heat gently and collect the distillate boiling below 100 °C.",
-"Transfer the distillate to a separating funnel with ~50 cm³ saturated sodium chloride solution. Invert gently several times, opening the tap to release pressure. Let the layers settle and run off the lower aqueous layer — cyclohexene is less dense, so it floats.",
-"Dry the organic layer over anhydrous CaCl₂, MgSO₄ or Na₂SO₄ until it runs clear, then decant into a weighed container. Weigh and calculate % yield. Redistil if a purer sample is needed.",
-"Confirm the alkene: a ~1 cm³ portion decolourises bromine water (or turns acidified KMnO₄ from purple to colourless/brown MnO₂).",
-"Related spec point: when making an aldehyde from a primary alcohol (RP10 territory), distil it off as it forms — its boiling point is lower than the alcohol's, so it escapes before being oxidised on to the carboxylic acid. If the acid is what you want, reflux first (vertical condenser, never sealed), then distil."],
+steps:[
+{s:"Load the flask (mass by difference)",d:"AQA's exemplar: dehydrate cyclohexanol to cyclohexene. Put ~20 cm³ cyclohexanol into a weighed 50 cm³ pear-shaped flask and re-weigh (mass by difference). Add ~8 cm³ concentrated phosphoric(V) acid dropwise with frequent shaking."},
+{s:"Distil below 100 °C",d:"Add anti-bumping granules and assemble the distillation apparatus: still head with the thermometer bulb level with the side-arm opening, water condenser sloping down to a cooled receiver. Water enters the condenser at the bottom and leaves at the top. Heat gently and collect the distillate boiling below 100 °C."},
+{s:"Separate in the funnel",d:"Transfer the distillate to a separating funnel with ~50 cm³ saturated sodium chloride solution. Invert gently several times, opening the tap to release pressure. Let the layers settle and run off the lower aqueous layer — cyclohexene is less dense, so it floats."},
+{s:"Dry, weigh, % yield",d:"Dry the organic layer over anhydrous CaCl₂, MgSO₄ or Na₂SO₄ until it runs clear, then decant into a weighed container. Weigh and calculate % yield. Redistil if a purer sample is needed."},
+{s:"Confirm the alkene",d:"A ~1 cm³ portion decolourises bromine water (or turns acidified KMnO₄ from purple to colourless/brown MnO₂)."},
+{s:"Aldehyde vs acid: distil or reflux",d:"Related spec point: when making an aldehyde from a primary alcohol (RP10 territory), distil it off as it forms — its boiling point is lower than the alcohol's, so it escapes before being oxidised on to the carboxylic acid. If the acid is what you want, reflux first (vertical condenser, never sealed), then distil."}],
 errors:[["Thermometer bulb in the liquid","It must sit level with the side-arm junction to read the vapour temperature of what is actually distilling over."],
 ["Sealed apparatus","Pressure builds and glassware can shatter. The system must always be open to the air at one point."],
 ["Water connected top-in","Counter-current cooling needs water in at the bottom; top-in leaves the condenser part-empty."],
@@ -1392,21 +1451,110 @@ errors:[["Thermometer bulb in the liquid","It must sit level with the side-arm j
 ["Wrong layer discarded","Check densities first (cyclohexene floats on water); if unsure, add a little water and watch which layer grows."],
 ["No anti-bumping granules","Large bubbles form suddenly and can throw liquid into the condenser."]],
 exp:"Cyclohexene boils at 82.9 °C (NIST WebBook) vs cyclohexanol at ~161 °C, so the <100 °C fraction is clean to collect. The dried product is clear, not cloudy, and decolourises bromine water. A typical student yield is 50–70% (indicative). RSC's alternative liquid prep: 2-methylpropan-2-ol + concentrated HCl → 2-chloro-2-methylpropane, washed with NaHCO₃ solution, dried over Na₂SO₄, redistilled."},
-{n:"RP 6",t:"Test-tube identification of organic groups",
+
+{n:"RP 6",t:"Test-tube identification of organic groups",icon:"🧫",time:"~45 min",diff:2,
 haz:[["danger","Tollens' reagent — never store; explosive silver fulminate forms on standing. Make fresh, rinse away immediately"],["danger","Bromine water — toxic/corrosive; use dilute, in a fume cupboard if available"],["warn","2,4-DNPH — flammable when dry; use as supplied solution"]],
-steps:["Alkene: shake a few drops of sample vigorously with ~1 cm³ bromine water. Orange → colourless = C=C present.",
-"Carbonyl: add 3–4 drops of sample to 3–4 drops of 2,4-DNPH (Brady's reagent) at room temperature. Orange/yellow precipitate = aldehyde or ketone.",
-"Aldehyde vs ketone: make Tollens' fresh (AgNO₃ + 1 drop NaOH, then just enough dilute NH₃ to redissolve the brown precipitate). Warm at 60–70 °C in a water bath — silver mirror (or grey/black deposit) = aldehyde. Alternatively Fehling's: mix equal volumes of A and B (clear deep blue), warm with the sample — brick-red precipitate of Cu₂O = aldehyde.",
-"Alcohol: AQA's exemplar adds a rice-grain piece of sodium to ~1 cm³ of the dry liquid — effervescence (H₂) indicates the –OH group; destroy leftover sodium in ethanol. For 1° vs 2° vs 3°: warm with acidified potassium dichromate(VI) — orange → green means oxidisable (1°/2° alcohol or aldehyde); tertiary alcohols stay orange.",
-"Carboxylic acid: add solid NaHCO₃ or sodium carbonate solution — effervescence; the gas turns limewater milky.",
-"Haloalkane (bonus spec test): warm with NaOH(aq) at ~60 °C, acidify with dilute nitric acid, then add silver nitrate solution — white ppt = chloro, cream = bromo, yellow = iodo."],
+steps:[
+{s:"Alkene: bromine water",d:"Shake a few drops of sample vigorously with ~1 cm³ bromine water. Orange → colourless = C=C present."},
+{s:"Carbonyl: 2,4-DNPH",d:"Add 3–4 drops of sample to 3–4 drops of 2,4-DNPH (Brady's reagent) at room temperature. Orange/yellow precipitate = aldehyde or ketone."},
+{s:"Aldehyde vs ketone: Tollens' or Fehling's",d:"Make Tollens' fresh (AgNO₃ + 1 drop NaOH, then just enough dilute NH₃ to redissolve the brown precipitate). Warm at 60–70 °C in a water bath — silver mirror (or grey/black deposit) = aldehyde. Alternatively Fehling's: mix equal volumes of A and B (clear deep blue), warm with the sample — brick-red precipitate of Cu₂O = aldehyde."},
+{s:"Alcohol: sodium, then dichromate",d:"AQA's exemplar adds a rice-grain piece of sodium to ~1 cm³ of the dry liquid — effervescence (H₂) indicates the –OH group; destroy leftover sodium in ethanol. For 1° vs 2° vs 3°: warm with acidified potassium dichromate(VI) — orange → green means oxidisable (1°/2° alcohol or aldehyde); tertiary alcohols stay orange."},
+{s:"Carboxylic acid: NaHCO₃",d:"Add solid NaHCO₃ or sodium carbonate solution — effervescence; the gas turns limewater milky."},
+{s:"Haloalkane: the AgNO₃ ladder",d:"Warm with NaOH(aq) at ~60 °C, acidify with dilute nitric acid, then add silver nitrate solution — white ppt = chloro, cream = bromo, yellow = iodo."}],
 errors:[["Warming Tollens' over a flame or storing it","Water bath only, and rinse residues away at once — dried silver residues are explosive."],
 ["Calling a ketone negative 'no reaction observed'","State the observation: 'orange precipitate with 2,4-DNPH, no silver mirror with Tollens' → ketone'. Examiners want observations, not conclusions alone."],
 ["Using cold Fehling's/dichromate","Both need a warm water bath; no change just means you didn't heat it."],
 ["Skipping the nitric acid before silver nitrate","Carbonate and hydroxide ions left in the mixture give false precipitates with AgNO₃ — acidify with dilute HNO₃ first."],
 ["Testing in a random order","Molecules can carry more than one functional group. Plan a systematic elimination sequence, least hazardous test first (RSC guidance)."],
 ["Cross-contaminated droppers","One clean pipette per reagent, or every tube goes orange."]],
-exp:"Full result table: alkene decolourises Br₂ water; aldehyde: DNPH ppt + silver mirror + Fehling's brick-red + dichromate green; ketone: DNPH ppt only; 1°/2° alcohol: fizzes with Na, dichromate green; 3° alcohol: fizzes with Na, dichromate stays orange; carboxylic acid: fizzes with NaHCO₃. Bonus: the iodoform test (I₂/KI + NaOH, warm gently) gives a yellow CHI₃ precipitate for CH₃C=O compounds and CH₃CH(OH)– alcohols — it distinguishes ethanol (positive) from methanol (negative). Disposal: Tollens' mixtures go down the foul-water drain immediately after use (RSC) — stored residues form explosive silver compounds."}];
+exp:"Full result table: alkene decolourises Br₂ water; aldehyde: DNPH ppt + silver mirror + Fehling's brick-red + dichromate green; ketone: DNPH ppt only; 1°/2° alcohol: fizzes with Na, dichromate green; 3° alcohol: fizzes with Na, dichromate stays orange; carboxylic acid: fizzes with NaHCO₃. Bonus: the iodoform test (I₂/KI + NaOH, warm gently) gives a yellow CHI₃ precipitate for CH₃C=O compounds and CH₃CH(OH)– alcohols — it distinguishes ethanol (positive) from methanol (negative). Disposal: Tollens' mixtures go down the foul-water drain immediately after use (RSC) — stored residues form explosive silver compounds."},
+
+{n:"RP 7",t:"Rates: initial rate & continuous monitoring",icon:"⏲️",time:"~50 min",diff:3,
+haz:[["warn","Hydrogen peroxide — irritant; keep off skin and eyes"],["warn","Dilute acids — irritant"]],
+steps:[
+{s:"Plan the iodine-clock mixtures",d:"H₂O₂ + 2I⁻ + 2H⁺ → I₂ + 2H₂O. Mix KI, starch, a fixed small amount of sodium thiosulfate and the acid in one flask; start the clock as you add the H₂O₂. The thiosulfate silently consumes the first portion of iodine — the instant it runs out, free I₂ hits the starch and the mixture snaps blue-black."},
+{s:"Vary one concentration only",d:"Change the concentration of a single reagent between runs, topping up with water so the total volume (and therefore every other concentration) stays constant. Time to the colour flip: initial rate ∝ 1/t, because the same fixed amount of iodine is made in every run."},
+{s:"Find the orders",d:"Plot log(1/t) against log(concentration): the gradient is the order with respect to that reagent (0, 1 or 2). Repeat for each reagent in turn to assemble the full rate equation."},
+{s:"Continuous monitoring: gas collection",d:"For a gas-producing reaction (e.g. Mg + HCl), collect the gas in a gas syringe and record the volume every 10 s. Plot volume against time: the curve is steepest at the start and flattens as the limiting reagent runs out."},
+{s:"Tangents, not chords",d:"Rate at any moment = gradient of the tangent to the curve at that instant. Initial rate = the tangent at t = 0. Draw it with a ruler touching the curve at one point only, and quote the coordinates you used for the gradient."}],
+errors:[["Forcing a straight line through curved concentration–time data","For an initial rate, draw a tangent at t = 0 — don't fit a straight line to a curve."],
+["Timing from the wrong moment","Start the clock at the instant the final reagent is added — and the same person should call it for every run."],
+["Changing the total volume between runs","If the total volume drifts, every concentration changes at once. Top up with water to a constant total."],
+["Calling 1/t the rate constant","1/t is proportional to the initial rate; it is not k. Orders come from how 1/t responds when one concentration changes."]],
+exp:"The classic H₂O₂/I⁻/H⁺ clock comes out first order in both H₂O₂ and I⁻ (indicative): log–log plots with gradients ≈ 1. Gas-collection curves flatten as the limiting reagent is consumed; doubling the metal's surface area steepens the initial tangent but leaves the final volume unchanged."},
+
+{n:"RP 8",t:"Measuring the EMF of an electrochemical cell",icon:"🔋",time:"~40 min",diff:2,
+haz:[["warn","Copper and zinc salt solutions — harmful to aquatic life; never down the sink"],["warn","Propanone for degreasing electrodes — flammable"]],
+steps:[
+{s:"Build the two half-cells",d:"Clean strips of zinc and copper with emery paper (then a propanone rinse) so the surface is fresh metal. Stand each metal in a beaker of a 1.00 mol dm⁻³ solution of its own ions: Zn in ZnSO₄(aq), Cu in CuSO₄(aq)."},
+{s:"Bridge them with a salt bridge",d:"Soak a strip of filter paper in saturated potassium nitrate solution and drape it between the beakers. It completes the circuit by letting ions migrate — the electrons take the wire. KNO₃ is the safe choice because every common nitrate is soluble; KCl would precipitate AgCl in a silver half-cell."},
+{s:"Measure with a high-resistance voltmeter",d:"Connect the electrodes to a high-resistance voltmeter: it draws essentially no current, so you read the true EMF at zero current. Record the value and note which electrode is positive."},
+{s:"Compare with the data book",d:"E°cell = E°(positive electrode) − E°(negative electrode). For Zn/Cu the standard value is +1.10 V at 298 K, 1.00 mol dm⁻³, 100 kPa — quote the conditions whenever you quote the number."},
+{s:"Change a concentration",d:"Dilute the Cu²⁺ solution tenfold and re-measure: the Cu²⁺ + 2e⁻ ⇌ Cu equilibrium shifts left, the copper electrode potential falls, and the cell EMF drops — le Chatelier applied to electrochemistry."}],
+errors:[["Reading with current flowing","Any current loses voltage across the cell's internal resistance, so the reading sits below the true EMF. High-resistance voltmeter; no bulbs, no ammeters."],
+["Dirty electrodes","Oxide films add contact resistance and drifting readings — emery-paper the metal just before use."],
+["A chloride salt bridge with silver half-cells","Chloride precipitates AgCl on the electrode and wrecks the half-cell. Potassium nitrate always works."],
+["No conditions quoted","E° means 298 K and 1.00 mol dm⁻³. A comparison with the data book without conditions is incomplete."]],
+exp:"Zn/Cu gives ≈ +1.10 V with copper positive; classroom values fall a little short through non-standard concentrations and junction potentials. Tenfold dilution of the Cu²⁺ drops the EMF by roughly 30 mV (indicative) — the direction, not the size, is what the spec asks you to predict."},
+
+{n:"RP 9",t:"pH curves with a calibrated probe",icon:"📈",time:"~45 min",diff:2,
+haz:[["warn","Dilute acid and alkali — irritant"],["warn","Calibration buffers — avoid skin contact"]],
+steps:[
+{s:"Calibrate the pH probe",d:"Rinse the probe with distilled water and calibrate in standard buffers (pH 4, 7 and 10), rinsing between each. An uncalibrated probe reads every point wrong by the same offset — a textbook systematic error."},
+{s:"Set up the titration",d:"Pipette 25.0 cm³ of the weak acid (e.g. ethanoic) into a beaker on a magnetic stirrer, probe held clear of the stir bar; fill the burette with the strong base."},
+{s:"Add base in planned increments",d:"Add in 1–2 cm³ steps, stirring, recording the settled pH each time — then switch to 0.2 cm³ dropwise steps within ~2 cm³ of the expected equivalence, so the vertical jump is actually captured."},
+{s:"Plot the curve",d:"Plot pH against volume added. Label the buffer region, the vertical section, and the equivalence volume (the mid-point of the vertical section)."},
+{s:"Read pKa at half-equivalence",d:"At half the equivalence volume, [HA] = [A⁻], so pH = pKa. Read it straight off the curve — a routine two-mark question."},
+{s:"Swap: strong acid into weak base",d:"Repeat with the strong acid in the burette and the weak base in the beaker: the curve mirrors — it starts high, the vertical section spans roughly pH 7 down to 3, and equivalence sits below 7."}],
+errors:[["Equal-sized additions all the way","Big increments near equivalence step clean over the vertical section — the exact region this practical exists to capture."],
+["Not stirring, or burying the probe","Unmixed local pH makes the reading swing; keep the bulb immersed but clear of the stirrer bar."],
+["Skipping calibration","Every reading inherits the probe's offset. Calibrate with at least two buffers, ideally three."],
+["Calling every equivalence pH 7","Weak acid + strong base equivalence is above 7 (the salt's anion is basic); strong acid + weak base is below 7. Only strong–strong passes through 7."]],
+exp:"Ethanoic acid vs NaOH (both 0.1 mol dm⁻³): starts ~pH 2.9, buffer region, sharp jump ~pH 7–11, equivalence ≈ 8.7; pH at half-equivalence ≈ 4.76 = pKa (indicative values — compare with your own curve from the titration simulation)."},
+
+{n:"RP 10",t:"Pure organic solid: preparation & purity",icon:"❄️",time:"~70 min",diff:3,
+haz:[["danger","Ethanoic anhydride — corrosive lachrymator; fume cupboard"],["warn","Hot recrystallisation solvents — no naked flames"],["warn","Reduced-pressure glassware — inspect for cracks first"]],
+steps:[
+{s:"Make the crude solid",d:"AQA's exemplar: aspirin. Warm salicylic acid (2-hydroxybenzoic acid) with ethanoic anhydride and a few drops of concentrated phosphoric acid catalyst in a ~60 °C water bath for 15 minutes, then pour into cold water to destroy the excess anhydride and crash out the crude product."},
+{s:"Filter under reduced pressure",d:"Collect the crystals on a Büchner funnel with the pump running: seat the damp filter paper, pour, rinse with a little ice-cold water, and let the airflow pull the cake dry. Faster than gravity filtration and gives a drier product."},
+{s:"Recrystallise",d:"Dissolve the crude solid in the minimum volume of HOT solvent, filter hot if there are insoluble specks, then cool slowly to room temperature and finally in ice. Pure crystals grow while the impurities — present in much smaller amounts — stay dissolved."},
+{s:"Wash and dry",d:"Filter again under reduced pressure, wash with a splash of ice-cold solvent, and dry between filter papers or in a desiccator/low oven."},
+{s:"Test purity: melting point",d:"Pack a few millimetres of dry product into a capillary and heat slowly in the melting-point apparatus near the expected value. Pure compounds melt sharply within ~1–2 °C of the data-book value; impurities lower AND broaden the range."},
+{s:"The liquid half of RP10",d:"For a pure organic liquid: distil, wash in a separating funnel, dry over an anhydrous salt and redistil, collecting over a narrow boiling range — every skill from RP5 applies verbatim."}],
+errors:[["Too much recrystallisation solvent","Minimum hot solvent. Every extra cm³ keeps product dissolved on cooling and quietly halves your yield."],
+["Cooling too fast","Rapid cooling traps impurities inside small crystals. Slow cooling first, ice second."],
+["Wet sample in the melting-point tube","Water depresses and broadens the melting range — the exact signature of impurity. Dry fully before testing."],
+["Washing with warm solvent","A warm wash redissolves your crystals straight down the sink. Ice-cold only."]],
+exp:"Pure aspirin melts sharply at 135 °C (data-book); the crude product melts low and wide until recrystallised. A typical student yield after one recrystallisation is 50–60% (indicative) — report both yield and melting range."},
+
+{n:"RP 11",t:"Identifying transition metal ions",icon:"🎨",time:"~35 min",diff:1,
+haz:[["warn","Transition metal salt solutions — harmful; wash hands after"],["warn","Dilute ammonia — irritant vapour"]],
+steps:[
+{s:"Read the solutions first",d:"Take ~1 cm depth of each unknown: Cu²⁺ is blue, Fe²⁺ pale green, Fe³⁺ yellow-brown. The solution colour is the first row of your evidence table."},
+{s:"NaOH dropwise, then in excess",d:"Cu²⁺: blue precipitate. Fe²⁺: green precipitate that darkens brown at the surface on standing — air oxidising Fe(II) to Fe(III). Fe³⁺: brown precipitate. None of the three redissolve in excess NaOH."},
+{s:"NH₃ dropwise, then in excess",d:"All three give the same precipitates at first — but only Cu²⁺ redissolves in excess ammonia, forming the deep royal-blue [Cu(NH₃)₄(H₂O)₂]²⁺ solution. That colour is the single most quotable observation in the practical."},
+{s:"The carbonate cross-check",d:"With Na₂CO₃(aq): the 2+ ions give simple precipitates, but Fe³⁺ is acidic enough to decompose carbonate — brown precipitate WITH effervescence of CO₂."},
+{s:"Record like an examiner",d:"Every cell of your table is colour + state: 'blue precipitate', 'green solution', 'effervescence'. A grid of ion vs reagent with an observation in every box is exactly the mark-scheme format."}],
+errors:[["Writing conclusions instead of observations","'It's copper' scores nothing. 'Blue precipitate, insoluble in excess NaOH, dissolving in excess ammonia to a deep blue solution' scores everything."],
+["Missing the change on standing","Fe(OH)₂'s green→brown surface darkening is a classic mark — it is visible evidence of oxidation by air."],
+["Adding 'excess' in one glug","'Dropwise, then in excess' is two separate observations. Add slowly, see the precipitate, then drown it."],
+["Cross-contaminated pipettes","A trace of ammonia in the NaOH dropper fakes the copper result. One pipette per reagent."]],
+exp:"Result grid (AQA 3.2.6): Cu²⁺ — blue ppt, insoluble in excess NaOH, deep blue solution in excess NH₃; Fe²⁺ — green ppt darkening on standing; Fe³⁺ — brown ppt, effervescence with carbonate."},
+
+{n:"RP 12",t:"Thin-layer chromatography",icon:"📋",time:"~40 min",diff:1,
+haz:[["danger","Developing solvents — flammable; lidded tank, no flames"],["warn","Ninhydrin spray — harmful; fume cupboard only"],["warn","UV lamp — never look directly at the source"]],
+steps:[
+{s:"Prepare the plate",d:"Draw the baseline in PENCIL about 1 cm from the bottom of the TLC plate, handling the plate only by its edges — fingerprints deposit grease and amino acids that show up later."},
+{s:"Spot the samples",d:"Use a fine capillary to place small, concentrated spots on the baseline, labelled in pencil beneath. Let each spot dry and re-spot two or three times to build up concentration without spreading."},
+{s:"Develop in a closed tank",d:"Pour solvent to BELOW the baseline, stand the plate in, and put the lid on so the atmosphere saturates with solvent vapour (otherwise solvent evaporates off the plate mid-run and the spots crawl). Remove the plate when the front is ~1 cm from the top."},
+{s:"Mark the solvent front immediately",d:"Pencil-mark the solvent front the second the plate comes out — it evaporates in moments and cannot be recovered."},
+{s:"Visualise the spots",d:"Colourless compounds: view under UV light (fluorescent-backed plates show dark spots), or spray with ninhydrin and warm for amino acids (purple spots)."},
+{s:"Calculate Rf",d:"Rf = distance from baseline to the CENTRE of the spot ÷ distance from baseline to the solvent front. Compare against reference values, or better, against known standards run on the same plate."}],
+errors:[["Ink baseline","Ink is itself a dye mixture — it chromatographs all over your plate. Pencil only."],
+["Solvent above the baseline","The samples dissolve off the plate into the tank instead of running up it. Solvent starts below the line."],
+["Forgetting the solvent front","No front, no denominator: no Rf, no comparison, no marks."],
+["Big dilute spots","They smear into overlapping blobs. Small, concentrated, dried between applications."]],
+exp:"Spots resolve up the plate with Rf between 0 and 1, constant for a given compound + solvent + stationary phase (AQA 3.3.15). Matching an unknown's Rf to a standard on the same plate identifies it; two spots with one Rf each means a two-component mixture."}];
 
 /* ---------- original exam-style question banks (written by ChemLab, AQA-style) ---------- */
 const EXAMW=[
@@ -1773,7 +1921,7 @@ const HOME=[
 ["Learn the theory","learn","--li","13 topic guides","Definitions worded for mark schemes, trends with real values, the anomalies examiners love."],
 ["Run the simulations","lab","--cu","7 interactive sims","Build atoms, refine crude oil, spin 3D VSEPR shapes, titration curves, Maxwell–Boltzmann and more."],
 ["Explore the elements","periodic","--na","118 elements","Electron configurations, categories and flame-test colours at a click."],
-["Master the practicals","prac","--k","5 deep walkthroughs","Method checklists, CLEAPSS-based safety, examiner-reported errors — and spot-the-mistake challenges."],
+["Master the practicals","prac","--k","All 12 practicals","Guided Lab Mode for every AQA required practical — step-by-step method, safety, examiner traps and spot-the-mistake challenges."],
 ["Test your knowledge","quiz","--bunsen","Quizzes + timed exams","195 quiz questions, plus timed exam papers marked by an AI examiner."],
 ["Check the sources","sources","--ink-soft","Accredited only","RSC, AQA, OCR, CLEAPSS, NIST and IUPAC references behind every number."]];
 const HOME_ICONS=["📚","⚗️","⚛️","🥽","📝","🔍"];
@@ -1786,7 +1934,7 @@ $$("#homecards .card").forEach(c=>{
   c.addEventListener("click",go);
   c.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();go();}});
 });
-$("#statrow").innerHTML=[TOPICS.length+" topic guides","7 interactive simulations","118 elements","5 practical deep-dives",QUIZ.length+" quiz questions"]
+$("#statrow").innerHTML=[TOPICS.length+" topic guides","7 interactive simulations","118 elements","12 required practicals",QUIZ.length+" quiz questions"]
   .map(x=>`<span>${x}</span>`).join("");
 $$(".hero-cta button").forEach(b=>b.addEventListener("click",()=>showView(b.dataset.goto)));
 
@@ -2168,38 +2316,151 @@ function applyTrends(){
 $("#pt-trends").addEventListener("input",applyTrends);
 
 /* ---------- practicals ---------- */
-$("#praclist").innerHTML=PRACLIST.map(p=>`<li>${p}</li>`).join("");
-$("#pracs").innerHTML=PRACS.map((p,i)=>`<div class="prac" id="prac${i}">
-  <button aria-expanded="false"><span class="num">${p.n}</span><h3>${p.t}</h3><span class="chev" style="margin-left:auto;color:var(--ink-soft)">▸</span></button>
-  <div class="body">
-    <h4>Safety — before you touch anything</h4>
-    <div class="hazards">${p.haz.map(h=>`<span class="haz ${h[0]}">⚠ ${h[1]}</span>`).join("")}</div>
-    <h4>Method — tick each step as you master it <span class="streak" id="pracpct${i}"></span></h4>
-    <div style="display:flex;align-items:center;gap:10px;margin:6px 0;max-width:78ch"><div class="pbar"><i id="pracbar${i}"></i></div></div>
-    <ul class="chk">${p.steps.map((s,j)=>`<li data-p="${i}" data-s="${j}"><span class="box">✓</span><span class="txt">${s}</span></li>`).join("")}</ul>
-    <h4>Where marks are lost — examiner-reported errors</h4>
-    ${p.errors.map(e=>`<div class="errbox"><b>${e[0]}</b>${e[1]}</div>`).join("")}
-    <h4>What you should get</h4>
-    <div class="expected">${p.exp}</div>
-    ${spotHtml(i)}
-  </div></div>`).join("");
-$$(".prac>button").forEach(b=>b.addEventListener("click",()=>{
-  const t=b.parentElement;
-  if(t.classList.contains("locked")){openAccount();return;}
-  const open=t.classList.toggle("open");
-  b.setAttribute("aria-expanded",open);
-  b.querySelector(".chev").style.transform=open?"rotate(90deg)":"";
-}));
+/* migrate old 5-practical progress indices to the 12-practical layout */
+(function(){
+  const pr=load("chemlab-prac",{});
+  if(pr&&Object.keys(pr).length&&!pr._v){
+    const m={0:0,1:1,2:2,3:4,4:5}, np={_v:2};
+    Object.entries(m).forEach(([o,n])=>{if(pr[o])np[n]=pr[o];});
+    store("chemlab-prac",np);
+  }
+})();
+const SPOTMAP={0:0,1:1,2:2,4:3,5:4};   // practical index → spot-the-mistake game
+function pracDone(i){
+  const a=(load("chemlab-prac",{})[i])||[];
+  return a.filter(Boolean).length;
+}
+function renderPracCards(){
+  const grid=$("#pracs"); if(!grid)return;
+  grid.innerHTML=PRACS.map((p,i)=>{
+    const done=pracDone(i), n=p.steps.length, pc=Math.round(done/n*100);
+    return `<div class="pcard ${done===n?"done":""}" data-i="${i}" tabindex="0" role="button">
+      <span class="picon">${p.icon}</span>
+      <span class="pnum">${p.n}</span>
+      <h3>${p.t}</h3>
+      <div class="pmeta"><span class="pips">${"●".repeat(p.diff)}${"○".repeat(3-p.diff)}</span><span>${p.time}</span><span>${n} steps</span></div>
+      <div class="pbarr"><i style="width:${pc}%"></i></div>
+      <span class="pgo">${done===n?"✓ Complete — revisit ▸":"Open lab ▸"}</span>
+    </div>`;
+  }).join("");
+  grid.querySelectorAll(".pcard").forEach(cD=>cD.addEventListener("click",()=>{
+    if(cD.classList.contains("locked")){openAccount();return;}
+    openLab(+cD.dataset.i);
+  }));
+  if(window.applyPracLocks)applyPracLocks();
+}
+function refreshPrac(){renderPracCards();}
+/* ---------- Lab Mode wizard ---------- */
+let lmI=0,lmStep=0;   // 0 = briefing, 1..n = steps, n+1 = debrief
+function openLab(i){ lmI=i; lmStep=0; $("#labmode").hidden=false; document.body.style.overflow="hidden"; lmRender(); }
+function closeLab(){ $("#labmode").hidden=true; document.body.style.overflow=""; renderPracCards(); }
+function lmSetDone(i,j,v){
+  const st=load("chemlab-prac",{}); st[i]=st[i]||[]; st[i][j]=v; st._v=2;
+  store("chemlab-prac",st);
+}
+function lmRender(){
+  const p=PRACS[lmI], n=p.steps.length;
+  const arr=(load("chemlab-prac",{})[lmI])||[];
+  const done=arr.filter(Boolean).length;
+  $("#lm-num").textContent=p.n;
+  $("#lm-title").textContent=p.t;
+  $("#lm-bar").style.width=(done/n*100)+"%";
+  const body=$("#lm-body"), next=$("#lm-next"), back=$("#lm-back");
+  back.style.visibility=lmStep===0?"hidden":"visible";
+  if(lmStep===0){
+    next.textContent="Start the method ▶";
+    body.innerHTML=`<div class="lab-step-k">Briefing · ${p.time} · difficulty ${"●".repeat(p.diff)}${"○".repeat(3-p.diff)}</div>
+      <h2 class="lab-step-s">${p.icon} ${p.t}</h2>
+      <h4>Safety — before you touch anything</h4>
+      <div class="hazards">${p.haz.map(h=>`<span class="haz ${h[0]}">⚠ ${h[1]}</span>`).join("")}</div>
+      <h4 style="margin-top:18px">What you'll do</h4>
+      <ol class="lab-brief">${p.steps.map((st,j)=>`<li>${arr[j]?"✅ ":""}${st.s}</li>`).join("")}</ol>`;
+  }else if(lmStep<=n){
+    const j=lmStep-1, st=p.steps[j];
+    next.textContent=arr[j]?(lmStep===n?"Debrief ▶":"Next ▶"):(lmStep===n?"✓ Done — debrief":"✓ Done — next");
+    body.innerHTML=`<div class="lab-step-k">Step ${lmStep} of ${n}${arr[j]?" · ✅ done":""}</div>
+      <h2 class="lab-step-s">${st.s}</h2>
+      <p class="lab-step-d">${st.d}</p>
+      ${arr[j]?`<p class="lab-done-toggle"><a style="cursor:pointer;color:var(--ink-soft);text-decoration:underline" id="lm-undo">mark as not done</a></p>`:""}`;
+    const u=$("#lm-undo");
+    if(u)u.addEventListener("click",()=>{lmSetDone(lmI,j,false);lmRender();});
+  }else{
+    next.textContent="Finish ✓";
+    const spotI=SPOTMAP[lmI];
+    body.innerHTML=`<div class="lab-step-k">Debrief</div>
+      <h2 class="lab-step-s">${done===n?"Lab complete! 🧪":"Debrief — "+done+"/"+n+" steps mastered"}</h2>
+      <h4>Where marks are lost — examiner-reported errors</h4>
+      ${p.errors.map(e=>`<details class="lab-details"><summary>${e[0]}</summary><div class="dbody">${e[1]}</div></details>`).join("")}
+      <details class="lab-details" open><summary>What you should get</summary><div class="dbody">${p.exp}</div></details>
+      ${spotI!=null?spotHtml(spotI):""}`;
+    if(spotI!=null)wireSpot(body,spotI);
+    if(done===n&&!reduced)setTimeout(()=>burstFrom($("#lm-next")),250);
+  }
+  const dots=$("#lm-dots");
+  dots.innerHTML=Array.from({length:n+2},(_,k)=>{
+    const cls=[k===lmStep?"cur":"",k>0&&k<=n&&arr[k-1]?"done":""].join(" ");
+    return `<button class="${cls}" data-k="${k}" aria-label="step ${k}"></button>`;
+  }).join("");
+  dots.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{lmStep=+b.dataset.k;lmRender();}));
+  $(".lab-body").scrollTop=0;
+}
+$("#lm-x").addEventListener("click",closeLab);
+$("#lm-back").addEventListener("click",()=>{if(lmStep>0){lmStep--;lmRender();}});
+$("#lm-next").addEventListener("click",()=>{
+  const n=PRACS[lmI].steps.length;
+  if(lmStep>=1&&lmStep<=n){
+    lmSetDone(lmI,lmStep-1,true);
+    burstFrom($("#lm-next"));
+  }
+  if(lmStep>n){closeLab();return;}
+  lmStep++; lmRender();
+});
+document.addEventListener("keydown",e=>{
+  if($("#labmode").hidden)return;
+  if(e.key==="Escape")closeLab();
+  if(e.key==="ArrowRight")$("#lm-next").click();
+  if(e.key==="ArrowLeft")$("#lm-back").click();
+});
+/* spot-the-mistake, wired inside the debrief */
+function wireSpot(root,i){
+  root.querySelectorAll(".spot li").forEach(li=>li.addEventListener("click",()=>{
+    if(li.closest(".spot").classList.contains("checked"))return;
+    li.classList.toggle("pick");
+  }));
+  const b=root.querySelector(".spot-check");
+  if(!b)return;
+  b.addEventListener("click",()=>{
+    const ul=root.querySelector(`.spot[data-p="${i}"]`);
+    if(ul.classList.contains("checked")){
+      ul.classList.remove("checked");
+      ul.querySelectorAll("li").forEach(li=>{li.className="";const w=li.querySelector(".why");if(w)w.remove();});
+      b.textContent="Check my answers"; root.querySelector("#spotres"+i).textContent="";
+      return;
+    }
+    ul.classList.add("checked");
+    let found=0,total=0;
+    ul.querySelectorAll("li").forEach(li=>{
+      const st=SPOT[i][+li.dataset.j], wrong=!!st[1], picked=li.classList.contains("pick");
+      if(wrong){total++;
+        if(picked){found++;li.classList.add("hit");}else li.classList.add("miss");
+        li.insertAdjacentHTML("beforeend",`<div class="why">${st[2]}</div>`);
+      } else if(picked) li.classList.add("false");
+    });
+    root.querySelector("#spotres"+i).textContent=`You found ${found}/${total}`+(found===total?" — perfect! 🎉":"");
+    if(found===total)burstFrom(b);
+    b.textContent="Try again";
+  });
+}
+renderPracCards();
 window.openAccount=function(){}; // replaced by the auth module
 window.chemPremium=true; // local mode: everything open; the auth module flips this for free accounts
 window.applyPracLocks=function(){
   const prem=window.chemPremium;
-  $$(".prac").forEach((el,i)=>{
+  $$("#pracs .pcard").forEach((el,i)=>{
     const locked=!prem && i>0; // RP1 stays free as the taster
     el.classList.toggle("locked",locked);
-    if(locked)el.classList.remove("open");
-    const ch=el.querySelector(".chev");
-    if(ch){ch.textContent=locked?"🔒":"▸";ch.style.transform="";}
+    const go=el.querySelector(".pgo");
+    if(go&&locked)go.textContent="🔒 Premium";
   });
   $$(".chapcard").forEach((el,i)=>{
     const locked=!prem && i>=6; // year-1 core free, the rest Premium
@@ -2226,48 +2487,7 @@ window.applyPracLocks=function(){
   const heroBtn=document.querySelector(".hero-cta button[data-goto='learn']");
   if(heroBtn)heroBtn.textContent=prem?"Dive in":"Start learning — it's free";
 };
-function refreshPrac(i){
-  const a=(load("chemlab-prac",{})[i])||[];
-  const n=PRACS[i].steps.length, done=a.filter(Boolean).length;
-  $$(`.chk li[data-p="${i}"]`).forEach(li=>li.classList.toggle("done",!!a[+li.dataset.s]));
-  const bar=$("#pracbar"+i); if(bar)bar.style.width=(done/n*100)+"%";
-  const pct=$("#pracpct"+i); if(pct)pct.textContent=done?`${done}/${n}${done===n?" — lab complete! 🧪":""}`:"";
-}
-$$(".chk li").forEach(li=>li.addEventListener("click",()=>{
-  const i=+li.dataset.p, j=+li.dataset.s;
-  const st=load("chemlab-prac",{}); st[i]=st[i]||[];
-  st[i][j]=!st[i][j]; store("chemlab-prac",st); refreshPrac(i);
-  if(st[i][j]){
-    burstFrom(li.querySelector(".box"));
-    if(st[i].filter(Boolean).length===PRACS[i].steps.length)burstFrom($("#pracbar"+i));
-  }
-}));
-PRACS.forEach((_,i)=>refreshPrac(i));
-$$(".spot li").forEach(li=>li.addEventListener("click",()=>{
-  if(li.closest(".spot").classList.contains("checked"))return;
-  li.classList.toggle("pick");
-}));
-$$(".spot-check").forEach(b=>b.addEventListener("click",()=>{
-  const i=+b.dataset.p, ul=document.querySelector(`.spot[data-p="${i}"]`);
-  if(ul.classList.contains("checked")){
-    ul.classList.remove("checked");
-    ul.querySelectorAll("li").forEach(li=>{li.className="";const w=li.querySelector(".why");if(w)w.remove();});
-    b.textContent="Check my answers"; document.querySelector("#spotres"+i).textContent="";
-    return;
-  }
-  ul.classList.add("checked");
-  let found=0,total=0;
-  ul.querySelectorAll("li").forEach(li=>{
-    const st=SPOT[i][+li.dataset.j], wrong=!!st[1], picked=li.classList.contains("pick");
-    if(wrong){total++;
-      if(picked){found++;li.classList.add("hit");}else li.classList.add("miss");
-      li.insertAdjacentHTML("beforeend",`<div class="why">${st[2]}</div>`);
-    } else if(picked) li.classList.add("false");
-  });
-  document.querySelector("#spotres"+i).textContent=`You found ${found}/${total}`+(found===total?" — perfect! 🎉":"");
-  if(found===total)burstFrom(b);
-  b.textContent="Try again";
-}));
+
 
 /* ---------- sources ---------- */
 $("#srclist").innerHTML=SOURCES.map(s=>`<div class="card"><h3>${s[0]}</h3><p>${s[1]}</p>
