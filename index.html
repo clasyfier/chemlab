@@ -2739,8 +2739,12 @@ function gasLoop(ts){
       o.vx+=dx/d*2600*dt; o.vy+=dy/d*2600*dt;
       o.vx*=0.94; o.vy*=0.94;
     }else{
-      const cool=Math.exp(-0.25*dt);                 // free gas gradually loses its energy
-      o.vx*=cool; o.vy*=cool;
+      /* free gas thermalises: relaxes toward room-temperature speed, with Brownian wander */
+      const s0=Math.hypot(o.vx,o.vy)||1e-6, vRoom=38;
+      const s1=vRoom+(s0-vRoom)*Math.exp(-0.35*dt);
+      const jr=(Math.random()-0.5)*1.5*dt;
+      const nvx=o.vx/s0*s1, nvy=o.vy/s0*s1, ca=Math.cos(jr), sa=Math.sin(jr);
+      o.vx=nvx*ca-nvy*sa; o.vy=nvx*sa+nvy*ca;
       if(o.x<4){o.x=4;o.vx=Math.abs(o.vx);} if(o.x>innerWidth-10){o.x=innerWidth-10;o.vx=-Math.abs(o.vx);}
       if(o.y<4){o.y=4;o.vy=Math.abs(o.vy);} if(o.y>innerHeight-10){o.y=innerHeight-10;o.vy=-Math.abs(o.vy);}
       if(gasRect&&now>o.grace){
@@ -2756,6 +2760,19 @@ function gasLoop(ts){
     }
     o.x+=o.vx*dt; o.y+=o.vy*dt;
     o.el.style.transform=`translate(${o.x}px,${o.y}px)`;
+  }
+  if(!tgt){                                        // molecules collide with each other (equal-mass elastic)
+    for(let i=0;i<gasOut.length;i++)for(let j=i+1;j<gasOut.length;j++){
+      const a=gasOut[i],b=gasOut[j];
+      const dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy);
+      if(d>0&&d<6){
+        const nx=dx/d,ny=dy/d;
+        const rel=(a.vx-b.vx)*nx+(a.vy-b.vy)*ny;
+        if(rel>0){a.vx-=rel*nx;a.vy-=rel*ny;b.vx+=rel*nx;b.vy+=rel*ny;}
+        const push=(6-d)/2;
+        a.x-=nx*push;a.y-=ny*push;b.x+=nx*push;b.y+=ny*push;
+      }
+    }
   }
   if(returned)gasHud();
   if(gasSuck&&!gasOut.length){
