@@ -2477,7 +2477,7 @@ function drawProf(){
 /* ideal gas — 3D draggable box, pump, trap door (effusion), vacuum, vanish */
 let gasParts=[],gasOut=[],gasDoor=false,gasSuck=false,gasGeom=null,gasLast=0;
 let gasMat=null,gasDragOn=false,gasLX=0,gasLY=0,gasVX=0,gasVY=0,gasCtx=null,gasW=0,gasH=0,gasRect=null;
-const GAS_DY=[-0.10,0.55], GAS_DZ=[-0.45,0.45];   // door bounds on the +x face (fractions of half-extents)
+const GAS_DY=[-0.55,0.60], GAS_DZ=[-0.60,0.60];   // big square hatch on the +x face (fractions of half-extents)
 const gasFx=document.createElement("div");
 gasFx.style.cssText="position:fixed;inset:0;pointer-events:none;z-index:220;overflow:hidden";
 document.body.appendChild(gasFx);
@@ -2563,12 +2563,25 @@ function drawGas(dt=0){
   const rD=doorPts.map(p=>m3v(gasMat,p));
   const doorZ=rD.reduce((a,p)=>a+p[2],0)/4;
   items.push({z:doorZ,draw(){
-    ctx.strokeStyle=cssVar("--cu");ctx.lineWidth=2.4;ctx.lineJoin="round";
+    const CU=cssVar("--cu");
+    ctx.lineJoin="round";
     ctx.beginPath();
     rD.forEach((p,i)=>{const [x,y]=proj(p);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
-    ctx.closePath();ctx.stroke();
+    ctx.closePath();
+    if(gasDoor){ctx.fillStyle="color-mix(in srgb,"+CU+" 16%,transparent)";ctx.fill();}
+    ctx.strokeStyle=CU;ctx.lineWidth=gasDoor?2.8:2.4;ctx.stroke();
+    if(gasDoor){                                     // indented grip ridges across the open flap
+      const lerp=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];
+      ctx.lineWidth=1.4;ctx.globalAlpha=0.75;
+      for(const t of [0.22,0.44,0.66,0.88]){
+        const [x1,y1]=proj(m3v(gasMat,lerp(doorPts[1],doorPts[0],t)));
+        const [x2,y2]=proj(m3v(gasMat,lerp(doorPts[2],doorPts[3],t)));
+        ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+      }
+      ctx.globalAlpha=1;
+    }
     const [lx,ly]=proj(rD[2]);
-    ctx.fillStyle=cssVar("--cu");ctx.font="700 10px -apple-system,sans-serif";ctx.textAlign="left";
+    ctx.fillStyle=CU;ctx.font="700 10px -apple-system,sans-serif";ctx.textAlign="left";
     ctx.fillText(gasDoor?"open!":"trap door",lx+6,ly-4);
   }});
   /* particles: physics in box space, spheres in view space */
