@@ -2228,13 +2228,13 @@ $("#sims").innerHTML=`
   <div class="stat"><div class="k">Mean speed scale</div><div class="v" id="g-s">—</div></div></div>
 </div><div class="sim" id="sim-atom">
   <h2>Build an atom</h2>
-  <p class="hint">Add protons, neutrons and electrons and watch the element, mass number, charge and shells respond. Protons decide the element; electrons decide the charge.</p>
+  <p class="hint">Add protons, neutrons and electrons and watch the element, mass number, charge and shells respond — protons decide the element; electrons decide the charge. <b>Drag the atom to spin it in 3D</b>, and <b>hold a button down</b> to sprint through the periodic table: all 118 elements are in there, hydrogen to oganesson.</p>
   <div class="controls">
     <div class="ctrl"><label>Protons</label><p style="display:flex;gap:6px;margin:0"><button class="btn ghost" data-at="p-">−</button><span class="val" id="at-p" style="min-width:24px;text-align:center;font-size:16px">1</span><button class="btn ghost" data-at="p+">+</button></p></div>
     <div class="ctrl"><label>Neutrons</label><p style="display:flex;gap:6px;margin:0"><button class="btn ghost" data-at="n-">−</button><span class="val" id="at-n" style="min-width:24px;text-align:center;font-size:16px">0</span><button class="btn ghost" data-at="n+">+</button></p></div>
     <div class="ctrl"><label>Electrons</label><p style="display:flex;gap:6px;margin:0"><button class="btn ghost" data-at="e-">−</button><span class="val" id="at-e" style="min-width:24px;text-align:center;font-size:16px">1</span><button class="btn ghost" data-at="e+">+</button></p></div>
   </div>
-  <canvas class="plot" id="at-plot" style="height:280px"></canvas>
+  <canvas class="plot" id="at-plot" style="height:340px"></canvas>
   <div class="readout">
     <div class="stat"><div class="k">Element</div><div class="v" id="at-el">H · hydrogen</div></div>
     <div class="stat"><div class="k">Nuclide</div><div class="v" id="at-nuc">¹H</div></div>
@@ -2511,60 +2511,146 @@ function gasLoop(){ if($("#v-lab").classList.contains("on")) drawGas(); if(!redu
 
 /* build an atom */
 let atomP=1, atomN=0, atomE=1;
-const SHELLCAP=[2,8,8,2];
+/* Bohr shells from aufbau subshell order, grouped by principal quantum number —
+   good for all 118 elements (ignores the handful of d/f exceptions) */
+const AT_SUBS=[[1,2],[2,2],[2,6],[3,2],[3,6],[4,2],[3,10],[4,6],[5,2],[4,10],[5,6],[6,2],[4,14],[5,10],[6,6],[7,2],[5,14],[6,10],[7,6],[8,2]];
 function shellFill(e){
-  const out=[]; let left=e;
-  for(const cap of SHELLCAP){ if(left<=0)break; const n=Math.min(cap,left); out.push(n); left-=n; }
-  return out;
+  const sh=[0,0,0,0,0,0,0,0]; let left=e;
+  for(const [n,cap] of AT_SUBS){ if(left<=0)break; const t=Math.min(cap,left); sh[n-1]+=t; left-=t; }
+  while(sh.length&&!sh[sh.length-1])sh.pop();
+  return sh;
+}
+let atMat=null,atDrag=false,atLX=0,atLY=0,atVX=0,atVY=0,atIdleAt=0,atCtx=null,atW=0,atH=0,atNucl=[],atShells=[];
+function atRebuild(){
+  atShells=shellFill(atomE);
+  const N=atomP+atomN; atNucl=[];
+  let p=atomP,n=atomN;
+  for(let i=0;i<N;i++){
+    const t=(p*atomN>=n*atomP&&p>0)||n<=0?"p":"n";
+    if(t==="p")p--;else n--;
+    const z=1-2*((i+0.5)/N), r=Math.sqrt(Math.max(0,1-z*z)), th=i*2.39996;
+    const rad=N===1?0:Math.cbrt((i+0.5)/N);
+    atNucl.push({d:[r*Math.cos(th)*rad, z*rad, r*Math.sin(th)*rad], t});
+  }
 }
 function drawAtom(){
-  const c=$("#at-plot"); if(!c.clientWidth)return;
-  const [ctx,w,h]=setupCanvas(c);
-  ctx.clearRect(0,0,w,h);
-  const cx=w/2, cy=h/2;
-  const shells=shellFill(atomE);
-  ctx.lineWidth=1;
-  shells.forEach((n,i)=>{
-    const r=46+i*30;
-    ctx.strokeStyle=cssVar("--line");
-    ctx.beginPath(); ctx.arc(cx,cy,r,0,7); ctx.stroke();
-    for(let k=0;k<n;k++){
-      const a=(k/n)*6.283 - 1.57 + i*0.5;
-      ctx.fillStyle=cssVar("--bunsen");
-      ctx.beginPath(); ctx.arc(cx+Math.cos(a)*r, cy+Math.sin(a)*r, 5, 0, 7); ctx.fill();
-    }
-  });
-  const parts=[];
-  for(let i=0;i<atomP;i++)parts.push("p");
-  for(let i=0;i<atomN;i++)parts.push("n");
-  parts.sort(()=>0.5-((parts.length*7)%13)/13);
-  parts.forEach((t,i)=>{
-    const r=4.4*Math.sqrt(i), a=i*2.4;
-    ctx.fillStyle=t==="p"?cssVar("--li"):cssVar("--ink-soft");
-    ctx.beginPath(); ctx.arc(cx+Math.cos(a)*r, cy+Math.sin(a)*r, 6.5, 0, 7); ctx.fill();
-    ctx.strokeStyle=cssVar("--panel"); ctx.lineWidth=1.2; ctx.stroke();
-  });
-  ctx.font="12px ui-monospace,Menlo,monospace"; ctx.fillStyle=cssVar("--ink-soft");
-  ctx.fillText("protons",14,20); ctx.fillStyle=cssVar("--li"); ctx.fillRect(66,12,9,9);
-  ctx.fillStyle=cssVar("--ink-soft"); ctx.fillText("neutrons",14,38); ctx.fillRect(72,30,9,9);
-  ctx.fillText("electrons",14,56); ctx.fillStyle=cssVar("--bunsen"); ctx.fillRect(76,48,9,9);
-  const el=ELEMENTS[atomP-1];
-  const ch=atomP-atomE;
+  atRebuild();
+  $("#at-p").textContent=atomP; $("#at-n").textContent=atomN; $("#at-e").textContent=atomE;
+  const el=ELEMENTS[atomP-1], ch=atomP-atomE;
   const sup=n=>String(n).split("").map(d=>"⁰¹²³⁴⁵⁶⁷⁸⁹"[+d]).join("");
   $("#at-el").textContent=el?`${el.sym} · ${el.name.toLowerCase()}`:"—";
   $("#at-nuc").textContent=el?`${sup(atomP+atomN)}${el.sym}${ch>0?sup(ch)+"⁺":ch<0?sup(-ch)+"⁻":""}`:"—";
   $("#at-ch").textContent=ch>0?`+${ch} (cation)`:ch<0?`${ch} (anion)`:"0 (neutral)";
-  $("#at-sh").textContent=shells.join(", ")||"0";
+  $("#at-sh").textContent=atShells.join(", ")||"0";
 }
-$$("[data-at]").forEach(b=>b.addEventListener("click",()=>{
-  const [k,op]=[b.dataset.at[0],b.dataset.at[1]];
-  const d=op==="+"?1:-1;
-  if(k==="p")atomP=Math.max(1,Math.min(20,atomP+d));
-  if(k==="n")atomN=Math.max(0,Math.min(24,atomN+d));
-  if(k==="e")atomE=Math.max(0,Math.min(20,atomE+d));
-  $("#at-p").textContent=atomP; $("#at-n").textContent=atomN; $("#at-e").textContent=atomE;
-  drawAtom();
-}));
+function atRender(){
+  requestAnimationFrame(atRender);
+  const c=$("#at-plot"); if(!c||!c.clientWidth||document.hidden)return;
+  const rc=c.getBoundingClientRect(); if(rc.bottom<0||rc.top>innerHeight)return;
+  const dpr=window.devicePixelRatio||1;
+  if(!atCtx||c.width!==Math.round(c.clientWidth*dpr)){[atCtx,atW,atH]=setupCanvas(c);}
+  const ctx=atCtx,w=atW,h=atH,now=performance.now();
+  if(!atMat)atMat=m3mul(rotX(-0.4),rotY(0.5));
+  if(!atDrag){
+    if(Math.abs(atVX)>4e-4||Math.abs(atVY)>4e-4){atMat=m3mul(rotY(atVX),m3mul(rotX(atVY),atMat));atVX*=0.95;atVY*=0.95;}
+    else if(now-atIdleAt>2600)atMat=m3mul(rotY(0.0022),atMat);
+  }
+  ctx.clearRect(0,0,w,h);
+  const cx=w/2,cy=h/2,maxR=Math.min(w,h)/2-14;
+  const el=ELEMENTS[atomP-1];
+  if(el){ctx.font=`800 ${Math.round(maxR*0.9)}px -apple-system,sans-serif`;ctx.textAlign="center";ctx.textBaseline="middle";
+    ctx.globalAlpha=0.05;ctx.fillStyle=cssVar("--ink");ctx.fillText(el.sym,cx,cy);ctx.globalAlpha=1;ctx.textBaseline="alphabetic";}
+  const f=4.2, proj=p=>{const s2=f/(f-p[2]/maxR);return [cx+p[0]*s2,cy-p[1]*s2,s2];};
+  const nucR=Math.min(maxR*0.32, 7+5.2*Math.cbrt(atomP+atomN));
+  const base=nucR+16, ns=atShells.length, gap=ns?(maxR-base)/ns:0;
+  const items=[];
+  const PCOL=cssVar("--li"), NCOL="#9aa0a8", ECOL=cssVar("--bunsen"), LINE=cssVar("--line");
+  atNucl.forEach(nu=>{
+    const p3=m3v(atMat,[nu.d[0]*nucR,nu.d[1]*nucR,nu.d[2]*nucR]);
+    items.push({z:p3[2],draw(){
+      const [x,y,sc]=proj(p3), r=6.2*sc;
+      ctx.fillStyle=nu.t==="p"?PCOL:NCOL;
+      ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fill();
+      const dim=Math.max(0,0.30*(0.5-p3[2]/(nucR*2)));
+      if(dim>0.03){ctx.fillStyle=`rgba(15,20,30,${dim})`;ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fill();}
+      else{ctx.fillStyle="rgba(255,255,255,.35)";ctx.beginPath();ctx.arc(x-r*0.3,y-r*0.35,r*0.32,0,7);ctx.fill();}
+    }});
+  });
+  atShells.forEach((cnt,i)=>{
+    const r=base+(i+0.5)*gap;
+    const tilt=m3mul(rotY(i*0.9),rotX(0.5+i*0.42));
+    let prev=null;
+    for(let k=0;k<=48;k++){
+      const a=k/48*Math.PI*2;
+      const p3=m3v(atMat,m3v(tilt,[Math.cos(a)*r,Math.sin(a)*r,0]));
+      if(prev){
+        const q=prev,pt=p3;
+        items.push({z:(q[2]+pt[2])/2,draw(){
+          const [x1,y1]=proj(q),[x2,y2]=proj(pt);
+          ctx.strokeStyle=LINE;ctx.globalAlpha=0.45+0.4*((q[2]+pt[2])/2/maxR+1)/2;
+          ctx.lineWidth=1.1;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.globalAlpha=1;
+        }});
+      }
+      prev=p3;
+    }
+    const speed=(i%2?-1:1)*0.00042/(1+i*0.5);
+    for(let j=0;j<cnt;j++){
+      const a=j/cnt*Math.PI*2+now*speed;
+      const p3=m3v(atMat,m3v(tilt,[Math.cos(a)*r,Math.sin(a)*r,0]));
+      items.push({z:p3[2],draw(){
+        const [x,y,sc]=proj(p3), er=4.6*sc;
+        ctx.fillStyle=ECOL;ctx.beginPath();ctx.arc(x,y,er,0,7);ctx.fill();
+        ctx.fillStyle="rgba(255,255,255,.4)";ctx.beginPath();ctx.arc(x-er*0.3,y-er*0.3,er*0.3,0,7);ctx.fill();
+      }});
+    }
+  });
+  items.sort((a,b)=>a.z-b.z).forEach(it=>it.draw());
+  ctx.font="12px ui-monospace,Menlo,monospace";ctx.textAlign="left";
+  ctx.fillStyle=cssVar("--ink-soft");ctx.fillText("protons",14,20);ctx.fillStyle=PCOL;ctx.fillRect(70,12,9,9);
+  ctx.fillStyle=cssVar("--ink-soft");ctx.fillText("neutrons",14,38);ctx.fillStyle=NCOL;ctx.fillRect(76,30,9,9);
+  ctx.fillStyle=cssVar("--ink-soft");ctx.fillText("electrons",14,56);ctx.fillStyle=ECOL;ctx.fillRect(80,48,9,9);
+}
+(()=>{
+  const c=$("#at-plot"); if(!c)return;
+  c.style.touchAction="none"; c.style.cursor="grab";
+  c.addEventListener("pointerdown",e=>{atDrag=true;atLX=e.clientX;atLY=e.clientY;atVX=atVY=0;c.setPointerCapture(e.pointerId);c.style.cursor="grabbing";e.preventDefault();});
+  c.addEventListener("pointermove",e=>{
+    if(!atDrag)return;
+    const dx=(e.clientX-atLX)*0.011, dy=(e.clientY-atLY)*0.011;
+    atMat=m3mul(rotY(dx),m3mul(rotX(dy),atMat||m3mul(rotX(-0.4),rotY(0.5))));
+    atVX=0.6*atVX+0.4*dx; atVY=0.6*atVY+0.4*dy;
+    atLX=e.clientX; atLY=e.clientY;
+  });
+  const up=()=>{if(!atDrag)return;atDrag=false;atIdleAt=performance.now();c.style.cursor="grab";
+    const cap=v=>Math.max(-0.055,Math.min(0.055,v));atVX=cap(atVX);atVY=cap(atVY);};
+  c.addEventListener("pointerup",up); c.addEventListener("pointercancel",up);
+  requestAnimationFrame(atRender);
+})();
+(()=>{
+  const step=(k,d)=>{
+    if(k==="p")atomP=Math.max(1,Math.min(118,atomP+d));
+    if(k==="n")atomN=Math.max(0,Math.min(180,atomN+d));
+    if(k==="e")atomE=Math.max(0,Math.min(120,atomE+d));
+    $("#at-p").textContent=atomP; $("#at-n").textContent=atomN; $("#at-e").textContent=atomE;
+    drawAtom();
+  };
+  $$("[data-at]").forEach(b=>{
+    const k=b.dataset.at[0], d=b.dataset.at[1]==="+"?1:-1;
+    let t1=null,t2=null,held=false;
+    const stop=()=>{clearTimeout(t1);clearInterval(t2);t1=t2=null;};
+    b.addEventListener("pointerdown",e=>{
+      held=true; step(k,d);
+      let count=0;
+      t1=setTimeout(()=>{t2=setInterval(()=>{
+        step(k,d);
+        if(++count===12){clearInterval(t2);t2=setInterval(()=>step(k,d),35);}
+      },90);},380);
+      b.setPointerCapture(e.pointerId);
+    });
+    ["pointerup","pointercancel"].forEach(ev=>b.addEventListener(ev,()=>{stop();setTimeout(()=>held=false,300);}));
+    b.addEventListener("click",()=>{if(held)return;step(k,d);});
+  });
+})();
 
 /* fractionating column — refine-the-crude game */
 const FRACS=[
