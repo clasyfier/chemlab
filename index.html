@@ -214,6 +214,42 @@ section.view.on{display:block;animation:fadein .25s ease}
 .ctrl select{font:inherit;padding:5px 8px;border-radius:7px;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
 .ctrl .val{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--ink);font-size:13px;font-variant-numeric:tabular-nums}
 .toggle{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink)}
+/* instrument controls for the sims */
+.sim .ctrl input[type=range]{-webkit-appearance:none;appearance:none;height:26px;background:transparent;cursor:pointer;--p:50%;--hue:var(--bunsen);--grad:linear-gradient(90deg,var(--bunsen),var(--cu))}
+.sim .ctrl input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:99px;background:var(--grad) 0 0/var(--p) 100% no-repeat,var(--line)}
+.sim .ctrl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:19px;height:19px;border-radius:50%;background:#fff;border:3px solid var(--hue);margin-top:-5.5px;box-shadow:0 1px 5px rgba(0,0,0,.28);transition:transform .15s,box-shadow .15s}
+.sim .ctrl input[type=range]:hover::-webkit-slider-thumb{transform:scale(1.12)}
+.sim .ctrl input[type=range]:active::-webkit-slider-thumb{transform:scale(1.28);box-shadow:0 0 0 7px color-mix(in srgb,var(--hue) 22%,transparent)}
+.sim .ctrl input[type=range]::-moz-range-track{height:8px;border-radius:99px;background:var(--line)}
+.sim .ctrl input[type=range]::-moz-range-progress{height:8px;border-radius:99px;background:var(--grad)}
+.sim .ctrl input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:#fff;border:3px solid var(--hue);box-shadow:0 1px 5px rgba(0,0,0,.28);transition:transform .15s}
+.sim .ctrl input[type=range]:active::-moz-range-thumb{transform:scale(1.28)}
+.ctrl-range{position:relative}
+.slidebub{position:absolute;transform:translate(-50%,-100%);background:var(--ink);color:var(--ground);font:700 11.5px ui-monospace,"SF Mono",Menlo,monospace;padding:4px 9px;border-radius:8px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .18s;z-index:6}
+.ctrl-range.live .slidebub{opacity:1}
+.sim .ctrl select.chipified{display:none}
+.selchips{display:flex;flex-wrap:wrap;gap:6px;max-width:340px}
+.selchips button{font:inherit;text-align:left;display:flex;align-items:center;gap:7px;padding:6px 11px;border-radius:11px;border:1.5px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer;transition:border-color .15s,transform .1s}
+.selchips button:hover{border-color:var(--bunsen)}
+.selchips button.on{border-color:var(--bunsen);background:color-mix(in srgb,var(--bunsen) 12%,var(--panel));animation:chippop .22s ease}
+.selchips button.on .m{color:var(--bunsen)}
+@keyframes chippop{0%{transform:scale(.92)}60%{transform:scale(1.06)}100%{transform:scale(1)}}
+.selchips .m{font-weight:800;font-size:12.5px;line-height:1.15}
+.selchips .s{display:block;font-size:10px;color:var(--ink-soft);line-height:1.15}
+.selchips svg.g{width:22px;height:22px;flex:0 0 22px;stroke:currentColor;fill:currentColor;color:var(--ink-soft)}
+.selchips button.on svg.g{color:var(--bunsen)}
+.selchips .sw{width:16px;height:16px;border-radius:50%;flex:0 0 16px;border:1px solid rgba(0,0,0,.15)}
+.toggle input[type=checkbox]{-webkit-appearance:none;appearance:none;width:38px;height:22px;border-radius:99px;background:var(--line);position:relative;cursor:pointer;margin:0;transition:background .2s;flex:0 0 38px}
+.toggle input[type=checkbox]:checked{background:var(--bunsen)}
+.toggle input[type=checkbox]::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:left .18s}
+.toggle input[type=checkbox]:checked::after{left:18px}
+.sim .ctrl button[data-at]{width:30px;height:30px;border-radius:50%;padding:0;display:grid;place-items:center;font-size:16px;font-weight:800;border-width:2px;transition:transform .1s}
+.sim .ctrl button[data-at]:active{transform:scale(.82)}
+.sim .ctrl button[data-at^="p"]{color:#d84a3c;border-color:#d84a3c}
+.sim .ctrl button[data-at^="n"]{color:#8a8f98;border-color:#8a8f98}
+.sim .ctrl button[data-at^="e"]{color:#3f7fc2;border-color:#3f7fc2}
+.val.bump{animation:valbump .25s ease}
+@keyframes valbump{40%{transform:scale(1.35)}}
 canvas.plot{width:100%;height:320px;display:block;border-radius:8px;background:var(--panel2)}
 .readout{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
 .stat{background:var(--panel2);border-radius:8px;padding:8px 14px;min-width:110px}
@@ -2914,6 +2950,86 @@ window.addEventListener("chemlab:changed",updateProgressNav);
   check();
   document.addEventListener("visibilitychange",()=>{if(!document.hidden)check();});
   setInterval(check,5*60*1000);
+})();
+
+/* ---------- instrument controls: sliders, chip decks, switches ---------- */
+(()=>{
+  const HUE={"g-t":["#d84a3c","linear-gradient(90deg,#4a8fd9,#f0a94a,#d84a3c)"],
+             "mb-t":["#d84a3c","linear-gradient(90deg,#4a8fd9,#f0a94a,#d84a3c)"],
+             "pr-ea":["#e07b2f","linear-gradient(90deg,#f5c26b,#e07b2f)"],
+             "mb-ea":["#e07b2f","linear-gradient(90deg,#f5c26b,#e07b2f)"],
+             "pr-dh":["#7f5fd0","linear-gradient(90deg,#3f7fc2,#8a8f98,#d84a3c)"],
+             "g-n":["#7f5fd0","linear-gradient(90deg,#b0a1e0,#7f5fd0)"],
+             "g-v":["#3aa6a0","linear-gradient(90deg,#8fd4cf,#3aa6a0)"],
+             "t-conc":["#3f7fc2","linear-gradient(90deg,#b9d2ea,#3f7fc2)"],
+             "t-vol":["#2f6fb3","linear-gradient(90deg,#cfe3f5,#2f6fb3)"]};
+  $$(".sim .ctrl input[type=range]").forEach(r=>{
+    const ctrl=r.closest(".ctrl"); if(!ctrl)return;
+    ctrl.classList.add("ctrl-range");
+    const [hue,grad]=HUE[r.id]||[];
+    if(hue){r.style.setProperty("--hue",hue);r.style.setProperty("--grad",grad);}
+    const bub=document.createElement("div"); bub.className="slidebub"; ctrl.appendChild(bub);
+    const val=ctrl.querySelector(".val");
+    let hideT=null;
+    const upd=()=>{
+      const p=(r.value-r.min)/(r.max-r.min);
+      r.style.setProperty("--p",(p*100)+"%");
+      bub.textContent=val?val.textContent:r.value;
+      bub.style.left=(r.offsetLeft+9+p*(r.offsetWidth-18))+"px";
+      bub.style.top=(r.offsetTop-4)+"px";
+    };
+    r.addEventListener("input",()=>requestAnimationFrame(upd));
+    const show=()=>{upd();ctrl.classList.add("live");clearTimeout(hideT);};
+    const hide=()=>{hideT=setTimeout(()=>ctrl.classList.remove("live"),650);};
+    r.addEventListener("pointerdown",show);
+    r.addEventListener("pointerup",hide);
+    r.addEventListener("pointerleave",()=>{if(!ctrl.classList.contains("live"))return;hide();});
+    r.addEventListener("focus",show); r.addEventListener("blur",hide);
+    upd();
+  });
+  const bpGlyph=n=>{let l="";for(let i=0;i<n;i++){const a=-Math.PI/2+i*2*Math.PI/n;
+    l+=`<line x1="11" y1="11" x2="${(11+8*Math.cos(a)).toFixed(1)}" y2="${(11+8*Math.sin(a)).toFixed(1)}" stroke-width="2.2" stroke-linecap="round"/>`;}
+    return `<svg class="g" viewBox="0 0 22 22">${l}<circle cx="11" cy="11" r="3.4" stroke="none"/></svg>`;};
+  const lpGlyph=n=>{let d='<circle cx="11" cy="11" r="3.4" stroke="none"/>';
+    if(n>=1)d+='<circle cx="8" cy="3.5" r="1.7" stroke="none"/><circle cx="14" cy="3.5" r="1.7" stroke="none"/>';
+    if(n>=2)d+='<circle cx="8" cy="18.5" r="1.7" stroke="none"/><circle cx="14" cy="18.5" r="1.7" stroke="none"/>';
+    return `<svg class="g" viewBox="0 0 22 22">${d}</svg>`;};
+  const INDSW={phen:"linear-gradient(90deg,#f4f2ee 50%,#e35b9f 50%)",mo:"linear-gradient(90deg,#d84a3c 50%,#f0c93b 50%)",btb:"linear-gradient(90deg,#f0c93b 50%,#3f7fc2 50%)"};
+  const glyph=(sel,o)=>{
+    if(sel.id==="sh-bp")return bpGlyph(+o.text);
+    if(sel.id==="sh-lp")return lpGlyph(+o.text);
+    if(sel.id==="t-ind")return `<span class="sw" style="background:${INDSW[o.value]||"var(--line)"}"></span>`;
+    return "";
+  };
+  const label=t=>{
+    let m=t,x="";
+    if(t.includes(" · ")){[m,x]=t.split(" · ");}
+    else{const p=t.match(/^(.*?)\s*\((.+)\)$/);if(p){m=p[1];x=p[2];}}
+    return [m,x];
+  };
+  $$(".sim .ctrl select").forEach(sel=>{
+    const wrap=document.createElement("div"); wrap.className="selchips";
+    sel.classList.add("chipified"); sel.after(wrap);
+    const render=()=>{
+      wrap.innerHTML=[...sel.options].map(o=>{
+        const [m,x]=label(o.text);
+        return `<button type="button" data-v="${o.value}" class="${o.value===sel.value?"on":""}">${glyph(sel,o)}<span>`+
+          `<span class="m">${m}</span>${x?`<span class="s">${x}</span>`:""}</span></button>`;
+      }).join("");
+      wrap.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{
+        sel.value=b.dataset.v;
+        sel.dispatchEvent(new Event("input",{bubbles:true}));
+        sel.dispatchEvent(new Event("change",{bubbles:true}));
+        render();
+      }));
+    };
+    render();
+  });
+  ["at-p","at-n","at-e"].forEach(id=>{
+    const el=document.getElementById(id); if(!el)return;
+    new MutationObserver(()=>{el.classList.remove("bump");void el.offsetWidth;el.classList.add("bump");})
+      .observe(el,{childList:true,characterData:true,subtree:true});
+  });
 })();
 function recTopic(t,got,max){
   if(t==null)return;
