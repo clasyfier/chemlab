@@ -2222,6 +2222,10 @@ $("#sims").innerHTML=`
     <div class="ctrl"><label for="g-n">Amount of gas</label><input type="range" id="g-n" min="0" max="4" step="0.1" value="1"><span class="val" id="g-n-v">1.0 mol</span></div>
     <div class="ctrl"><label for="g-t">Temperature</label><input type="range" id="g-t" min="0" max="1000" step="10" value="300"><span class="val" id="g-t-v">300 K</span></div>
     <div class="ctrl"><label for="g-v">Volume</label><input type="range" id="g-v" min="10" max="50" step="1" value="25"><span class="val" id="g-v-v">25 dm³</span></div>
+    <div class="ctrl"><label for="g-shape">Container</label><select id="g-shape">
+      <option value="box" selected>Box</option>
+      <option value="sphere">Sphere</option>
+      <option value="cyl">Cylinder</option></select></div>
     <div class="ctrl"><label>Gas handling</label><p style="display:flex;gap:8px;flex-wrap:wrap;margin:0">
       <button class="btn ghost" id="g-pump">💨 Pump in gas</button>
       <button class="btn ghost" id="g-door">🚪 Open trap door</button>
@@ -2474,10 +2478,11 @@ function drawProf(){
   drawProf();
 }));
 
-/* ideal gas — 3D draggable box, pump, trap door (effusion), vacuum, vanish */
-let gasParts=[],gasOut=[],gasDoor=false,gasSuck=false,gasGeom=null,gasLast=0;
+/* ideal gas — 3D draggable container (box/sphere/cylinder), pump, trap door, vacuum */
+let gasParts=[],gasOut=[],gasDoor=false,gasSuck=false,gasGeom=null,gasLast=0,gasShape="box";
 let gasMat=null,gasDragOn=false,gasLX=0,gasLY=0,gasVX=0,gasVY=0,gasCtx=null,gasW=0,gasH=0,gasRect=null;
-const GAS_DY=[-0.55,0.60], GAS_DZ=[-0.60,0.60];   // big square hatch on the +x face (fractions of half-extents)
+const GAS_DY=[-0.55,0.60], GAS_DZ=[-0.60,0.60];   // box hatch bounds (fractions of half-extents)
+const GAS_THD=0.62;                                // sphere cap half-angle
 const gasFx=document.createElement("div");
 gasFx.style.cssText="position:fixed;inset:0;pointer-events:none;z-index:220;overflow:hidden";
 document.body.appendChild(gasFx);
@@ -2491,35 +2496,59 @@ function gasHud(){
 }
 const gasDir=()=>{const a=Math.random()*6.283,b=Math.acos(2*Math.random()-1);
   return [Math.sin(b)*Math.cos(a),Math.sin(b)*Math.sin(a),Math.cos(b)];};
-function gasNew(px,py,pz){ return {p:[px??(Math.random()*2-1),py??(Math.random()*2-1),pz??(Math.random()*2-1)],d:gasDir()}; }
+function gasRandPos(D){
+  if(gasShape==="sphere"){const d=gasDir(),r=D.R*Math.cbrt(Math.random())*0.96;return [d[0]*r,d[1]*r,d[2]*r];}
+  if(gasShape==="cyl"){const a=Math.random()*6.283,q=D.r*Math.sqrt(Math.random())*0.96;
+    return [(Math.random()*2-1)*D.hx*0.96,q*Math.cos(a),q*Math.sin(a)];}
+  return [(Math.random()*2-1)*D.E[0]*0.96,(Math.random()*2-1)*D.E[1]*0.96,(Math.random()*2-1)*D.E[2]*0.96];
+}
+function gasDims(w,h){
+  const maxR=Math.min(w,h)/2-16, sc=Math.cbrt((+$("#g-v").value)/25);
+  if(gasShape==="sphere"){const R=maxR*0.60*sc;return{E:[R,R,R],R};}
+  if(gasShape==="cyl"){const hx=maxR*0.74*sc,r=maxR*0.46*sc;return{E:[hx,r,r],hx,r,rd:r*0.58};}
+  const b=maxR*0.52*sc;return{E:[b*1.35,b*0.95,b*0.9]};
+}
 function gasSetN(n){
+  const D=gasDims(gasW||600,gasH||400);
   const need=Math.round(n*40);
-  while(gasParts.length<need)gasParts.push(gasNew());
+  while(gasParts.length<need)gasParts.push({p:gasRandPos(D),d:gasDir()});
   if(gasParts.length>need)gasParts.length=need;
 }
-function gasHalf(w,h){
-  const maxR=Math.min(w,h)/2-16, s=Math.cbrt((+$("#g-v").value)/25);
-  const b=maxR*0.52*s;
-  return [b*1.35,b*0.95,b*0.9];
-}
-function gasEscape(pos,dir,H){
-  if(!gasGeom||gasOut.length>=110)return;           // past the cap the gas just diffuses away
-  const {rect,cx,cy,proj}=gasGeom;
-  const [sx,sy]=proj(m3v(gasMat,pos));              // exact exit point, this very frame
+function gasScatter(){ const D=gasDims(gasW||600,gasH||400); gasParts.forEach(g=>{g.p=gasRandPos(D);g.d=gasDir();}); }
+function gasEscape(pos,dir){
+  if(!gasGeom||gasOut.length>=110)return;
+  const {rect,proj}=gasGeom;
+  const [sx,sy]=proj(m3v(gasMat,pos));
   const ahead=pos.map((v,i)=>v+dir[i]*20);
   const [sx2,sy2]=proj(m3v(gasMat,ahead));
   let dx=sx2-sx, dy=sy2-sy; const dl=Math.hypot(dx,dy)||1; dx/=dl; dy/=dl;
-  const v=Math.min(760,60+gasP()*1.1);              // escape speed tracks the pressure
+  const v=Math.min(760,60+gasP()*1.1);
   const el=document.createElement("div");
   el.style.cssText="position:absolute;left:0;top:0;width:5px;height:5px;border-radius:50%;background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.75),"+cssVar("--bunsen")+" 65%);will-change:transform";
   gasFx.appendChild(el);
   gasOut.push({el,x:rect.left+sx+dx*8,y:rect.top+sy+dy*8,vx:dx*v,vy:dy*v,grace:performance.now()+280});
 }
+/* door rim (hole outline), hinge y, chord half-widths for ridges — per shape */
+function gasDoorRim(D){
+  if(gasShape==="sphere"){
+    const R=D.R, xf=R*Math.cos(GAS_THD), rq=R*Math.sin(GAS_THD);
+    return {xf,rq,yc:0,pts:Array.from({length:24},(_,k)=>{const a=k/24*6.283;return [xf,rq*Math.cos(a),rq*Math.sin(a)];})};
+  }
+  if(gasShape==="cyl"){
+    const rq=D.rd;
+    return {xf:D.hx,rq,yc:0,pts:Array.from({length:24},(_,k)=>{const a=k/24*6.283;return [D.hx,rq*Math.cos(a),rq*Math.sin(a)];})};
+  }
+  const H=D.E;
+  return {xf:H[0],rq:null,box:true,
+    pts:[[H[0],GAS_DY[0]*H[1],GAS_DZ[0]*H[2]],[H[0],GAS_DY[1]*H[1],GAS_DZ[0]*H[2]],
+         [H[0],GAS_DY[1]*H[1],GAS_DZ[1]*H[2]],[H[0],GAS_DY[0]*H[1],GAS_DZ[1]*H[2]]]};
+}
+const gasSwing=(pt,y1,th)=>[pt[0]+(y1-pt[1])*Math.sin(th),y1-(y1-pt[1])*Math.cos(th),pt[2]];
 function drawGas(dt=0){
   const c=$("#g-plot"); if(!c||!c.clientWidth){gasGeom=null;gasRect=null;return;}
   const dpr=window.devicePixelRatio||1;
   if(!gasCtx||c.width!==Math.round(c.clientWidth*dpr)){[gasCtx,gasW,gasH]=setupCanvas(c);}
-  const ctx=gasCtx,w=gasW,h=gasH,now=performance.now();
+  const ctx=gasCtx,w=gasW,h=gasH;
   if(!gasMat)gasMat=m3mul(rotX(-0.30),rotY(0.55));
   if(!gasDragOn&&(Math.abs(gasVX)>4e-4||Math.abs(gasVY)>4e-4)){
     gasMat=m3mul(rotY(gasVX),m3mul(rotX(gasVY),gasMat)); gasVX*=0.94; gasVY*=0.94;
@@ -2529,100 +2558,149 @@ function drawGas(dt=0){
   $("#g-s").textContent="∝ √T = "+Math.sqrt(T).toFixed(1);
   const cx=w/2,cy=h/2,maxR=Math.min(w,h)/2-16,f=4.2;
   const proj=p=>{const sc=f/(f-p[2]/maxR);return [cx+p[0]*sc,cy-p[1]*sc,sc];};
-  const H=gasHalf(w,h);
-  const rect=c.getBoundingClientRect();
-  gasGeom={rect,cx,cy,proj,H};
+  const D=gasDims(w,h), rect=c.getBoundingClientRect();
+  gasGeom={rect,cx,cy,proj,D};
   ctx.clearRect(0,0,w,h);
   const items=[];
-  const EDGE=cssVar("--ink-soft");
-  /* box corners & edges */
-  const C=[];
-  for(let i=0;i<8;i++)C.push([(i&1?1:-1)*H[0],(i&2?1:-1)*H[1],(i&4?1:-1)*H[2]]);
-  const EDGES=[[0,1],[2,3],[4,5],[6,7],[0,2],[1,3],[4,6],[5,7],[0,4],[1,5],[2,6],[3,7]];
-  const rC=C.map(p=>m3v(gasMat,p));
+  const EDGE=cssVar("--ink-soft"), CU=cssVar("--cu");
+  const seg=(q,pt)=>{items.push({z:(q[2]+pt[2])/2,draw(){
+    const [x1,y1]=proj(q),[x2,y2]=proj(pt);
+    const depth=((q[2]+pt[2])/2/maxR+1)/2;
+    ctx.strokeStyle=EDGE;ctx.globalAlpha=0.30+0.55*depth;ctx.lineWidth=1.3+1.2*depth;
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.globalAlpha=1;
+  }});};
+  const loop3=pts=>{const r=pts.map(p=>m3v(gasMat,p));
+    for(let i=0;i<r.length;i++)seg(r[i],r[(i+1)%r.length]);};
+  /* wireframe + bounding rect */
+  const E=D.E, BC=[];
+  for(let i=0;i<8;i++)BC.push(m3v(gasMat,[(i&1?1:-1)*E[0],(i&2?1:-1)*E[1],(i&4?1:-1)*E[2]]));
   let mnx=1e9,mxx=-1e9,mny=1e9,mxy=-1e9;
-  rC.forEach(p=>{const [sx,sy]=proj(p);mnx=Math.min(mnx,sx);mxx=Math.max(mxx,sx);mny=Math.min(mny,sy);mxy=Math.max(mxy,sy);});
+  BC.forEach(p=>{const [sx,sy]=proj(p);mnx=Math.min(mnx,sx);mxx=Math.max(mxx,sx);mny=Math.min(mny,sy);mxy=Math.max(mxy,sy);});
   gasRect={l:rect.left+mnx,r:rect.left+mxx,t:rect.top+mny,b:rect.top+mxy};
-  EDGES.forEach(([a,b])=>{
-    const q=rC[a],pt=rC[b];
-    items.push({z:(q[2]+pt[2])/2,draw(){
-      const [x1,y1]=proj(q),[x2,y2]=proj(pt);
-      const depth=((q[2]+pt[2])/2/maxR+1)/2;
-      ctx.strokeStyle=EDGE;ctx.globalAlpha=0.30+0.55*depth;ctx.lineWidth=1.3+1.2*depth;
-      ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.globalAlpha=1;
-    }});
-  });
-  /* trap door on the +x face */
-  const dc=[[H[0],GAS_DY[0]*H[1],GAS_DZ[0]*H[2]],[H[0],GAS_DY[1]*H[1],GAS_DZ[0]*H[2]],
-            [H[0],GAS_DY[1]*H[1],GAS_DZ[1]*H[2]],[H[0],GAS_DY[0]*H[1],GAS_DZ[1]*H[2]]];
-  let doorPts;
-  if(gasDoor){
-    const th=1.85, y1=GAS_DY[1]*H[1];                 // hinge along the top edge, flap swung outward
-    doorPts=dc.map(([x,y,z])=>[x+(y1-y)*Math.sin(th),y1-(y1-y)*Math.cos(th),z]);
-  }else doorPts=dc;
-  /* the door wall is a glass pane — with a real hole in it when the flap is open */
-  const face=[[H[0],-H[1],-H[2]],[H[0],H[1],-H[2]],[H[0],H[1],H[2]],[H[0],-H[1],H[2]]].map(p=>m3v(gasMat,p));
-  const holePts=dc.map(p=>m3v(gasMat,p));
-  items.push({z:face.reduce((a,p)=>a+p[2],0)/4,draw(){
-    ctx.beginPath();
-    face.forEach((p,i)=>{const [x,y]=proj(p);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
-    ctx.closePath();
-    if(gasDoor){
-      holePts.forEach((p,i)=>{const [x,y]=proj(p);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
-      ctx.closePath();
+  const ring=(rad,ax,off=0)=>Array.from({length:28},(_,k)=>{const a=k/28*6.283;
+    if(ax===0)return [off,rad*Math.cos(a),rad*Math.sin(a)];
+    if(ax===1)return [rad*Math.cos(a),off,rad*Math.sin(a)];
+    return [rad*Math.cos(a),rad*Math.sin(a),off];});
+  if(gasShape==="sphere"){
+    loop3(ring(D.R,0)); loop3(ring(D.R,1)); loop3(ring(D.R,2));
+    loop3(ring(D.R*0.71,1,D.R*0.71)); loop3(ring(D.R*0.71,1,-D.R*0.71));
+  }else if(gasShape==="cyl"){
+    loop3(ring(D.r,0,D.hx)); loop3(ring(D.r,0,-D.hx));
+    for(const a of [0.79,2.36,3.93,5.50]){
+      seg(m3v(gasMat,[D.hx,D.r*Math.cos(a),D.r*Math.sin(a)]),m3v(gasMat,[-D.hx,D.r*Math.cos(a),D.r*Math.sin(a)]));
     }
-    ctx.fillStyle="color-mix(in srgb,"+cssVar("--cu")+" 11%,transparent)";
-    ctx.fill("evenodd");
-    if(gasDoor){
-      ctx.strokeStyle=cssVar("--cu");ctx.lineWidth=1.8;ctx.setLineDash([5,4]);
+  }else{
+    const H=E, C=[];
+    for(let i=0;i<8;i++)C.push([(i&1?1:-1)*H[0],(i&2?1:-1)*H[1],(i&4?1:-1)*H[2]]);
+    [[0,1],[2,3],[4,5],[6,7],[0,2],[1,3],[4,6],[5,7],[0,4],[1,5],[2,6],[3,7]]
+      .forEach(([a,b])=>seg(m3v(gasMat,C[a]),m3v(gasMat,C[b])));
+  }
+  /* glass door wall with a real hole, ridged flap when open */
+  const rim=gasDoorRim(D);
+  const y1=Math.max(...rim.pts.map(p=>p[1]));
+  const flap=gasDoor?rim.pts.map(p=>gasSwing(p,y1,1.85)):rim.pts;
+  const rRim=rim.pts.map(p=>m3v(gasMat,p)), rFlap=flap.map(p=>m3v(gasMat,p));
+  const paneZ=rRim.reduce((a,p)=>a+p[2],0)/rRim.length;
+  items.push({z:paneZ,draw(){
+    /* wall pane: box face or cylinder end-cap; the sphere's pane is the cap itself */
+    ctx.beginPath();
+    let pane=null;
+    if(rim.box){const H=E;pane=[[H[0],-H[1],-H[2]],[H[0],H[1],-H[2]],[H[0],H[1],H[2]],[H[0],-H[1],H[2]]];}
+    else if(gasShape==="cyl")pane=ring(D.r,0,D.hx);
+    if(pane){
+      const rp=pane.map(p=>m3v(gasMat,p));
+      rp.forEach((p,i)=>{const [x,y]=proj(p);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
+      ctx.closePath();
+      if(gasDoor){rRim.forEach((p,i)=>{const [x,y]=proj(p);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.closePath();}
+      ctx.fillStyle="color-mix(in srgb,"+CU+" 11%,transparent)";
+      ctx.fill("evenodd");
+    }else if(!gasDoor){
+      rRim.forEach((p,i)=>{const [x,y]=proj(p);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
+      ctx.closePath();
+      ctx.fillStyle="color-mix(in srgb,"+CU+" 11%,transparent)"; ctx.fill();
+    }
+    if(gasDoor){                                     // dashed frame around the hole
+      ctx.strokeStyle=CU;ctx.lineWidth=1.8;ctx.setLineDash([5,4]);
       ctx.beginPath();
-      holePts.forEach((p,i)=>{const [x,y]=proj(p);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
+      rRim.forEach((p,i)=>{const [x,y]=proj(p);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
       ctx.closePath();ctx.stroke();ctx.setLineDash([]);
     }
   }});
-  const rD=doorPts.map(p=>m3v(gasMat,p));
-  const doorZ=rD.reduce((a,p)=>a+p[2],0)/4;
-  items.push({z:doorZ,draw(){
-    const CU=cssVar("--cu");
+  const flapZ=rFlap.reduce((a,p)=>a+p[2],0)/rFlap.length;
+  items.push({z:flapZ+1,draw(){
     ctx.lineJoin="round";
     ctx.beginPath();
-    rD.forEach((p,i)=>{const [x,y]=proj(p);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
+    rFlap.forEach((p,i)=>{const [x,y]=proj(p);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
     ctx.closePath();
     if(gasDoor){ctx.fillStyle="color-mix(in srgb,"+CU+" 16%,transparent)";ctx.fill();}
-    ctx.strokeStyle=CU;ctx.lineWidth=gasDoor?2.8:2.4;ctx.stroke();
-    if(gasDoor){                                     // indented grip ridges across the open flap
-      const lerp=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];
+    ctx.strokeStyle=CU;ctx.lineWidth=gasDoor?2.6:2.2;ctx.stroke();
+    if(gasDoor){                                     // grip ridges across the flap
+      const ymin=Math.min(...rim.pts.map(p=>p[1]));
       ctx.lineWidth=1.4;ctx.globalAlpha=0.75;
       for(const t of [0.22,0.44,0.66,0.88]){
-        const [x1,y1]=proj(m3v(gasMat,lerp(doorPts[1],doorPts[0],t)));
-        const [x2,y2]=proj(m3v(gasMat,lerp(doorPts[2],doorPts[3],t)));
-        ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+        const yt=y1-(y1-ymin)*t;
+        let z0,z1;
+        if(rim.box){z0=GAS_DZ[0]*E[2];z1=GAS_DZ[1]*E[2];}
+        else{const wds=rim.rq*rim.rq-yt*yt; if(wds<=0)continue; z1=Math.sqrt(wds); z0=-z1;}
+        const [ax,ay]=proj(m3v(gasMat,gasSwing([rim.xf,yt,z0],y1,1.85)));
+        const [bx2,by2]=proj(m3v(gasMat,gasSwing([rim.xf,yt,z1],y1,1.85)));
+        ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx2,by2);ctx.stroke();
       }
       ctx.globalAlpha=1;
     }
-    const [lx,ly]=proj(rD[2]);
+    const [lx,ly]=proj(rFlap[2]);
     ctx.fillStyle=CU;ctx.font="700 10px -apple-system,sans-serif";ctx.textAlign="left";
     ctx.fillText(gasDoor?"open!":"trap door",lx+6,ly-4);
   }});
-  /* particles: physics in box space, spheres in view space */
+  /* particles */
   const S=Math.sqrt(T)*7;
   let escaped=false;
   for(let i=gasParts.length-1;i>=0;i--){
     const g=gasParts[i];
-    if(!reduced&&S>0){
+    if(!reduced&&S>0&&dt>0){
       for(let ax=0;ax<3;ax++)g.p[ax]+=g.d[ax]*S*dt;
-      if(g.p[0]>H[0]){
-        if(gasDoor&&!gasSuck&&g.p[1]>GAS_DY[0]*H[1]&&g.p[1]<GAS_DY[1]*H[1]&&g.p[2]>GAS_DZ[0]*H[2]&&g.p[2]<GAS_DZ[1]*H[2]){
-          gasParts.splice(i,1);gasEscape(g.p,g.d,H);escaped=true;continue;
+      if(gasShape==="sphere"){
+        const rr=Math.hypot(g.p[0],g.p[1],g.p[2]);
+        if(rr>D.R){
+          if(gasDoor&&!gasSuck&&g.p[0]/rr>Math.cos(GAS_THD)){
+            const pp=g.p.map(v=>v*D.R/rr);
+            gasParts.splice(i,1);gasEscape(pp,g.d);escaped=true;continue;
+          }
+          const nx=g.p[0]/rr,ny=g.p[1]/rr,nz=g.p[2]/rr;
+          const dot=g.d[0]*nx+g.d[1]*ny+g.d[2]*nz;
+          g.d[0]-=2*dot*nx;g.d[1]-=2*dot*ny;g.d[2]-=2*dot*nz;
+          g.p=[nx*D.R,ny*D.R,nz*D.R];
         }
-        g.p[0]=H[0];g.d[0]=-Math.abs(g.d[0]);
+      }else if(gasShape==="cyl"){
+        if(g.p[0]>D.hx){
+          if(gasDoor&&!gasSuck&&g.p[1]*g.p[1]+g.p[2]*g.p[2]<D.rd*D.rd){
+            gasParts.splice(i,1);gasEscape([D.hx,g.p[1],g.p[2]],g.d);escaped=true;continue;
+          }
+          g.p[0]=D.hx;g.d[0]=-Math.abs(g.d[0]);
+        }
+        if(g.p[0]<-D.hx){g.p[0]=-D.hx;g.d[0]=Math.abs(g.d[0]);}
+        const q=Math.hypot(g.p[1],g.p[2]);
+        if(q>D.r){
+          const ny=g.p[1]/q,nz=g.p[2]/q;
+          const dot=g.d[1]*ny+g.d[2]*nz;
+          g.d[1]-=2*dot*ny;g.d[2]-=2*dot*nz;
+          g.p[1]=ny*D.r;g.p[2]=nz*D.r;
+        }
+      }else{
+        const H=E;
+        if(g.p[0]>H[0]){
+          if(gasDoor&&!gasSuck&&g.p[1]>GAS_DY[0]*H[1]&&g.p[1]<GAS_DY[1]*H[1]&&g.p[2]>GAS_DZ[0]*H[2]&&g.p[2]<GAS_DZ[1]*H[2]){
+            gasParts.splice(i,1);gasEscape(g.p,g.d);escaped=true;continue;
+          }
+          g.p[0]=H[0];g.d[0]=-Math.abs(g.d[0]);
+        }
+        if(g.p[0]<-H[0]){g.p[0]=-H[0];g.d[0]=Math.abs(g.d[0]);}
+        for(const ax of [1,2]){
+          if(g.p[ax]>H[ax]){g.p[ax]=H[ax];g.d[ax]=-Math.abs(g.d[ax]);}
+          if(g.p[ax]<-H[ax]){g.p[ax]=-H[ax];g.d[ax]=Math.abs(g.d[ax]);}
+        }
       }
-      if(g.p[0]<-H[0]){g.p[0]=-H[0];g.d[0]=Math.abs(g.d[0]);}
-      for(const ax of [1,2]){
-        if(g.p[ax]>H[ax]){g.p[ax]=H[ax];g.d[ax]=-Math.abs(g.d[ax]);}
-        if(g.p[ax]<-H[ax]){g.p[ax]=-H[ax];g.d[ax]=Math.abs(g.d[ax]);}
-      }
-    }else{ for(const ax of [0,1,2]){ g.p[ax]=Math.max(-H[ax],Math.min(H[ax],g.p[ax])); } }
+    }
     const rp=m3v(gasMat,g.p);
     items.push({z:rp[2],draw(){
       const [x,y,sc]=proj(rp), r=2.6*sc;
@@ -2637,9 +2715,9 @@ function drawGas(dt=0){
 }
 function gasDoorPagePos(){
   if(!gasGeom)return null;
-  const {rect,proj,H}=gasGeom;
-  const mid=m3v(gasMat,[H[0],(GAS_DY[0]+GAS_DY[1])/2*H[1],0]);
-  const [sx,sy]=proj(mid);
+  const {rect,proj,D}=gasGeom;
+  const ymid=gasShape==="box"?(GAS_DY[0]+GAS_DY[1])/2*D.E[1]:0;
+  const [sx,sy]=proj(m3v(gasMat,[D.E[0],ymid,0]));
   return {x:rect.left+sx,y:rect.top+sy};
 }
 function gasLoop(ts){
@@ -2655,15 +2733,17 @@ function gasLoop(ts){
     if(tgt){
       const dx=tgt.x-o.x, dy=tgt.y-o.y, d=Math.hypot(dx,dy)||1;
       if(d<16){o.el.remove();gasOut.splice(i,1);
-        gasParts.push({p:[gasGeom?gasGeom.H[0]*0.94:0,(GAS_DY[0]+GAS_DY[1])/2*(gasGeom?gasGeom.H[1]:0),0],d:gasDir()});
-        const g=gasParts[gasParts.length-1]; g.d[0]=-Math.abs(g.d[0]);
-        returned=true;continue;}
+        const D=gasGeom?gasGeom.D:{E:[1,1,1]};
+        const g={p:[D.E[0]*0.9,0,0],d:gasDir()}; g.d[0]=-Math.abs(g.d[0]);
+        gasParts.push(g); returned=true; continue;}
       o.vx+=dx/d*2600*dt; o.vy+=dy/d*2600*dt;
       o.vx*=0.94; o.vy*=0.94;
     }else{
+      const cool=Math.exp(-0.25*dt);                 // free gas gradually loses its energy
+      o.vx*=cool; o.vy*=cool;
       if(o.x<4){o.x=4;o.vx=Math.abs(o.vx);} if(o.x>innerWidth-10){o.x=innerWidth-10;o.vx=-Math.abs(o.vx);}
       if(o.y<4){o.y=4;o.vy=Math.abs(o.vy);} if(o.y>innerHeight-10){o.y=innerHeight-10;o.vy=-Math.abs(o.vy);}
-      if(gasRect&&now>o.grace){                      // the box is solid: bounce off it
+      if(gasRect&&now>o.grace){
         const {l,r,t,b}=gasRect;
         if(o.x>l&&o.x<r&&o.y>t&&o.y<b){
           const pen=[o.x-l,r-o.x,o.y-t,b-o.y], m=Math.min(...pen);
@@ -2678,7 +2758,7 @@ function gasLoop(ts){
     o.el.style.transform=`translate(${o.x}px,${o.y}px)`;
   }
   if(returned)gasHud();
-  if(gasSuck&&!gasOut.length){                       // vacuum done — slam the door shut
+  if(gasSuck&&!gasOut.length){
     gasSuck=false; gasDoor=false;
     $("#g-suck").textContent="🌀 Suck the gas back";
     $("#g-door").textContent="🚪 Open trap door";
@@ -2703,11 +2783,14 @@ function gasLoop(ts){
 $("#g-n").addEventListener("input",()=>{gasSetN(+$("#g-n").value);gasHud();});
 $("#g-t").addEventListener("input",()=>{$("#g-t-v").textContent=$("#g-t").value+" K";});
 $("#g-v").addEventListener("input",()=>{$("#g-v-v").textContent=$("#g-v").value+" dm³";});
+$("#g-shape").addEventListener("input",()=>{gasShape=$("#g-shape").value;gasScatter();});
 $("#g-pump").addEventListener("click",()=>{
   if(gasCount()>=4)return;
-  for(let i=0;i<12;i++){const g=gasNew(-0.95*(gasGeom?gasGeom.H[0]:1),null,null);
-    if(gasGeom){g.p[1]=(Math.random()*2-1)*gasGeom.H[1]*0.3;g.p[2]=(Math.random()*2-1)*gasGeom.H[2]*0.3;}
-    g.d[0]=Math.abs(g.d[0]); gasParts.push(g);}
+  const D=gasGeom?gasGeom.D:{E:[1,1,1]};
+  for(let i=0;i<12;i++){
+    const g={p:[-D.E[0]*0.9,(Math.random()*2-1)*D.E[1]*0.25,(Math.random()*2-1)*D.E[2]*0.25],d:gasDir()};
+    g.d[0]=Math.abs(g.d[0]); gasParts.push(g);
+  }
   gasHud(); burstFrom($("#g-pump"));
 });
 $("#g-door").addEventListener("click",()=>{
