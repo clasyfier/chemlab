@@ -2628,24 +2628,7 @@ function atRender(){
     else if(now-atIdleAt>2600)atMat=m3mul(rotY(0.0022),atMat);
   }
   ctx.clearRect(0,0,w,h);
-  const meterEdge=84, rightBound=w-84, symW=w>760?Math.min(220,w*0.24):0;
-  const cx=symW?meterEdge+(rightBound-symW-meterEdge)/2:w/2, cy=h/2, maxR=Math.min(w,h)/2-14;
-  const el=ELEMENTS[atomP-1];
-  if(el){
-    ctx.fillStyle=cssVar("--ink"); ctx.textBaseline="middle";
-    if(symW){                                       // wide canvas: symbol column beside the atom
-      const sx=rightBound-symW/2;
-      ctx.textAlign="center"; ctx.globalAlpha=0.14;
-      ctx.font=`800 ${Math.round(Math.min(symW*0.62,maxR*0.75))}px -apple-system,sans-serif`;
-      ctx.fillText(el.sym,sx,cy-12);
-      ctx.globalAlpha=0.5; ctx.font="700 13px -apple-system,sans-serif";
-      ctx.fillText(el.name.toLowerCase(),sx,cy+Math.min(symW*0.34,maxR*0.4));
-    }else{                                          // narrow: small badge top-centre
-      ctx.textAlign="center"; ctx.globalAlpha=0.4;
-      ctx.font="800 26px -apple-system,sans-serif"; ctx.fillText(el.sym,w/2,22);
-    }
-    ctx.globalAlpha=1; ctx.textBaseline="alphabetic"; ctx.textAlign="left";
-  }
+  const cx=w/2, cy=h/2, maxR=Math.min(w,h)/2-14;
   const f=4.2, proj=p=>{const s2=f/(f-p[2]/maxR);return [cx+p[0]*s2,cy-p[1]*s2,s2];};
   const nucR=Math.min(maxR*0.32, 7+5.2*Math.cbrt(atomP+atomN));
   const base=nucR+16, ns=atShells.length, gap=ns?(maxR-base)/ns:0;
