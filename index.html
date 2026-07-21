@@ -2228,7 +2228,7 @@ $("#sims").innerHTML=`
   <div class="stat"><div class="k">Mean speed scale</div><div class="v" id="g-s">—</div></div></div>
 </div><div class="sim" id="sim-atom">
   <h2>Build an atom</h2>
-  <p class="hint">Add protons, neutrons and electrons and watch the element, mass number, charge and shells respond — protons decide the element; electrons decide the charge. <b>Drag the atom to spin it in 3D</b>, and <b>hold a button down</b> to sprint through the periodic table: all 118 elements are in there, hydrogen to oganesson. The Geiger-style meter on the left rates how radioactive your nuclide is — and predicts how it would decay.</p>
+  <p class="hint">Add protons, neutrons and electrons and watch the element, mass number, charge and shells respond — protons decide the element; electrons decide the charge. <b>Drag the atom to spin it in 3D</b>, and <b>hold a button down</b> to sprint through the periodic table: all 118 elements are in there, hydrogen to oganesson. The meters on either side tell the two halves of the story: the ☢ gauge rates how radioactive the <i>nucleus</i> is (and predicts its decay), while the ⚡ gauge rates how chemically reactive the <i>electron arrangement</i> makes it.</p>
   <div class="controls">
     <div class="ctrl"><label>Protons</label><p style="display:flex;gap:6px;margin:0"><button class="btn ghost" data-at="p-">−</button><span class="val" id="at-p" style="min-width:24px;text-align:center;font-size:16px">1</span><button class="btn ghost" data-at="p+">+</button></p></div>
     <div class="ctrl"><label>Neutrons</label><p style="display:flex;gap:6px;margin:0"><button class="btn ghost" data-at="n-">−</button><span class="val" id="at-n" style="min-width:24px;text-align:center;font-size:16px">0</span><button class="btn ghost" data-at="n+">+</button></p></div>
@@ -2520,7 +2520,56 @@ function shellFill(e){
   while(sh.length&&!sh[sh.length-1])sh.pop();
   return sh;
 }
-let atMat=null,atDrag=false,atLX=0,atLY=0,atVX=0,atVY=0,atIdleAt=0,atCtx=null,atW=0,atH=0,atNucl=[],atShells=[],atRadDisp=0;
+let atMat=null,atDrag=false,atLX=0,atLY=0,atVX=0,atVY=0,atIdleAt=0,atCtx=null,atW=0,atH=0,atNucl=[],atShells=[],atRadDisp=0,atReaDisp=0;
+/* chemical reactivity from the electron arrangement: distance from a full outer shell */
+function atReact(E,Z,shells){
+  const ch=Z-E, NOB=[2,10,18,36,54,86,118], isNob=NOB.includes(E), per=shells.length;
+  let sc,mode="";
+  if(ch===0){
+    if(isNob){sc=3;mode="full outer shell — noble";}
+    else{
+      let lo=0,hi=118;
+      for(const n of NOB){if(n<E)lo=n;else{hi=n;break;}}
+      const loss=E-lo, gain=hi-E, m=Math.min(loss,gain);
+      sc=m===1?92:m===2?74:m===3?52:m===4?38:30;
+      if(loss<gain){sc=Math.min(100,sc+(per-2)*3);mode=`wants to lose ${loss} e⁻ — metal-like`;}
+      else if(gain<loss){sc=Math.max(5,sc-(per-2)*4);mode=`wants to gain ${gain} e⁻ — non-metal-like`;}
+      else mode="shares electrons — covalent";
+    }
+  }else if(isNob){sc=Math.min(30,10+Math.abs(ch)*4);mode=`stable ${ch>0?"cation":"anion"} — noble configuration`;}
+  else{sc=Math.min(100,40+Math.abs(ch)*8);mode=`${ch>0?"cation":"anion"} — reactive charged species`;}
+  let label,col;
+  if(sc<12){label="inert";col=cssVar("--ok");}
+  else if(sc<30){label="mildly reactive";col="#9b9b3a";}
+  else if(sc<55){label="reactive";col="#f0a94a";}
+  else if(sc<80){label="very reactive";col="#e07b2f";}
+  else{label="violently reactive";col="#d84a3c";}
+  return {sc,label,col,mode};
+}
+/* shared vertical gauge */
+function atGauge(ctx,h,now,px,glyph,lvl,score,label,col){
+  const mX=px+18, mT=104, mB=h-40, mH=mB-mT;
+  ctx.fillStyle="rgba(127,127,127,.08)";
+  frRoundRect(ctx,px,70,60,mB-70+26,10); ctx.fill();
+  const pulse=score>55?1+0.13*Math.sin(now/110):1;
+  ctx.save();ctx.translate(mX+5,86);ctx.scale(pulse,pulse);
+  ctx.font="17px -apple-system,sans-serif";ctx.textAlign="center";
+  ctx.globalAlpha=0.35+score/160;ctx.fillStyle=col;ctx.fillText(glyph,0,6);ctx.restore();ctx.globalAlpha=1;
+  const g3=ctx.createLinearGradient(0,mB,0,mT);
+  g3.addColorStop(0,cssVar("--ok"));g3.addColorStop(0.5,"#f0a94a");g3.addColorStop(1,"#d84a3c");
+  ctx.fillStyle=g3; frRoundRect(ctx,mX,mT,10,mH,5); ctx.fill();
+  ctx.strokeStyle="rgba(127,127,127,.35)";ctx.lineWidth=1;
+  for(let i=1;i<5;i++){const ty=mB-i/5*mH;ctx.beginPath();ctx.moveTo(mX,ty);ctx.lineTo(mX+10,ty);ctx.stroke();}
+  const ny=mB-Math.max(0,Math.min(100,lvl))/100*mH;
+  ctx.fillStyle=cssVar("--ink");
+  ctx.beginPath();ctx.moveTo(mX-10,ny-5);ctx.lineTo(mX-2,ny);ctx.lineTo(mX-10,ny+5);ctx.closePath();ctx.fill();
+  ctx.strokeStyle=cssVar("--ink");ctx.lineWidth=1.8;
+  ctx.beginPath();ctx.moveTo(mX-1,ny);ctx.lineTo(mX+11,ny);ctx.stroke();
+  ctx.save();ctx.translate(mX+27,(mT+mB)/2);ctx.rotate(-Math.PI/2);
+  ctx.font="800 11px -apple-system,sans-serif";ctx.textAlign="center";
+  ctx.fillStyle=col;ctx.fillText(label.toUpperCase(),0,0);ctx.restore();
+  ctx.textAlign="left";
+}
 /* how far is this nuclide from the valley of stability? (semi-empirical mass formula) */
 function atRadio(Z,N){
   const A=Z+N;
@@ -2579,21 +2628,21 @@ function atRender(){
     else if(now-atIdleAt>2600)atMat=m3mul(rotY(0.0022),atMat);
   }
   ctx.clearRect(0,0,w,h);
-  const meterEdge=84, symW=w>700?Math.min(240,w*0.26):0;
-  const cx=symW?meterEdge+(w-symW-meterEdge)/2:w/2, cy=h/2, maxR=Math.min(w,h)/2-14;
+  const meterEdge=84, rightBound=w-84, symW=w>760?Math.min(220,w*0.24):0;
+  const cx=symW?meterEdge+(rightBound-symW-meterEdge)/2:w/2, cy=h/2, maxR=Math.min(w,h)/2-14;
   const el=ELEMENTS[atomP-1];
   if(el){
     ctx.fillStyle=cssVar("--ink"); ctx.textBaseline="middle";
-    if(symW){                                       // wide canvas: symbol column on the right
-      const sx=w-symW/2;
+    if(symW){                                       // wide canvas: symbol column beside the atom
+      const sx=rightBound-symW/2;
       ctx.textAlign="center"; ctx.globalAlpha=0.14;
       ctx.font=`800 ${Math.round(Math.min(symW*0.62,maxR*0.75))}px -apple-system,sans-serif`;
       ctx.fillText(el.sym,sx,cy-12);
       ctx.globalAlpha=0.5; ctx.font="700 13px -apple-system,sans-serif";
       ctx.fillText(el.name.toLowerCase(),sx,cy+Math.min(symW*0.34,maxR*0.4));
-    }else{                                          // narrow: small badge top-right
-      ctx.textAlign="right"; ctx.globalAlpha=0.4;
-      ctx.font="800 26px -apple-system,sans-serif"; ctx.fillText(el.sym,w-14,26);
+    }else{                                          // narrow: small badge top-centre
+      ctx.textAlign="center"; ctx.globalAlpha=0.4;
+      ctx.font="800 26px -apple-system,sans-serif"; ctx.fillText(el.sym,w/2,22);
     }
     ctx.globalAlpha=1; ctx.textBaseline="alphabetic"; ctx.textAlign="left";
   }
@@ -2648,35 +2697,17 @@ function atRender(){
   ctx.fillStyle=cssVar("--ink-soft");ctx.fillText("neutrons",14,38);ctx.fillStyle=NCOL;ctx.fillRect(76,30,9,9);
   ctx.fillStyle=cssVar("--ink-soft");ctx.fillText("electrons",14,56);ctx.fillStyle=ECOL;ctx.fillRect(80,48,9,9);
 
-  /* radioactivity meter, left side */
+  /* radioactivity (left) and reactivity (right) meters */
   const rad=atRadio(atomP,atomN);
   atRadDisp+=(rad.sc-atRadDisp)*0.08;
   const jit=rad.sc>14?(Math.sin(now/53)+Math.sin(now/89))*rad.sc*0.018:0;   // geiger tremble
-  const lvl=Math.max(0,Math.min(100,atRadDisp+jit));
-  const mX=28,mT=104,mB=h-40,mH=mB-mT;
-  ctx.fillStyle="rgba(127,127,127,.08)";
-  frRoundRect(ctx,10,70,60,mB-70+26,10); ctx.fill();
-  const pulse=rad.sc>55?1+0.13*Math.sin(now/110):1;
-  ctx.save();ctx.translate(mX+5,86);ctx.scale(pulse,pulse);
-  ctx.font="17px -apple-system,sans-serif";ctx.textAlign="center";
-  ctx.globalAlpha=0.35+rad.sc/160;ctx.fillStyle=rad.col;ctx.fillText("☢",0,6);ctx.restore();ctx.globalAlpha=1;
-  const g3=ctx.createLinearGradient(0,mB,0,mT);
-  g3.addColorStop(0,cssVar("--ok"));g3.addColorStop(0.5,"#f0a94a");g3.addColorStop(1,"#d84a3c");
-  ctx.fillStyle=g3; frRoundRect(ctx,mX,mT,10,mH,5); ctx.fill();
-  ctx.strokeStyle="rgba(127,127,127,.35)";ctx.lineWidth=1;
-  for(let i=1;i<5;i++){const ty=mB-i/5*mH;ctx.beginPath();ctx.moveTo(mX,ty);ctx.lineTo(mX+10,ty);ctx.stroke();}
-  const ny=mB-lvl/100*mH;
-  ctx.fillStyle=cssVar("--ink");
-  ctx.beginPath();ctx.moveTo(mX-10,ny-5);ctx.lineTo(mX-2,ny);ctx.lineTo(mX-10,ny+5);ctx.closePath();ctx.fill();
-  ctx.strokeStyle=cssVar("--ink");ctx.lineWidth=1.8;
-  ctx.beginPath();ctx.moveTo(mX-1,ny);ctx.lineTo(mX+11,ny);ctx.stroke();
-  ctx.save();ctx.translate(mX+27,(mT+mB)/2);ctx.rotate(-Math.PI/2);
-  ctx.font="800 11px -apple-system,sans-serif";ctx.textAlign="center";
-  ctx.fillStyle=rad.col;ctx.fillText(rad.label.toUpperCase(),0,0);ctx.restore();
-  if(rad.mode){
-    ctx.font="10.5px -apple-system,sans-serif";ctx.fillStyle=cssVar("--ink-soft");
-    ctx.textAlign="left";ctx.fillText(rad.mode,12,h-8);
-  }
+  atGauge(ctx,h,now,10,"☢",atRadDisp+jit,rad.sc,rad.label,rad.col);
+  const rea=atReact(atomE,atomP,atShells);
+  atReaDisp+=(rea.sc-atReaDisp)*0.08;
+  atGauge(ctx,h,now,w-70,"⚡",atReaDisp,rea.sc,rea.label,rea.col);
+  ctx.font="10.5px -apple-system,sans-serif";ctx.fillStyle=cssVar("--ink-soft");
+  if(rad.mode){ctx.textAlign="left";ctx.fillText("☢ "+rad.mode,12,h-8);}
+  if(rea.mode){ctx.textAlign="right";ctx.fillText("⚡ "+rea.mode,w-12,h-8);}
   ctx.textAlign="left";
 }
 (()=>{
