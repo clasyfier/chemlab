@@ -2217,11 +2217,16 @@ $("#sims").innerHTML=`
 </div>
 <div class="sim" id="sim-gas">
   <h2>Ideal gas · pV = nRT</h2>
-  <p class="hint">Particles in a box. Temperature sets their speed (⟨KE⟩ ∝ T), volume sets the box, and pressure is what you read off the wall collisions. R = 8.314 J K⁻¹ mol⁻¹.</p>
+  <p class="hint">Particles in a box. Temperature sets their speed (⟨KE⟩ ∝ T), volume sets the box, and pressure is what you read off the wall collisions — R = 8.314 J K⁻¹ mol⁻¹. <b>Pump in more gas</b>, then <b>open the trap door</b> and watch the molecules effuse out onto the page — they leave faster the higher the pressure. Suck them back with the vacuum, or remove the gas entirely.</p>
   <div class="controls">
-    <div class="ctrl"><label for="g-n">Amount of gas</label><input type="range" id="g-n" min="0.5" max="3" step="0.1" value="1"><span class="val" id="g-n-v">1.0 mol</span></div>
+    <div class="ctrl"><label for="g-n">Amount of gas</label><input type="range" id="g-n" min="0" max="4" step="0.1" value="1"><span class="val" id="g-n-v">1.0 mol</span></div>
     <div class="ctrl"><label for="g-t">Temperature</label><input type="range" id="g-t" min="150" max="900" step="10" value="300"><span class="val" id="g-t-v">300 K</span></div>
     <div class="ctrl"><label for="g-v">Volume</label><input type="range" id="g-v" min="10" max="50" step="1" value="25"><span class="val" id="g-v-v">25 dm³</span></div>
+    <div class="ctrl"><label>Gas handling</label><p style="display:flex;gap:8px;flex-wrap:wrap;margin:0">
+      <button class="btn ghost" id="g-pump">💨 Pump in gas</button>
+      <button class="btn ghost" id="g-door">🚪 Open trap door</button>
+      <button class="btn ghost" id="g-suck" disabled>🌀 Suck the gas back</button>
+      <button class="btn ghost" id="g-reset">🗑 Remove all gas</button></p></div>
   </div>
   <canvas class="plot" id="g-plot" style="height:260px"></canvas>
   <div class="readout"><div class="stat"><div class="k">Pressure</div><div class="v" id="g-p">—</div></div>
@@ -2469,45 +2474,140 @@ function drawProf(){
   drawProf();
 }));
 
-/* ideal gas particle box */
-let gasParts=[];
-function gasInit(){
-  gasParts=[]; const N=Math.round(+$("#g-n").value*40);
-  let seed=42; const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
-  for(let i=0;i<N;i++) gasParts.push({x:rnd(),y:rnd(),a:rnd()*6.283});
+/* ideal gas particle box — pump, trap door (effusion), vacuum, vanish */
+let gasParts=[],gasOut=[],gasDoor=false,gasSuck=false,gasGeom=null,gasLast=0;
+const GAS_DOOR=[0.18,0.42];
+const gasFx=document.createElement("div");
+gasFx.style.cssText="position:fixed;inset:0;pointer-events:none;z-index:220;overflow:hidden";
+document.body.appendChild(gasFx);
+const gasCount=()=>gasParts.length/40;
+function gasP(){ const T=+$("#g-t").value,Vd=+$("#g-v").value; return gasCount()*8.314*T/(Vd/1000)/1000; }
+function gasHud(){
+  const n=gasCount();
+  $("#g-n").value=n;
+  $("#g-n-v").textContent=n.toFixed(1)+" mol"+(gasOut.length?` · ${gasOut.length} escaped`:"");
+  $("#g-suck").disabled=!(gasDoor&&gasOut.length);
+}
+function gasSetN(n){
+  const need=Math.round(n*40);
+  while(gasParts.length<need)gasParts.push({x:Math.random(),y:Math.random(),a:Math.random()*6.283});
+  if(gasParts.length>need)gasParts.length=need;
+}
+function gasEscape(){
+  if(!gasGeom||reduced||gasOut.length>=110)return;   // past the cap the gas just diffuses away
+  const {rect,bx,by,boxW,boxH}=gasGeom;
+  const el=document.createElement("div");
+  el.style.cssText="position:absolute;left:0;top:0;width:7px;height:7px;border-radius:50%;background:"+cssVar("--bunsen")+";opacity:.85;will-change:transform";
+  gasFx.appendChild(el);
+  const v=Math.min(760,60+gasP()*1.1);               // escape speed tracks the pressure
+  const spread=(Math.random()-0.5)*1.1;
+  gasOut.push({el,
+    x:rect.left+bx+boxW+4,
+    y:rect.top+by+(GAS_DOOR[0]+GAS_DOOR[1])/2*boxH+(Math.random()-0.5)*14,
+    vx:v*Math.cos(spread), vy:v*Math.sin(spread)});
 }
 function drawGas(){
-  const c=$("#g-plot"); if(!c.clientWidth)return;
+  const c=$("#g-plot"); if(!c.clientWidth){gasGeom=null;return;}
   const [ctx,w,h]=setupCanvas(c);
-  const n=+$("#g-n").value,T=+$("#g-t").value,Vd=+$("#g-v").value;
-  const P=n*8.314*T/(Vd/1000)/1000; // kPa
-  $("#g-p").textContent=P.toFixed(0)+" kPa";
+  const T=+$("#g-t").value,Vd=+$("#g-v").value,n=gasCount(),P=gasP();
+  $("#g-p").textContent=n?P.toFixed(0)+" kPa":"0 kPa — vacuum";
   $("#g-s").textContent="∝ √T = "+Math.sqrt(T).toFixed(1);
-  const boxW=(Vd/50)*(w-40)+40, boxH=h-30;
-  const bx=(w-boxW)/2, by=15;
+  const boxW=(Vd/50)*(w-40)+40, boxH=h-30, bx=(w-boxW)/2, by=15;
+  gasGeom={rect:c.getBoundingClientRect(),bx,by,boxW,boxH};
   ctx.clearRect(0,0,w,h);
-  ctx.strokeStyle=cssVar("--ink-soft");ctx.lineWidth=2;ctx.strokeRect(bx,by,boxW,boxH);
-  const need=Math.round(n*40);
-  while(gasParts.length<need)gasParts.push({x:Math.abs(Math.sin(gasParts.length*12.9898)),y:Math.abs(Math.sin(gasParts.length*78.233)),a:gasParts.length});
-  if(gasParts.length>need)gasParts.length=need;
+  const dy0=by+GAS_DOOR[0]*boxH, dy1=by+GAS_DOOR[1]*boxH;
+  ctx.strokeStyle=cssVar("--ink-soft");ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.moveTo(bx,by);ctx.lineTo(bx+boxW,by);
+  ctx.moveTo(bx,by);ctx.lineTo(bx,by+boxH);
+  ctx.moveTo(bx,by+boxH);ctx.lineTo(bx+boxW,by+boxH);
+  ctx.moveTo(bx+boxW,by);ctx.lineTo(bx+boxW,dy0);
+  ctx.moveTo(bx+boxW,dy1);ctx.lineTo(bx+boxW,by+boxH);
+  ctx.stroke();
+  ctx.strokeStyle=cssVar("--cu");ctx.lineWidth=3;ctx.lineCap="round";
+  ctx.beginPath();
+  if(gasDoor){ctx.moveTo(bx+boxW,dy0);ctx.lineTo(bx+boxW+(dy1-dy0)*0.85,dy0+(dy1-dy0)*0.35);}
+  else{ctx.moveTo(bx+boxW,dy0);ctx.lineTo(bx+boxW,dy1);}
+  ctx.stroke();ctx.lineWidth=2;ctx.lineCap="butt";
+  ctx.fillStyle=cssVar("--cu");ctx.font="700 10px -apple-system,sans-serif";ctx.textAlign="left";
+  ctx.fillText(gasDoor?"open!":"trap door",bx+boxW+7,dy0-5);
   const sp=Math.sqrt(T)/900;
   ctx.fillStyle=cssVar("--bunsen");
-  for(const p of gasParts){
+  let escaped=false;
+  for(let i=gasParts.length-1;i>=0;i--){
+    const p=gasParts[i];
     if(!reduced){
       p.x+=Math.cos(p.a)*sp; p.y+=Math.sin(p.a)*sp*1.4;
-      if(p.x<0){p.x=0;p.a=Math.PI-p.a;} if(p.x>1){p.x=1;p.a=Math.PI-p.a;}
+      if(p.x<0){p.x=0;p.a=Math.PI-p.a;}
+      if(p.x>1){
+        if(gasDoor&&!gasSuck&&p.y>GAS_DOOR[0]&&p.y<GAS_DOOR[1]){gasParts.splice(i,1);gasEscape();escaped=true;continue;}
+        p.x=1;p.a=Math.PI-p.a;
+      }
       if(p.y<0){p.y=0;p.a=-p.a;} if(p.y>1){p.y=1;p.a=-p.a;}
     }
     ctx.beginPath();ctx.arc(bx+p.x*boxW,by+p.y*boxH,3,0,7);ctx.fill();
   }
+  if(escaped)gasHud();
 }
-["g-n","g-t","g-v"].forEach(id=>$("#"+id).addEventListener("input",()=>{
-  $("#g-n-v").textContent=(+$("#g-n").value).toFixed(1)+" mol";
-  $("#g-t-v").textContent=$("#g-t").value+" K";
-  $("#g-v-v").textContent=$("#g-v").value+" dm³";
-}));
-gasInit();
-function gasLoop(){ if($("#v-lab").classList.contains("on")) drawGas(); if(!reduced) requestAnimationFrame(gasLoop); }
+function gasLoop(ts){
+  requestAnimationFrame(gasLoop);
+  const dt=Math.min(0.05,(ts-gasLast)/1000||0.016); gasLast=ts;
+  if($("#v-lab").classList.contains("on")&&!document.hidden)drawGas();
+  if(!gasOut.length)return;
+  const tgt=gasSuck&&gasDoor&&gasGeom?{
+    x:gasGeom.rect.left+gasGeom.bx+gasGeom.boxW,
+    y:gasGeom.rect.top+gasGeom.by+(GAS_DOOR[0]+GAS_DOOR[1])/2*gasGeom.boxH}:null;
+  let returned=false;
+  for(let i=gasOut.length-1;i>=0;i--){
+    const o=gasOut[i];
+    if(tgt){
+      const dx=tgt.x-o.x, dy=tgt.y-o.y, d=Math.hypot(dx,dy)||1;
+      if(d<16){o.el.remove();gasOut.splice(i,1);
+        gasParts.push({x:0.97,y:(GAS_DOOR[0]+GAS_DOOR[1])/2,a:Math.PI+(Math.random()-0.5)*0.8});
+        returned=true;continue;}
+      o.vx+=dx/d*2600*dt; o.vy+=dy/d*2600*dt;
+      o.vx*=0.94; o.vy*=0.94;
+    }else{
+      if(o.x<4){o.x=4;o.vx=Math.abs(o.vx);} if(o.x>innerWidth-10){o.x=innerWidth-10;o.vx=-Math.abs(o.vx);}
+      if(o.y<4){o.y=4;o.vy=Math.abs(o.vy);} if(o.y>innerHeight-10){o.y=innerHeight-10;o.vy=-Math.abs(o.vy);}
+    }
+    o.x+=o.vx*dt; o.y+=o.vy*dt;
+    o.el.style.transform=`translate(${o.x}px,${o.y}px)`;
+  }
+  if(returned)gasHud();
+  if(gasSuck&&!gasOut.length){                     // vacuum done — slam the door shut
+    gasSuck=false; gasDoor=false;
+    $("#g-suck").textContent="🌀 Suck the gas back";
+    $("#g-door").textContent="🚪 Open trap door";
+    gasHud();
+  }
+}
+$("#g-n").addEventListener("input",()=>{gasSetN(+$("#g-n").value);gasHud();});
+$("#g-t").addEventListener("input",()=>{$("#g-t-v").textContent=$("#g-t").value+" K";});
+$("#g-v").addEventListener("input",()=>{$("#g-v-v").textContent=$("#g-v").value+" dm³";});
+$("#g-pump").addEventListener("click",()=>{
+  if(gasCount()>=4)return;
+  for(let i=0;i<12;i++)gasParts.push({x:0.03,y:0.4+Math.random()*0.2,a:(Math.random()-0.5)*1.2});
+  gasHud(); burstFrom($("#g-pump"));
+});
+$("#g-door").addEventListener("click",()=>{
+  gasDoor=!gasDoor;
+  $("#g-door").textContent=gasDoor?"🚪 Close trap door":"🚪 Open trap door";
+  if(!gasDoor&&gasSuck){gasSuck=false;$("#g-suck").textContent="🌀 Suck the gas back";}
+  gasHud();
+});
+$("#g-suck").addEventListener("click",()=>{
+  if(!gasDoor||!gasOut.length)return;
+  gasSuck=true; $("#g-suck").textContent="🌀 Sucking…";
+});
+$("#g-reset").addEventListener("click",()=>{
+  gasParts=[]; gasSuck=false;
+  gasOut.forEach(o=>o.el.remove()); gasOut=[];
+  $("#g-suck").textContent="🌀 Suck the gas back";
+  gasHud();
+});
+gasSetN(1); gasHud();
+requestAnimationFrame(gasLoop);
 
 /* build an atom */
 let atomP=1, atomN=0, atomE=1;
