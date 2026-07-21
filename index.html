@@ -2229,6 +2229,8 @@ window.applyPracLocks=function(){
   if(hardOpt)hardOpt.textContent=prem?"Hard":"Hard · ★ Premium";
   const qnav=document.querySelector('nav.rail button[data-v="quiz"]');
   if(qnav)qnav.innerHTML=`<span class="dot" style="background:var(--bunsen)"></span>Test your knowledge${prem?"":" 🔒"}`;
+  const heroBtn=document.querySelector(".hero-cta button[data-goto='learn']");
+  if(heroBtn)heroBtn.textContent=prem?"Dive in":"Start learning — it's free";
 };
 function refreshPrac(i){
   const a=(load("chemlab-prac",{})[i])||[];
