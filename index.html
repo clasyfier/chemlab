@@ -2207,6 +2207,7 @@ $("#sims").innerHTML=`
   <canvas class="plot" id="fr-plot" style="height:430px"></canvas>
   <div class="readout" style="align-items:center">
     <button class="btn" id="fr-start">Start refining</button>
+    <button class="btn ghost" id="fr-stop" hidden>Stop barrel</button>
     <div class="stat"><div class="k">Score</div><div class="v" id="fr-score">0</div></div>
     <div class="stat"><div class="k">Streak</div><div class="v" id="fr-streak">0</div></div>
     <div class="stat"><div class="k">Best barrel</div><div class="v" id="fr-best">—</div></div>
@@ -2572,7 +2573,7 @@ function frNext(){
     frDone=true; frRun=false;
     const b=load("chemlab-frac-best",null);
     if(b==null||frScore>b)store("chemlab-frac-best",frScore);
-    frHud(); $("#fr-start").textContent="Refine another barrel";
+    frHud(); $("#fr-start").textContent="Refine another barrel"; $("#fr-stop").hidden=true;
   } else frSpawnAt=performance.now()+650;
 }
 function frClickRow(i){
@@ -2593,7 +2594,15 @@ function frStart(){
   frFills=[0,0,0,0,0,0]; frFx=[]; frMsg=null;
   frSpawnAt=performance.now()+700; frHud();
   $("#fr-start").textContent="Restart barrel";
+  $("#fr-stop").hidden=false;
   frSay("Barrel loaded — vapours rising!","ok");
+}
+function frStop(){
+  frRun=false; frDone=false; frMol=null; frFx=[];
+  frScore=0; frStreak=0; frCount=0; frRight=0; frFills=[0,0,0,0,0,0];
+  frHud(); frMsg=null;
+  $("#fr-start").textContent="Start refining";
+  $("#fr-stop").hidden=true;
 }
 function frRoundRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
 function frRender(ts){
@@ -2745,6 +2754,7 @@ function frRender(ts){
     if(x>colL&&y>=colT&&y<=colB)frClickRow(Math.min(5,Math.floor((y-colT)/rowH)));
   });
   $("#fr-start").addEventListener("click",frStart);
+  $("#fr-stop").addEventListener("click",frStop);
   frHud();
   requestAnimationFrame(frRender);
 })();
