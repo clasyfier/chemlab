@@ -2217,7 +2217,7 @@ $("#sims").innerHTML=`
 </div>
 <div class="sim" id="sim-gas">
   <h2>Ideal gas · pV = nRT</h2>
-  <p class="hint">Particles in a box. Temperature sets their speed (⟨KE⟩ ∝ T), volume sets the box, and pressure is what you read off the wall collisions — R = 8.314 J K⁻¹ mol⁻¹. <b>Pump in more gas</b>, then <b>open the trap door</b> and watch the molecules effuse out onto the page — they leave faster the higher the pressure. Suck them back with the vacuum, or remove the gas entirely.</p>
+  <p class="hint">Particles in a box — <b>drag the box to spin it in 3D</b>. Temperature sets their speed (⟨KE⟩ ∝ T), volume sets the box, and pressure is what you read off the wall collisions — R = 8.314 J K⁻¹ mol⁻¹. <b>Pump in more gas</b>, then <b>open the trap door</b> and watch the molecules stream out onto the page — they leave faster the higher the pressure, and they bounce right off the box. Suck them back with the vacuum, or remove the gas entirely.</p>
   <div class="controls">
     <div class="ctrl"><label for="g-n">Amount of gas</label><input type="range" id="g-n" min="0" max="4" step="0.1" value="1"><span class="val" id="g-n-v">1.0 mol</span></div>
     <div class="ctrl"><label for="g-t">Temperature</label><input type="range" id="g-t" min="0" max="1000" step="10" value="300"><span class="val" id="g-t-v">300 K</span></div>
@@ -2474,9 +2474,10 @@ function drawProf(){
   drawProf();
 }));
 
-/* ideal gas particle box — pump, trap door (effusion), vacuum, vanish */
+/* ideal gas — 3D draggable box, pump, trap door (effusion), vacuum, vanish */
 let gasParts=[],gasOut=[],gasDoor=false,gasSuck=false,gasGeom=null,gasLast=0;
-const GAS_DOOR=[0.18,0.42];
+let gasMat=null,gasDragOn=false,gasLX=0,gasLY=0,gasVX=0,gasVY=0,gasCtx=null,gasW=0,gasH=0,gasRect=null;
+const GAS_DY=[-0.10,0.55], GAS_DZ=[-0.45,0.45];   // door bounds on the +x face (fractions of half-extents)
 const gasFx=document.createElement("div");
 gasFx.style.cssText="position:fixed;inset:0;pointer-events:none;z-index:220;overflow:hidden";
 document.body.appendChild(gasFx);
@@ -2488,106 +2489,192 @@ function gasHud(){
   $("#g-n-v").textContent=n.toFixed(1)+" mol"+(gasOut.length?` · ${gasOut.length} escaped`:"");
   $("#g-suck").disabled=!(gasDoor&&gasOut.length);
 }
+const gasDir=()=>{const a=Math.random()*6.283,b=Math.acos(2*Math.random()-1);
+  return [Math.sin(b)*Math.cos(a),Math.sin(b)*Math.sin(a),Math.cos(b)];};
+function gasNew(px,py,pz){ return {p:[px??(Math.random()*2-1),py??(Math.random()*2-1),pz??(Math.random()*2-1)],d:gasDir()}; }
 function gasSetN(n){
   const need=Math.round(n*40);
-  while(gasParts.length<need)gasParts.push({x:Math.random(),y:Math.random(),a:Math.random()*6.283});
+  while(gasParts.length<need)gasParts.push(gasNew());
   if(gasParts.length>need)gasParts.length=need;
 }
-function gasEscape(){
-  if(!gasGeom||reduced||gasOut.length>=110)return;   // past the cap the gas just diffuses away
-  const {rect,bx,by,boxW,boxH}=gasGeom;
-  const el=document.createElement("div");
-  el.style.cssText="position:absolute;left:0;top:0;width:7px;height:7px;border-radius:50%;background:"+cssVar("--bunsen")+";opacity:.85;will-change:transform";
-  gasFx.appendChild(el);
-  const v=Math.min(760,60+gasP()*1.1);               // escape speed tracks the pressure
-  const spread=(Math.random()-0.5)*1.1;
-  gasOut.push({el,
-    x:rect.left+bx+boxW+4,
-    y:rect.top+by+(GAS_DOOR[0]+GAS_DOOR[1])/2*boxH+(Math.random()-0.5)*14,
-    vx:v*Math.cos(spread), vy:v*Math.sin(spread)});
+function gasHalf(w,h){
+  const maxR=Math.min(w,h)/2-16, s=Math.cbrt((+$("#g-v").value)/25);
+  const b=maxR*0.52*s;
+  return [b*1.35,b*0.95,b*0.9];
 }
-function drawGas(){
-  const c=$("#g-plot"); if(!c.clientWidth){gasGeom=null;return;}
-  const [ctx,w,h]=setupCanvas(c);
-  const T=+$("#g-t").value,Vd=+$("#g-v").value,n=gasCount(),P=gasP();
+function gasEscape(pos,dir,H){
+  if(!gasGeom||gasOut.length>=110)return;           // past the cap the gas just diffuses away
+  const {rect,cx,cy,proj}=gasGeom;
+  const [sx,sy]=proj(m3v(gasMat,pos));              // exact exit point, this very frame
+  const ahead=pos.map((v,i)=>v+dir[i]*20);
+  const [sx2,sy2]=proj(m3v(gasMat,ahead));
+  let dx=sx2-sx, dy=sy2-sy; const dl=Math.hypot(dx,dy)||1; dx/=dl; dy/=dl;
+  const v=Math.min(760,60+gasP()*1.1);              // escape speed tracks the pressure
+  const el=document.createElement("div");
+  el.style.cssText="position:absolute;left:0;top:0;width:5px;height:5px;border-radius:50%;background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.75),"+cssVar("--bunsen")+" 65%);will-change:transform";
+  gasFx.appendChild(el);
+  gasOut.push({el,x:rect.left+sx+dx*8,y:rect.top+sy+dy*8,vx:dx*v,vy:dy*v,grace:performance.now()+280});
+}
+function drawGas(dt=0){
+  const c=$("#g-plot"); if(!c||!c.clientWidth){gasGeom=null;gasRect=null;return;}
+  const dpr=window.devicePixelRatio||1;
+  if(!gasCtx||c.width!==Math.round(c.clientWidth*dpr)){[gasCtx,gasW,gasH]=setupCanvas(c);}
+  const ctx=gasCtx,w=gasW,h=gasH,now=performance.now();
+  if(!gasMat)gasMat=m3mul(rotX(-0.30),rotY(0.55));
+  if(!gasDragOn&&(Math.abs(gasVX)>4e-4||Math.abs(gasVY)>4e-4)){
+    gasMat=m3mul(rotY(gasVX),m3mul(rotX(gasVY),gasMat)); gasVX*=0.94; gasVY*=0.94;
+  }
+  const T=+$("#g-t").value,n=gasCount(),P=gasP();
   $("#g-p").textContent=n?P.toFixed(0)+" kPa":"0 kPa — vacuum";
   $("#g-s").textContent="∝ √T = "+Math.sqrt(T).toFixed(1);
-  const boxW=(Vd/50)*(w-40)+40, boxH=h-30, bx=(w-boxW)/2, by=15;
-  gasGeom={rect:c.getBoundingClientRect(),bx,by,boxW,boxH};
+  const cx=w/2,cy=h/2,maxR=Math.min(w,h)/2-16,f=4.2;
+  const proj=p=>{const sc=f/(f-p[2]/maxR);return [cx+p[0]*sc,cy-p[1]*sc,sc];};
+  const H=gasHalf(w,h);
+  const rect=c.getBoundingClientRect();
+  gasGeom={rect,cx,cy,proj,H};
   ctx.clearRect(0,0,w,h);
-  const dy0=by+GAS_DOOR[0]*boxH, dy1=by+GAS_DOOR[1]*boxH;
-  ctx.strokeStyle=cssVar("--ink-soft");ctx.lineWidth=2;
-  ctx.beginPath();
-  ctx.moveTo(bx,by);ctx.lineTo(bx+boxW,by);
-  ctx.moveTo(bx,by);ctx.lineTo(bx,by+boxH);
-  ctx.moveTo(bx,by+boxH);ctx.lineTo(bx+boxW,by+boxH);
-  ctx.moveTo(bx+boxW,by);ctx.lineTo(bx+boxW,dy0);
-  ctx.moveTo(bx+boxW,dy1);ctx.lineTo(bx+boxW,by+boxH);
-  ctx.stroke();
-  ctx.strokeStyle=cssVar("--cu");ctx.lineWidth=3;ctx.lineCap="round";
-  ctx.beginPath();
-  if(gasDoor){ctx.moveTo(bx+boxW,dy0);ctx.lineTo(bx+boxW+(dy1-dy0)*0.85,dy0+(dy1-dy0)*0.35);}
-  else{ctx.moveTo(bx+boxW,dy0);ctx.lineTo(bx+boxW,dy1);}
-  ctx.stroke();ctx.lineWidth=2;ctx.lineCap="butt";
-  ctx.fillStyle=cssVar("--cu");ctx.font="700 10px -apple-system,sans-serif";ctx.textAlign="left";
-  ctx.fillText(gasDoor?"open!":"trap door",bx+boxW+7,dy0-5);
-  const sp=Math.sqrt(T)/900;
-  ctx.fillStyle=cssVar("--bunsen");
+  const items=[];
+  const EDGE=cssVar("--ink-soft");
+  /* box corners & edges */
+  const C=[];
+  for(let i=0;i<8;i++)C.push([(i&1?1:-1)*H[0],(i&2?1:-1)*H[1],(i&4?1:-1)*H[2]]);
+  const EDGES=[[0,1],[2,3],[4,5],[6,7],[0,2],[1,3],[4,6],[5,7],[0,4],[1,5],[2,6],[3,7]];
+  const rC=C.map(p=>m3v(gasMat,p));
+  let mnx=1e9,mxx=-1e9,mny=1e9,mxy=-1e9;
+  rC.forEach(p=>{const [sx,sy]=proj(p);mnx=Math.min(mnx,sx);mxx=Math.max(mxx,sx);mny=Math.min(mny,sy);mxy=Math.max(mxy,sy);});
+  gasRect={l:rect.left+mnx,r:rect.left+mxx,t:rect.top+mny,b:rect.top+mxy};
+  EDGES.forEach(([a,b])=>{
+    const q=rC[a],pt=rC[b];
+    items.push({z:(q[2]+pt[2])/2,draw(){
+      const [x1,y1]=proj(q),[x2,y2]=proj(pt);
+      const depth=((q[2]+pt[2])/2/maxR+1)/2;
+      ctx.strokeStyle=EDGE;ctx.globalAlpha=0.30+0.55*depth;ctx.lineWidth=1.3+1.2*depth;
+      ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.globalAlpha=1;
+    }});
+  });
+  /* trap door on the +x face */
+  const dc=[[H[0],GAS_DY[0]*H[1],GAS_DZ[0]*H[2]],[H[0],GAS_DY[1]*H[1],GAS_DZ[0]*H[2]],
+            [H[0],GAS_DY[1]*H[1],GAS_DZ[1]*H[2]],[H[0],GAS_DY[0]*H[1],GAS_DZ[1]*H[2]]];
+  let doorPts;
+  if(gasDoor){
+    const th=1.85, y1=GAS_DY[1]*H[1];                 // hinge along the top edge, flap swung outward
+    doorPts=dc.map(([x,y,z])=>[x+(y1-y)*Math.sin(th),y1-(y1-y)*Math.cos(th),z]);
+  }else doorPts=dc;
+  const rD=doorPts.map(p=>m3v(gasMat,p));
+  const doorZ=rD.reduce((a,p)=>a+p[2],0)/4;
+  items.push({z:doorZ,draw(){
+    ctx.strokeStyle=cssVar("--cu");ctx.lineWidth=2.4;ctx.lineJoin="round";
+    ctx.beginPath();
+    rD.forEach((p,i)=>{const [x,y]=proj(p);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
+    ctx.closePath();ctx.stroke();
+    const [lx,ly]=proj(rD[2]);
+    ctx.fillStyle=cssVar("--cu");ctx.font="700 10px -apple-system,sans-serif";ctx.textAlign="left";
+    ctx.fillText(gasDoor?"open!":"trap door",lx+6,ly-4);
+  }});
+  /* particles: physics in box space, spheres in view space */
+  const S=Math.sqrt(T)*7;
   let escaped=false;
   for(let i=gasParts.length-1;i>=0;i--){
-    const p=gasParts[i];
-    if(!reduced){
-      p.x+=Math.cos(p.a)*sp; p.y+=Math.sin(p.a)*sp*1.4;
-      if(p.x<0){p.x=0;p.a=Math.PI-p.a;}
-      if(p.x>1){
-        if(gasDoor&&!gasSuck&&p.y>GAS_DOOR[0]&&p.y<GAS_DOOR[1]){gasParts.splice(i,1);gasEscape();escaped=true;continue;}
-        p.x=1;p.a=Math.PI-p.a;
+    const g=gasParts[i];
+    if(!reduced&&S>0){
+      for(let ax=0;ax<3;ax++)g.p[ax]+=g.d[ax]*S*dt;
+      if(g.p[0]>H[0]){
+        if(gasDoor&&!gasSuck&&g.p[1]>GAS_DY[0]*H[1]&&g.p[1]<GAS_DY[1]*H[1]&&g.p[2]>GAS_DZ[0]*H[2]&&g.p[2]<GAS_DZ[1]*H[2]){
+          gasParts.splice(i,1);gasEscape(g.p,g.d,H);escaped=true;continue;
+        }
+        g.p[0]=H[0];g.d[0]=-Math.abs(g.d[0]);
       }
-      if(p.y<0){p.y=0;p.a=-p.a;} if(p.y>1){p.y=1;p.a=-p.a;}
-    }
-    ctx.beginPath();ctx.arc(bx+p.x*boxW,by+p.y*boxH,3,0,7);ctx.fill();
+      if(g.p[0]<-H[0]){g.p[0]=-H[0];g.d[0]=Math.abs(g.d[0]);}
+      for(const ax of [1,2]){
+        if(g.p[ax]>H[ax]){g.p[ax]=H[ax];g.d[ax]=-Math.abs(g.d[ax]);}
+        if(g.p[ax]<-H[ax]){g.p[ax]=-H[ax];g.d[ax]=Math.abs(g.d[ax]);}
+      }
+    }else{ for(const ax of [0,1,2]){ g.p[ax]=Math.max(-H[ax],Math.min(H[ax],g.p[ax])); } }
+    const rp=m3v(gasMat,g.p);
+    items.push({z:rp[2],draw(){
+      const [x,y,sc]=proj(rp), r=2.6*sc;
+      ctx.fillStyle=cssVar("--bunsen");
+      ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fill();
+      ctx.fillStyle="rgba(255,255,255,.45)";
+      ctx.beginPath();ctx.arc(x-r*0.3,y-r*0.33,r*0.34,0,7);ctx.fill();
+    }});
   }
+  items.sort((a,b)=>a.z-b.z).forEach(it=>it.draw());
   if(escaped)gasHud();
+}
+function gasDoorPagePos(){
+  if(!gasGeom)return null;
+  const {rect,proj,H}=gasGeom;
+  const mid=m3v(gasMat,[H[0],(GAS_DY[0]+GAS_DY[1])/2*H[1],0]);
+  const [sx,sy]=proj(mid);
+  return {x:rect.left+sx,y:rect.top+sy};
 }
 function gasLoop(ts){
   requestAnimationFrame(gasLoop);
   const dt=Math.min(0.05,(ts-gasLast)/1000||0.016); gasLast=ts;
-  if($("#v-lab").classList.contains("on")&&!document.hidden)drawGas();
+  if($("#v-lab").classList.contains("on")&&!document.hidden)drawGas(dt); else {gasGeom=null;gasRect=null;}
   if(!gasOut.length)return;
-  const tgt=gasSuck&&gasDoor&&gasGeom?{
-    x:gasGeom.rect.left+gasGeom.bx+gasGeom.boxW,
-    y:gasGeom.rect.top+gasGeom.by+(GAS_DOOR[0]+GAS_DOOR[1])/2*gasGeom.boxH}:null;
+  const now=performance.now();
+  const tgt=gasSuck&&gasDoor?gasDoorPagePos():null;
   let returned=false;
   for(let i=gasOut.length-1;i>=0;i--){
     const o=gasOut[i];
     if(tgt){
       const dx=tgt.x-o.x, dy=tgt.y-o.y, d=Math.hypot(dx,dy)||1;
       if(d<16){o.el.remove();gasOut.splice(i,1);
-        gasParts.push({x:0.97,y:(GAS_DOOR[0]+GAS_DOOR[1])/2,a:Math.PI+(Math.random()-0.5)*0.8});
+        gasParts.push({p:[gasGeom?gasGeom.H[0]*0.94:0,(GAS_DY[0]+GAS_DY[1])/2*(gasGeom?gasGeom.H[1]:0),0],d:gasDir()});
+        const g=gasParts[gasParts.length-1]; g.d[0]=-Math.abs(g.d[0]);
         returned=true;continue;}
       o.vx+=dx/d*2600*dt; o.vy+=dy/d*2600*dt;
       o.vx*=0.94; o.vy*=0.94;
     }else{
       if(o.x<4){o.x=4;o.vx=Math.abs(o.vx);} if(o.x>innerWidth-10){o.x=innerWidth-10;o.vx=-Math.abs(o.vx);}
       if(o.y<4){o.y=4;o.vy=Math.abs(o.vy);} if(o.y>innerHeight-10){o.y=innerHeight-10;o.vy=-Math.abs(o.vy);}
+      if(gasRect&&now>o.grace){                      // the box is solid: bounce off it
+        const {l,r,t,b}=gasRect;
+        if(o.x>l&&o.x<r&&o.y>t&&o.y<b){
+          const pen=[o.x-l,r-o.x,o.y-t,b-o.y], m=Math.min(...pen);
+          if(m===pen[0]){o.x=l;o.vx=-Math.abs(o.vx);}
+          else if(m===pen[1]){o.x=r;o.vx=Math.abs(o.vx);}
+          else if(m===pen[2]){o.y=t;o.vy=-Math.abs(o.vy);}
+          else{o.y=b;o.vy=Math.abs(o.vy);}
+        }
+      }
     }
     o.x+=o.vx*dt; o.y+=o.vy*dt;
     o.el.style.transform=`translate(${o.x}px,${o.y}px)`;
   }
   if(returned)gasHud();
-  if(gasSuck&&!gasOut.length){                     // vacuum done — slam the door shut
+  if(gasSuck&&!gasOut.length){                       // vacuum done — slam the door shut
     gasSuck=false; gasDoor=false;
     $("#g-suck").textContent="🌀 Suck the gas back";
     $("#g-door").textContent="🚪 Open trap door";
     gasHud();
   }
 }
+(()=>{
+  const c=$("#g-plot"); if(!c)return;
+  c.style.touchAction="none"; c.style.cursor="grab";
+  c.addEventListener("pointerdown",e=>{gasDragOn=true;gasLX=e.clientX;gasLY=e.clientY;gasVX=gasVY=0;c.setPointerCapture(e.pointerId);c.style.cursor="grabbing";e.preventDefault();});
+  c.addEventListener("pointermove",e=>{
+    if(!gasDragOn)return;
+    const dx=(e.clientX-gasLX)*0.011, dy=(e.clientY-gasLY)*0.011;
+    gasMat=m3mul(rotY(dx),m3mul(rotX(dy),gasMat||m3mul(rotX(-0.3),rotY(0.55))));
+    gasVX=0.6*gasVX+0.4*dx; gasVY=0.6*gasVY+0.4*dy;
+    gasLX=e.clientX; gasLY=e.clientY;
+  });
+  const up=()=>{if(!gasDragOn)return;gasDragOn=false;c.style.cursor="grab";
+    const cap=v=>Math.max(-0.05,Math.min(0.05,v));gasVX=cap(gasVX);gasVY=cap(gasVY);};
+  c.addEventListener("pointerup",up); c.addEventListener("pointercancel",up);
+})();
 $("#g-n").addEventListener("input",()=>{gasSetN(+$("#g-n").value);gasHud();});
 $("#g-t").addEventListener("input",()=>{$("#g-t-v").textContent=$("#g-t").value+" K";});
 $("#g-v").addEventListener("input",()=>{$("#g-v-v").textContent=$("#g-v").value+" dm³";});
 $("#g-pump").addEventListener("click",()=>{
   if(gasCount()>=4)return;
-  for(let i=0;i<12;i++)gasParts.push({x:0.03,y:0.4+Math.random()*0.2,a:(Math.random()-0.5)*1.2});
+  for(let i=0;i<12;i++){const g=gasNew(-0.95*(gasGeom?gasGeom.H[0]:1),null,null);
+    if(gasGeom){g.p[1]=(Math.random()*2-1)*gasGeom.H[1]*0.3;g.p[2]=(Math.random()*2-1)*gasGeom.H[2]*0.3;}
+    g.d[0]=Math.abs(g.d[0]); gasParts.push(g);}
   gasHud(); burstFrom($("#g-pump"));
 });
 $("#g-door").addEventListener("click",()=>{
