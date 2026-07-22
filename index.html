@@ -6687,6 +6687,8 @@ function render(){
           style="font:inherit;padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);min-width:200px">
         <button class="btn ghost" id="nick-save">Save</button></p>
       <div class="charmeter" id="nick-count">${(prof.nickname||"").length}/24</div>
+      <p style="margin:8px 0 0"><button class="btn ghost" id="nick-rand" style="padding:6px 14px;font-size:13px">🎲 Random nickname</button>
+      <span id="nick-msg" style="font-size:12.5px;margin-left:8px"></span></p>
       <h4 class="setlbl" style="margin-top:14px">Profile picture</h4>
       <div class="avpick">${AV_EMOJI.map(e=>`<button class="av-e${prof.avatar===e?" on":""}" data-e="${e}" aria-label="Avatar ${e}">${e}</button>`).join("")}</div>
       <div class="avhues">${AV_HUES.map(h=>`<button class="av-h${prof.avatar_hue===h?" on":""}" data-h="${h}" style="background:hsl(${h},50%,45%)" aria-label="Colour"></button>`).join("")}</div>
@@ -6756,9 +6758,42 @@ function render(){
     render(); renderCorner();
     if(fx)burstFrom(document.querySelector(".acct-head .avatar")||acct);
   }
-  $("#nick-save").onclick=()=>{
+  const NICK_A=["Covalent","Aromatic","Volatile","Chiral","Noble","Molar","Ionic","Exothermic","Catalytic","Saturated","Radical","Diatomic","Alkaline","Quantum","Azeotropic","Gaseous"];
+  const NICK_B=["Badger","Beaker","Burette","Phoenix","Falcon","Isotope","Orbital","Pipette","Crystal","Photon","Vortex","Titan","Comet","Molecule","Electron","Catalyst"];
+  const nickGen=()=>NICK_A[Math.floor(Math.random()*NICK_A.length)]+NICK_B[Math.floor(Math.random()*NICK_B.length)]+Math.floor(10+Math.random()*90);
+  const nickMsg=(t,ok)=>{const m=$("#nick-msg");if(m){m.textContent=t;m.style.color=ok?"var(--ok)":"var(--danger)";}};
+  $("#nick-rand").onclick=async()=>{
+    for(let i=0;i<6;i++){
+      const cand=nickGen();
+      let taken=false;
+      try{const {data}=await sb.rpc("nick_taken",{name:cand});taken=!!data;}catch(e){}
+      if(!taken){
+        $("#nick").value=cand;
+        $("#nick-count").textContent=cand.length+"/24";
+        nickMsg("✨ "+cand+" is free — hit Save to claim it",true);
+        return;
+      }
+    }
+    nickMsg("The generator is having a moment — try again",false);
+  };
+  $("#nick-save").onclick=async()=>{
     const v=$("#nick").value.trim().slice(0,24);
-    saveProf({nickname:v||null});
+    if(v){
+      try{
+        const {data:taken}=await sb.rpc("nick_taken",{name:v});
+        if(taken){nickMsg("“"+v+"” is already claimed — try another or roll the dice",false);return;}
+      }catch(e){}
+      const {error}=await sb.from("profiles").update({nickname:v}).eq("id",user.id);
+      if(error){
+        nickMsg(error.code==="23505"?"“"+v+"” was claimed a moment ago — try another":"Could not save — try again",false);
+        return;
+      }
+      Object.assign(prof,{nickname:v});
+      render(); renderCorner();
+      nickMsg("Saved ✓ — “"+v+"” is yours",true);
+      return;
+    }
+    saveProf({nickname:null});
   };
   $("#nick").addEventListener("keydown",e=>{if(e.key==="Enter")$("#nick-save").click();});
   $("#nick").addEventListener("input",()=>{

@@ -49,3 +49,11 @@ grant execute on function public.leaderboard() to anon, authenticated;
 
 -- Admin flag: server-set only (not in the authenticated update grant)
 alter table public.profiles add column if not exists admin boolean not null default false;
+
+-- Unique nicknames + availability check
+create unique index if not exists profiles_nickname_unique on public.profiles (lower(nickname)) where nickname is not null and nickname <> '';
+create or replace function public.nick_taken(name text) returns boolean
+language sql security definer set search_path=public stable as $fn$
+  select exists(select 1 from profiles where lower(nickname)=lower(name) and id <> auth.uid());
+$fn$;
+grant execute on function public.nick_taken(text) to authenticated;
