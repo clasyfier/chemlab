@@ -56,6 +56,22 @@
   --ok:#2E7D4F; --warn:#B0761A; --danger:#B23A3A;
   --shadow:0 1px 3px rgba(22,35,43,.08),0 4px 16px rgba(22,35,43,.06);
 }
+:root[data-theme="irene"]{
+  --ground:#FFF0F6; --panel:#FFFFFF; --panel2:#FFE3EF; --ink:#4A1D35; --ink-soft:#A2648A;
+  --line:#F5CBDE; --bunsen:#E84393; --bunsen-soft:#FCE1EF;
+  --li:#FF5C8A; --na:#F9A03F; --k:#C77DFF; --cu:#D65DB1;
+  --ok:#2E9E7B; --warn:#E8862B; --danger:#E8467C;
+  --shadow:0 1px 3px rgba(232,67,147,.10),0 4px 16px rgba(232,67,147,.10);
+}
+:root[data-theme="irene"] section.view{position:relative}
+:root[data-theme="irene"] section.view::after,
+:root[data-theme="irene"] .reader::after,
+:root[data-theme="irene"] #labmode::after{
+  content:"irene"; position:absolute; bottom:10px; right:16px;
+  font-family:"Snell Roundhand","Brush Script MT",cursive;
+  font-size:17px; color:var(--bunsen); opacity:.22; pointer-events:none;
+}
+:root[data-theme="irene"] .reader::after,:root[data-theme="irene"] #labmode::after{position:fixed;z-index:80}
 :root[data-theme="dark"]{
   --ground:#0F171C; --panel:#16222A; --panel2:#1C2A33; --ink:#E5EDEF; --ink-soft:#8FA3AD;
   --line:#24343D; --bunsen:#6FA0E8; --bunsen-soft:#1B2C42;
@@ -5546,10 +5562,28 @@ if("serviceWorker" in navigator&&location.protocol==="https:")
   const sys=()=>matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";
   const cur=()=>document.documentElement.dataset.theme||sys();
   const paint=()=>{
-    btn.textContent=cur()==="dark"?"☀️":"🌙";
-    btn.title=cur()==="dark"?"Switch to light mode":"Switch to dark mode";
+    const c=cur();
+    btn.textContent=c==="irene"?"🎀":c==="dark"?"☀️":"🌙";
+    btn.title=c==="irene"?"":c==="dark"?"Switch to light mode":"Switch to dark mode";
   };
+  let taps=[];
   btn.addEventListener("click",()=>{
+    const now=performance.now();
+    taps=taps.filter(t=>now-t<650); taps.push(now);
+    if(taps.length>=3){
+      taps=[];
+      if(cur()==="irene"){
+        delete document.documentElement.dataset.theme;
+        try{localStorage.removeItem("cl-theme");}catch(e){}
+      }else{
+        document.documentElement.dataset.theme="irene";
+        try{localStorage.setItem("cl-theme","irene");}catch(e){}
+        toast("🎀 irene mode");
+      }
+      paint(); redrawAll();
+      return;
+    }
+    if(cur()==="irene")return;                       // only the triple-tap escapes irene
     const next=cur()==="dark"?"light":"dark";
     document.documentElement.dataset.theme=next;
     try{localStorage.setItem("cl-theme",next);}catch(e){}
