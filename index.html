@@ -3493,6 +3493,9 @@ window.applyPracLocks=function(){
   if(hardOpt)hardOpt.textContent=prem?"Hard":"Hard · ★ Premium";
   const qnav=document.querySelector('nav.rail button[data-v="quiz"]');
   if(qnav)qnav.innerHTML=`<span class="dot" style="background:var(--bunsen)"></span>Test your knowledge${prem?"":" 🔒"}`;
+  const gdoor=document.getElementById("g-door");
+  if(gdoor&&!prem){gasDoor=false;gasSuck=false;gdoor.textContent="🚪 Open trap door 🔒";}
+  else if(gdoor&&!gasDoor)gdoor.textContent="🚪 Open trap door";
   const heroBtn=document.querySelector(".hero-cta button[data-goto='learn']");
   if(heroBtn)heroBtn.textContent=prem?"Dive in":"Start learning — it's free";
 };
@@ -3637,6 +3640,9 @@ $("#sims").innerHTML=`
   <div class="controls">
     <div class="ctrl"><label>Protons</label><p style="display:flex;gap:6px;margin:0"><button class="btn ghost" data-at="p-">−</button><span class="val" id="at-p" style="min-width:24px;text-align:center;font-size:16px">1</span><button class="btn ghost" data-at="p+">+</button></p></div>
     <div class="ctrl"><label>Neutrons</label><p style="display:flex;gap:6px;margin:0"><button class="btn ghost" data-at="n-">−</button><span class="val" id="at-n" style="min-width:24px;text-align:center;font-size:16px">0</span><button class="btn ghost" data-at="n+">+</button></p></div>
+    <div class="ctrl"><label for="at-view">View</label><select id="at-view">
+      <option value="shells" selected>Shells (Bohr)</option>
+      <option value="orbitals">Orbitals (subshells)</option></select></div>
     <div class="ctrl"><label>Electrons</label><p style="display:flex;gap:6px;margin:0"><button class="btn ghost" data-at="e-">−</button><span class="val" id="at-e" style="min-width:24px;text-align:center;font-size:16px">1</span><button class="btn ghost" data-at="e+">+</button></p></div>
   </div>
   <canvas class="plot" id="at-plot" style="height:340px"></canvas>
@@ -4692,6 +4698,7 @@ $("#g-pump").addEventListener("click",()=>{
   gasHud(); burstFrom($("#g-pump"));
 });
 $("#g-door").addEventListener("click",()=>{
+  if(!window.chemPremium){openAccount();return;}
   gasDoor=!gasDoor;
   $("#g-door").textContent=gasDoor?"🚪 Close trap door":"🚪 Open trap door";
   if(!gasDoor&&gasSuck){gasSuck=false;$("#g-suck").textContent="🌀 Suck the gas back";}
@@ -4816,6 +4823,120 @@ function drawAtom(){
   $("#at-ch").textContent=ch>0?`+${ch} (cation)`:ch<0?`${ch} (anion)`:"0 (neutral)";
   $("#at-sh").textContent=atShells.join(", ")||"0";
 }
+const AT_L=["s","p","d","f"];
+function atSubshells(e){
+  const out=[]; let left=e;
+  for(const [n,cap] of AT_SUBS){
+    if(left<=0)break;
+    const t=Math.min(cap,left);
+    out.push({n,cap,e:t,l:AT_L[[2,6,10,14].indexOf(cap)]});
+    left-=t;
+  }
+  return out;
+}
+const AT_NOBLE={2:"He",10:"Ne",18:"Ar",36:"Kr",54:"Xe",86:"Rn"};
+function atOrbitals(ctx,w,h,cx,cy,maxR,proj){
+  const subs=atSubshells(atomE);
+  /* split at the last noble-gas core */
+  let coreE=0,coreSym=null,cum=0,coreIdx=-1;
+  subs.forEach((sb,i)=>{cum+=sb.e;if(AT_NOBLE[cum]&&sb.e===sb.cap){coreE=cum;coreSym=AT_NOBLE[cum];coreIdx=i;}});
+  const tail=subs.slice(coreIdx+1);
+  const items=[];
+  /* nucleus */
+  items.push({z:0,draw(){shSphere(ctx,cx,cy,13,cssVar("--li"),0);}});
+  /* noble core: translucent sphere */
+  if(coreSym){
+    items.push({z:-1e5,draw(){
+      const g=ctx.createRadialGradient(cx,cy,4,cx,cy,34);
+      g.addColorStop(0,"rgba(127,140,160,.30)");g.addColorStop(1,"rgba(127,140,160,.05)");
+      ctx.fillStyle=g;ctx.beginPath();ctx.arc(cx,cy,34,0,7);ctx.fill();
+      ctx.strokeStyle=cssVar("--ink-soft");ctx.globalAlpha=.5;ctx.setLineDash([3,4]);
+      ctx.beginPath();ctx.arc(cx,cy,34,0,7);ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=1;
+      ctx.fillStyle=cssVar("--ink-soft");ctx.font="700 10px -apple-system,sans-serif";ctx.textAlign="center";
+      ctx.fillText("["+coreSym+"] core",cx,cy+48);ctx.textAlign="left";
+    }});
+  }
+  /* valence subshells in 3D */
+  const shown=tail.slice(-3);
+  shown.forEach((sb,i)=>{
+    const r=58+i*30, col=sb.l==="s"?cssVar("--bunsen"):sb.l==="p"?cssVar("--cu"):sb.l==="d"?cssVar("--k"):cssVar("--na");
+    const lbl=sb.n+sb.l+String(sb.e).split("").map(d=>"⁰¹²³⁴⁵⁶⁷⁸⁹"[+d]).join("");
+    if(sb.l==="s"){
+      items.push({z:-r,draw(){
+        ctx.strokeStyle=col;ctx.globalAlpha=.65;ctx.lineWidth=1.6;
+        ctx.beginPath();ctx.arc(cx,cy,r*0.55,0,7);ctx.stroke();
+        ctx.globalAlpha=sb.e===2?.16:.08;ctx.fillStyle=col;
+        ctx.beginPath();ctx.arc(cx,cy,r*0.55,0,7);ctx.fill();ctx.globalAlpha=1;
+        ctx.fillStyle=col;ctx.font="800 11px ui-monospace,Menlo,monospace";ctx.textAlign="center";
+        ctx.fillText(lbl,cx-r*0.55-24,cy-r*0.55-2);ctx.textAlign="left";
+      }});
+    }else if(sb.l==="p"){
+      const axes=[[1,0,0],[0,1,0],[0,0,1]];
+      const occ=[Math.min(2,Math.max(0,sb.e-0>=4?2:sb.e>=1?1:0)),0,0];
+      /* Hund occupancy per orbital */
+      const per=[0,0,0]; let e=sb.e;
+      for(let k=0;k<3&&e>0;k++){per[k]=1;e--;}
+      for(let k=0;k<3&&e>0;k++){per[k]=2;e--;}
+      axes.forEach((ax,k)=>{
+        if(!per[k])return;
+        for(const sgn of [1,-1]){
+          const p3=m3v(atMat,[ax[0]*r*0.62*sgn,ax[1]*r*0.62*sgn,ax[2]*r*0.62*sgn]);
+          items.push({z:p3[2],draw(){
+            const [x,y,sc]=proj(p3);
+            const ang=Math.atan2(y-cy,x-cx);
+            ctx.fillStyle=col;ctx.globalAlpha=(per[k]===2?.5:.28)*(0.6+0.4*(p3[2]/maxR+1)/2);
+            ctx.beginPath();ctx.ellipse(x,y,20*sc,10*sc,ang,0,7);ctx.fill();ctx.globalAlpha=1;
+          }});
+        }
+      });
+      const lp=m3v(atMat,[r*0.62,r*0.35,0]);
+      items.push({z:1e5,draw(){
+        ctx.fillStyle=col;ctx.font="800 11px ui-monospace,Menlo,monospace";
+        ctx.fillText(lbl,cx+r*0.55,cy-r*0.5);
+      }});
+    }else{
+      const nl=sb.l==="d"?8:12;
+      for(let k=0;k<nl;k++){
+        const a=k/nl*Math.PI*2+Math.PI/nl;
+        const p3=m3v(atMat,[Math.cos(a)*r*0.6,0,Math.sin(a)*r*0.6]);
+        items.push({z:p3[2],draw(){
+          const [x,y,sc]=proj(p3);
+          const ang=Math.atan2(y-cy,x-cx);
+          ctx.fillStyle=col;ctx.globalAlpha=Math.min(.5,.1+sb.e/sb.cap*.4)*(0.6+0.4*(p3[2]/maxR+1)/2);
+          ctx.beginPath();ctx.ellipse(x,y,13*sc,7*sc,ang,0,7);ctx.fill();ctx.globalAlpha=1;
+        }});
+      }
+      items.push({z:1e5,draw(){
+        ctx.fillStyle=col;ctx.font="800 11px ui-monospace,Menlo,monospace";
+        ctx.fillText(lbl,cx+r*0.5,cy+r*0.55);
+      }});
+    }
+  });
+  items.sort((a,b)=>a.z-b.z).forEach(it=>it.draw());
+  /* electron-in-boxes diagram along the bottom */
+  const tailShow=tail.slice(-4);
+  const bx0=cx-((coreSym?46:0)+tailShow.reduce((a,sb)=>a+sb.cap/2*20+26,0))/2, by=h-34;
+  let x=bx0;
+  ctx.font="700 11px ui-monospace,Menlo,monospace";ctx.textAlign="left";
+  if(coreSym){ctx.fillStyle=cssVar("--ink-soft");ctx.fillText("["+coreSym+"]",x,by+14);x+=42;}
+  tailShow.forEach(sb=>{
+    const orbs=sb.cap/2, per=new Array(orbs).fill(0);
+    let e=sb.e;
+    for(let k=0;k<orbs&&e>0;k++){per[k]=1;e--;}
+    for(let k=0;k<orbs&&e>0;k++){per[k]=2;e--;}
+    ctx.fillStyle=cssVar("--ink-soft");ctx.fillText(sb.n+sb.l,x,by-6);
+    for(let k=0;k<orbs;k++){
+      ctx.strokeStyle=cssVar("--ink-soft");ctx.lineWidth=1;
+      ctx.strokeRect(x,by,18,20);
+      ctx.fillStyle=cssVar("--bunsen");ctx.font="800 12px ui-monospace,Menlo,monospace";
+      if(per[k]===1)ctx.fillText("↑",x+5,by+15);
+      if(per[k]===2)ctx.fillText("↑↓",x+1,by+15);
+      ctx.font="700 11px ui-monospace,Menlo,monospace";
+      x+=20;
+    }
+    x+=26;
+  });
+}
 function atRender(){
   requestAnimationFrame(atRender);
   const c=$("#at-plot"); if(!c||!c.clientWidth||document.hidden)return;
@@ -4831,6 +4952,9 @@ function atRender(){
   ctx.clearRect(0,0,w,h);
   const cx=w/2, cy=h/2, maxR=Math.min(w,h)/2-14;
   const f=4.2, proj=p=>{const s2=f/(f-p[2]/maxR);return [cx+p[0]*s2,cy-p[1]*s2,s2];};
+  if(($("#at-view")&&$("#at-view").value)==="orbitals"){
+    atOrbitals(ctx,w,h,cx,cy,maxR,p=>{const sc=f/(f-p[2]/maxR);return [cx+p[0]*sc,cy-p[1]*sc,sc];});
+  }else{
   const nucR=Math.min(maxR*0.32, 7+5.2*Math.cbrt(atomP+atomN));
   const base=nucR+16, ns=atShells.length, gap=ns?(maxR-base)/ns:0;
   const items=[];
@@ -4876,10 +5000,11 @@ function atRender(){
     }
   });
   items.sort((a,b)=>a.z-b.z).forEach(it=>it.draw());
+  }
   ctx.font="12px ui-monospace,Menlo,monospace";ctx.textAlign="left";
-  ctx.fillStyle=cssVar("--ink-soft");ctx.fillText("protons",14,20);ctx.fillStyle=PCOL;ctx.fillRect(70,12,9,9);
-  ctx.fillStyle=cssVar("--ink-soft");ctx.fillText("neutrons",14,38);ctx.fillStyle=NCOL;ctx.fillRect(76,30,9,9);
-  ctx.fillStyle=cssVar("--ink-soft");ctx.fillText("electrons",14,56);ctx.fillStyle=ECOL;ctx.fillRect(80,48,9,9);
+  ctx.fillStyle=cssVar("--ink-soft");ctx.fillText("protons",14,20);ctx.fillStyle=cssVar("--li");ctx.fillRect(70,12,9,9);
+  ctx.fillStyle=cssVar("--ink-soft");ctx.fillText("neutrons",14,38);ctx.fillStyle="#9aa0a8";ctx.fillRect(76,30,9,9);
+  ctx.fillStyle=cssVar("--ink-soft");ctx.fillText("electrons",14,56);ctx.fillStyle=cssVar("--bunsen");ctx.fillRect(80,48,9,9);
 
   /* radioactivity (left) and reactivity (right) meters */
   const rad=atRadio(atomP,atomN);
