@@ -1,0 +1,13 @@
+{
+  "name": "ChemLab — Interactive A-Level Chemistry",
+  "short_name": "ChemLab",
+  "description": "Live simulations, a living periodic table, all 12 required practicals, quizzes and AI-marked exams for A-level chemistry.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F3F6F5",
+  "theme_color": "#2456A6",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}
