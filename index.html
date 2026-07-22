@@ -5379,6 +5379,7 @@ const RK_TIERS=[["Lab Rat","🐀","#8a8f98"],["Bunsen Apprentice","🔥","#b8733
 ["Mole Wrangler","🐾","#e0a93c"],["Catalyst","⚡","#3aa6a0"],["Equilibrist","⚖️","#5b8dd9"],
 ["Reaction Master","💥","#8a5bd6"],["Nobel Laureate","🏅","#e84393"]];
 const RK_DIV=150, RK_TIER=450, RK_MAX=7*RK_TIER, RK_TUBE=500;
+const RK_JUMPS=["https://buy.stripe.com/test_00w5kF0m45sD9pr2Yy9fW02", "https://buy.stripe.com/test_bJeaEZgl21cngRTcz89fW03", "https://buy.stripe.com/test_14A14p0m4g7hbxzbv49fW04", "https://buy.stripe.com/test_6oU3cxfgYbR1atvar09fW05", "https://buy.stripe.com/test_cNidRb7OwbR1gRTdDc9fW06", "https://buy.stripe.com/test_aFa3cxb0I2gr457dDc9fW07", "https://buy.stripe.com/test_9B63cx8SA4oz8ln0Qq9fW08", "https://buy.stripe.com/test_28E4gBd8Q4ozgRT7eO9fW09", "https://buy.stripe.com/test_5kQcN75Go2greJL8iS9fW0a", "https://buy.stripe.com/test_8x2cN7c4M9IT457ar09fW0b"];
 const rkToday=()=>new Date().toISOString().slice(0,10);
 const rkDayDiff=(a,b)=>Math.round((new Date(b)-new Date(a))/86400000);
 function rkState(){return load("chemlab-ranked",{rp:0,tubes:0,minted:0,streak:0,freezes:0,lastCheck:null,lastActive:null,decayedFor:null,shieldUntil:0,log:[]});}
@@ -5418,6 +5419,7 @@ function rpAdd(n,why){
   if(!$("#v-ranked").classList.contains("on"))return;
   renderRanked();
 }
+window.rkPromoFromRp=function(rp){const i=rkInfo(rp);rkPromo(i);toast("🚀 Rank jump complete — welcome to "+i.label);};
 function rkPromo(info){
   const o=$("#rk-promo"); if(!o)return;
   $("#rk-promo-shield").style.setProperty("--rkc",info.col);
@@ -5515,6 +5517,11 @@ function renderRanked(){
     <div class="pchip"><b>${st.tubes}🧪</b><span>test tubes</span></div>
   </div>
   ${Date.now()<st.shieldUntil?`<p style="font-size:13px;color:var(--ok);margin:0 0 12px">🛡️ Promotion shield active — no decay for ${Math.ceil((st.shieldUntil-Date.now())/86400000)} more day(s).</p>`:`<p style="font-size:13px;color:var(--ink-soft);margin:0 0 12px">⚠️ Two quiet days and this rank decays a division. Freezes cover one missed day each.</p>`}
+  ${!isMax&&(st.jumps||0)<10?`<div class="card" style="margin-bottom:14px;border-color:#e0a93c"><h3>🚀 Rank Jump</h3>
+    <p style="font-size:13.5px;color:var(--ink-soft);margin:4px 0 10px">In a hurry? Buy your way out of ${info.name} — one full rank, instantly. The examiners will never know. Each jump costs €10 more than the last, and the summit itself cannot be bought: jumps stop at the Laureate's door, and test tubes must be earned.</p>
+    <button class="btn" id="rk-jump">🚀 Jump one rank — €${((st.jumps||0)+1)*10}</button>
+    <span style="font-size:12px;color:var(--ink-soft);margin-left:10px">${st.jumps?`${st.jumps} jump${st.jumps>1?"s":""} purchased so far`:"first jump"}</span>
+  </div>`:""}
   <div class="card" style="margin-bottom:14px"><h3>How RP is earned</h3>
     <ul style="font-size:13.5px;margin:6px 0;padding-left:20px">
       <li><b>+150</b> — PERFECT PAPER: an exam of 10+ questions at 100% (the jackpot)</li>
@@ -5532,6 +5539,11 @@ function renderRanked(){
     :`<div style="text-align:center;padding:22px"><div style="font-size:34px">🔒</div>
       <p style="font-size:14px;color:var(--ink-soft);max-width:44ch;margin:6px auto 0">The leaderboard is for <b>Nobel Laureates</b> only. Reach the summit, mint test tubes, and your name appears among the immortals.</p></div>`}
   </div>`;
+  const jb=$("#rk-jump");
+  if(jb)jb.addEventListener("click",()=>{
+    if(!window.chemJumpGo){openAccount();return;}
+    window.chemJumpGo(RK_JUMPS[Math.min(9,rkState().jumps||0)]);
+  });
   if(isMax&&window.chemFetchLeaderboard){
     window.chemFetchLeaderboard().then(rows=>{
       const el=$("#rk-lb"); if(!el)return;
@@ -6404,6 +6416,14 @@ const sb=createClient(CFG.url,CFG.anon);
 window.chemAuthHeader=async()=>{const {data:{session}}=await sb.auth.getSession();return session?{Authorization:"Bearer "+session.access_token}:{};};
 window.chemFetchLeaderboard=async()=>{const {data,error}=await sb.rpc("leaderboard");if(error)throw error;return data;};
 window.chemPushTubes=async(t)=>{try{const {data:{session}}=await sb.auth.getSession();if(session)await sb.from("profiles").update({tubes:t}).eq("id",session.user.id);}catch(e){}};
+window.chemJumpGo=async(base)=>{
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session){openAccount();return;}
+  const u=new URL(base);
+  u.searchParams.set("client_reference_id",session.user.id);
+  if(session.user.email)u.searchParams.set("prefilled_email",session.user.email);
+  location.href=u.toString();
+};
 window.chemPremium=false; window.applyPracLocks(); if(typeof renderQuiz==="function")renderQuiz();
 
 const KEYS=["chemlab-mastered","chemlab-quiz","chemlab-prac","chemlab-hunt-best","chemlab-quiz-beststreak","chemlab-mood","chemlab-ranked","chemlab-learntime","chemlab-perfectruns"];
@@ -6798,6 +6818,21 @@ function render(){
 }
 sb.auth.onAuthStateChange((ev)=>{if(ev==="SIGNED_OUT"){wipeLocal();location.reload();}else refresh();});
 refresh();
+if(new URLSearchParams(location.search).has("jumped")){
+  history.replaceState({},"",location.pathname);
+  const r0=(lget("chemlab-ranked",{})||{}).rp||0;
+  let tries=0;
+  const poll=setInterval(async()=>{
+    await refresh(); tries++;
+    const now=(lget("chemlab-ranked",{})||{}).rp||0;
+    if(now>r0){
+      clearInterval(poll);
+      if(window.showView)showView("ranked");
+      if(window.rkPromoFromRp)rkPromoFromRp(now);
+    }
+    if(tries>20)clearInterval(poll);
+  },2500);
+}
 if(new URLSearchParams(location.search).has("upgraded")){
   history.replaceState({},"",location.pathname);
   let tries=0, opened=false;

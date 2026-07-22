@@ -47,6 +47,25 @@ export default async function handler(req, res) {
   if (event.type === 'checkout.session.completed') {
     const userId = obj.client_reference_id;
     if (!userId) return res.status(200).json({ ok: true, note: 'no client_reference_id' });
+
+    if (obj.metadata && obj.metadata.kind === 'rankjump') {
+      // paid rank jump: +1 full tier (450 RP), capped at the Nobel Laureate floor —
+      // test tubes can never be bought
+      const g = await fetch(`${process.env.SUPABASE_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(userId)}&select=progress`, {
+        headers: { apikey: process.env.SUPABASE_SERVICE_ROLE, Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE}` },
+      });
+      const rows = g.ok ? await g.json() : [];
+      const progress = (rows[0] && rows[0].progress) || {};
+      const rk = progress['chemlab-ranked'] || { rp: 0, tubes: 0, minted: 0, streak: 0, freezes: 0, lastCheck: null, lastActive: null, decayedFor: null, shieldUntil: 0, log: [] };
+      rk.rp = Math.min(3150, (rk.rp || 0) + 450);
+      rk.jumps = (rk.jumps || 0) + 1;
+      rk.shieldUntil = Date.now() + 3 * 86400000;
+      rk.log = [{ t: Date.now(), txt: `🚀 RANK JUMP #${rk.jumps} purchased`, rp: 450 }, ...(rk.log || [])].slice(0, 12);
+      progress['chemlab-ranked'] = rk;
+      const r = await sbPatch(`id=eq.${encodeURIComponent(userId)}`, { progress });
+      return res.status(r.ok ? 200 : 502).json({ ok: r.ok, rankjump: rk.jumps, rp: rk.rp });
+    }
+
     const r = await sbPatch(`id=eq.${encodeURIComponent(userId)}`,
       { premium: true, payment_customer_id: obj.customer ? String(obj.customer) : undefined });
     return res.status(r.ok ? 200 : 502).json({ ok: r.ok, premium: true });
