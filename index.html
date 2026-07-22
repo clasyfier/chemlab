@@ -2769,7 +2769,7 @@ $("#sims").innerHTML=`
   <h2>Ideal gas · pV = nRT</h2>
   <p class="hint">Particles in a box — <b>drag the box to spin it in 3D</b>. Temperature sets their speed (⟨KE⟩ ∝ T), volume sets the box, and pressure is what you read off the wall collisions — R = 8.314 J K⁻¹ mol⁻¹. <b>Pump in more gas</b>, then <b>open the trap door</b> and watch the molecules stream out onto the page — they leave faster the higher the pressure, and they bounce right off the box. Suck them back with the vacuum, or remove the gas entirely.</p>
   <div class="controls">
-    <div class="ctrl"><label for="g-n">Amount of gas</label><input type="range" id="g-n" min="0" max="4" step="0.1" value="1"><span class="val" id="g-n-v">1.0 mol</span></div>
+    <div class="ctrl"><label for="g-n">Amount of gas</label><input type="range" id="g-n" min="0" max="100" step="0.5" value="1"><span class="val" id="g-n-v">1.0 mol</span></div>
     <div class="ctrl"><label for="g-t">Temperature</label><input type="range" id="g-t" min="0" max="1000" step="10" value="300"><span class="val" id="g-t-v">300 K</span></div>
     <div class="ctrl"><label for="g-v">Volume</label><input type="range" id="g-v" min="10" max="50" step="1" value="25"><span class="val" id="g-v-v">25 dm³</span></div>
     <div class="ctrl"><label for="g-shape">Container</label><select id="g-shape">
@@ -3458,9 +3458,17 @@ let gasParts=[],gasOut=[],gasDoor=false,gasSuck=false,gasGeom=null,gasLast=0,gas
 let gasMat=null,gasDragOn=false,gasLX=0,gasLY=0,gasVX=0,gasVY=0,gasCtx=null,gasW=0,gasH=0,gasRect=null;
 const GAS_DY=[-0.55,0.60], GAS_DZ=[-0.60,0.60];   // box hatch bounds (fractions of half-extents)
 const GAS_THD=0.62;                                // sphere cap half-angle
-const gasFx=document.createElement("div");
-gasFx.style.cssText="position:fixed;inset:0;pointer-events:none;z-index:220;overflow:hidden";
+const gasFx=document.createElement("canvas");
+gasFx.style.cssText="position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:220";
 document.body.appendChild(gasFx);
+const gasFxCtx=gasFx.getContext("2d");
+function gasFxFit(){
+  const dpr=window.devicePixelRatio||1;
+  if(gasFx.width!==Math.round(innerWidth*dpr)||gasFx.height!==Math.round(innerHeight*dpr)){
+    gasFx.width=Math.round(innerWidth*dpr); gasFx.height=Math.round(innerHeight*dpr);
+    gasFxCtx.setTransform(dpr,0,0,dpr,0,0);
+  }
+}
 const gasCount=()=>gasParts.length/40;
 function gasP(){ const T=+$("#g-t").value,Vd=+$("#g-v").value; return gasCount()*8.314*T/(Vd/1000)/1000; }
 function gasHud(){
@@ -3502,17 +3510,14 @@ function gasSetN(n){
 }
 function gasScatter(){ const D=gasDims(gasW||600,gasH||400); gasParts.forEach(g=>{g.p=gasRandPos(D);g.d=gasDir();}); }
 function gasEscape(pos,dir){
-  if(!gasGeom||gasOut.length>=110)return;
+  if(!gasGeom)return;                               // every molecule may leave — no cap
   const {rect,proj}=gasGeom;
   const [sx,sy]=proj(m3v(gasMat,pos));
   const ahead=pos.map((v,i)=>v+dir[i]*20);
   const [sx2,sy2]=proj(m3v(gasMat,ahead));
   let dx=sx2-sx, dy=sy2-sy; const dl=Math.hypot(dx,dy)||1; dx/=dl; dy/=dl;
   const v=Math.min(760,60+gasP()*1.1);
-  const el=document.createElement("div");
-  el.style.cssText="position:absolute;left:0;top:0;width:5px;height:5px;border-radius:50%;background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.75),"+cssVar("--bunsen")+" 65%);will-change:transform";
-  gasFx.appendChild(el);
-  gasOut.push({el,x:rect.left+sx+dx*8,y:rect.top+sy+dy*8,vx:dx*v,vy:dy*v,grace:performance.now()+280});
+  gasOut.push({x:rect.left+sx+dx*8,y:rect.top+sy+dy*8,vx:dx*v,vy:dy*v,grace:performance.now()+280});
 }
 /* door rim (hole outline), hinge y, chord half-widths for ridges — per shape */
 function gasDoorRim(D){
@@ -3731,7 +3736,10 @@ function gasLoop(ts){
   requestAnimationFrame(gasLoop);
   let dt=(ts-gasLast)/1000; if(!(dt>0))dt=0; dt=Math.min(0.05,dt); gasLast=ts;
   if($("#v-lab").classList.contains("on")&&!document.hidden)drawGas(dt); else {gasGeom=null;gasRect=null;}
-  if(!gasOut.length)return;
+  if(!gasOut.length){
+    if(gasFx.width)gasFxCtx.clearRect(0,0,innerWidth,innerHeight);
+    return;
+  }
   const now=performance.now();
   const tgt=gasSuck&&gasDoor?gasDoorPagePos():null;
   let returned=false;
@@ -3739,7 +3747,7 @@ function gasLoop(ts){
     const o=gasOut[i];
     if(tgt){
       const dx=tgt.x-o.x, dy=tgt.y-o.y, d=Math.hypot(dx,dy)||1;
-      if(d<16){o.el.remove();gasOut.splice(i,1);
+      if(d<16){gasOut.splice(i,1);
         const D=gasGeom?gasGeom.D:{E:[1,1,1]};
         const g={p:[D.E[0]*0.9,0,0],d:gasDir()}; g.d[0]=-Math.abs(g.d[0]);
         gasParts.push(g); returned=true; continue;}
@@ -3766,20 +3774,38 @@ function gasLoop(ts){
       }
     }
     o.x+=o.vx*dt; o.y+=o.vy*dt;
-    o.el.style.transform=`translate(${o.x}px,${o.y}px)`;
   }
-  if(!tgt){                                        // molecules collide with each other (equal-mass elastic)
-    for(let i=0;i<gasOut.length;i++)for(let j=i+1;j<gasOut.length;j++){
-      const a=gasOut[i],b=gasOut[j];
-      const dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy);
-      if(d>0&&d<6){
-        const nx=dx/d,ny=dy/d;
-        const rel=(a.vx-b.vx)*nx+(a.vy-b.vy)*ny;
-        if(rel>0){a.vx-=rel*nx;a.vy-=rel*ny;b.vx+=rel*nx;b.vy+=rel*ny;}
-        const push=(6-d)/2;
-        a.x-=nx*push;a.y-=ny*push;b.x+=nx*push;b.y+=ny*push;
+  if(!tgt){                                        // pair collisions via spatial hash (handles thousands)
+    const CELL=8, map=new Map();
+    for(let i=0;i<gasOut.length;i++){
+      const o=gasOut[i], k=((o.x/CELL)|0)*100000+((o.y/CELL)|0);
+      const arr=map.get(k); if(arr)arr.push(i); else map.set(k,[i]);
+    }
+    for(let i=0;i<gasOut.length;i++){
+      const a=gasOut[i], cx0=(a.x/CELL)|0, cy0=(a.y/CELL)|0;
+      for(let gx=cx0-1;gx<=cx0+1;gx++)for(let gy=cy0-1;gy<=cy0+1;gy++){
+        const arr=map.get(gx*100000+gy); if(!arr)continue;
+        for(const j of arr){
+          if(j<=i)continue;
+          const b=gasOut[j];
+          const dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy);
+          if(d>0&&d<6){
+            const nx=dx/d,ny=dy/d;
+            const rel=(a.vx-b.vx)*nx+(a.vy-b.vy)*ny;
+            if(rel>0){a.vx-=rel*nx;a.vy-=rel*ny;b.vx+=rel*nx;b.vy+=rel*ny;}
+            const push=(6-d)/2;
+            a.x-=nx*push;a.y-=ny*push;b.x+=nx*push;b.y+=ny*push;
+          }
+        }
       }
     }
+  }
+  /* paint the loose gas */
+  gasFxFit();
+  gasFxCtx.clearRect(0,0,innerWidth,innerHeight);
+  if(gasOut.length){
+    const spr=gasSpriteGet(cssVar("--bunsen"));
+    for(const o of gasOut)gasFxCtx.drawImage(spr,o.x-2.5,o.y-2.5,5,5);
   }
   if(returned)gasHud();
   if(gasSuck&&!gasOut.length){
@@ -3812,7 +3838,7 @@ $("#g-100").addEventListener("click",()=>{
   gasSetN(100); gasHud(); burstFrom($("#g-100"));
 });
 $("#g-pump").addEventListener("click",()=>{
-  if(gasCount()>=4)return;
+  if(gasCount()>=100)return;
   const D=gasGeom?gasGeom.D:{E:[1,1,1]};
   for(let i=0;i<12;i++){
     const g={p:[-D.E[0]*0.9,(Math.random()*2-1)*D.E[1]*0.25,(Math.random()*2-1)*D.E[2]*0.25],d:gasDir()};
@@ -3831,8 +3857,8 @@ $("#g-suck").addEventListener("click",()=>{
   gasSuck=true; $("#g-suck").textContent="🌀 Sucking…";
 });
 $("#g-reset").addEventListener("click",()=>{
-  gasParts=[]; gasSuck=false;
-  gasOut.forEach(o=>o.el.remove()); gasOut=[];
+  gasParts=[]; gasSuck=false; gasOut=[];
+  gasFxFit(); gasFxCtx.clearRect(0,0,innerWidth,innerHeight);
   $("#g-suck").textContent="🌀 Suck the gas back";
   gasHud();
 });
