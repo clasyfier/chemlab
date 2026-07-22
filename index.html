@@ -2778,6 +2778,7 @@ $("#sims").innerHTML=`
       <option value="cyl">Cylinder</option></select></div>
     <div class="ctrl"><label>Gas handling</label><p style="display:flex;gap:8px;flex-wrap:wrap;margin:0">
       <button class="btn ghost" id="g-pump">💨 Pump in gas</button>
+      <button class="btn ghost" id="g-100">💥 Cram in 100 mol</button>
       <button class="btn ghost" id="g-door">🚪 Open trap door</button>
       <button class="btn ghost" id="g-suck" disabled>🌀 Suck the gas back</button>
       <button class="btn ghost" id="g-reset">🗑 Remove all gas</button></p></div>
@@ -3470,6 +3471,17 @@ function gasHud(){
 }
 const gasDir=()=>{const a=Math.random()*6.283,b=Math.acos(2*Math.random()-1);
   return [Math.sin(b)*Math.cos(a),Math.sin(b)*Math.sin(a),Math.cos(b)];};
+let gasSprite=null,gasSpriteCol="";
+function gasSpriteGet(col){
+  if(gasSprite&&gasSpriteCol===col)return gasSprite;
+  const c=document.createElement("canvas");c.width=c.height=24;
+  const x=c.getContext("2d");
+  x.fillStyle=col;x.beginPath();x.arc(12,12,11,0,7);x.fill();
+  const g=x.createRadialGradient(8,8,1,12,12,11);
+  g.addColorStop(0,"rgba(255,255,255,.65)");g.addColorStop(0.5,"rgba(255,255,255,.08)");g.addColorStop(1,"rgba(0,0,0,.25)");
+  x.fillStyle=g;x.beginPath();x.arc(12,12,11,0,7);x.fill();
+  gasSprite=c;gasSpriteCol=col;return c;
+}
 function gasRandPos(D){
   if(gasShape==="sphere"){const d=gasDir(),r=D.R*Math.cbrt(Math.random())*0.96;return [d[0]*r,d[1]*r,d[2]*r];}
   if(gasShape==="cyl"){const a=Math.random()*6.283,q=D.r*Math.sqrt(Math.random())*0.96;
@@ -3694,11 +3706,15 @@ function drawGas(dt=0){
     }
     const rp=m3v(gasMat,g.p);
     items.push({z:rp[2],draw(){
-      const [x,y,sc]=proj(rp), r=2.6*sc;
-      ctx.fillStyle=cssVar("--bunsen");
-      ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fill();
-      ctx.fillStyle="rgba(255,255,255,.45)";
-      ctx.beginPath();ctx.arc(x-r*0.3,y-r*0.33,r*0.34,0,7);ctx.fill();
+      const [x,y,sc]=proj(rp), r=(gasParts.length>600?2.1:2.6)*sc;
+      if(gasParts.length>600){                      // sprite fast path for dense gas
+        ctx.drawImage(gasSpriteGet(cssVar("--bunsen")),x-r,y-r,r*2,r*2);
+      }else{
+        ctx.fillStyle=cssVar("--bunsen");
+        ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fill();
+        ctx.fillStyle="rgba(255,255,255,.45)";
+        ctx.beginPath();ctx.arc(x-r*0.3,y-r*0.33,r*0.34,0,7);ctx.fill();
+      }
     }});
   }
   items.sort((a,b)=>a.z-b.z).forEach(it=>it.draw());
@@ -3792,6 +3808,9 @@ $("#g-n").addEventListener("input",()=>{gasSetN(+$("#g-n").value);gasHud();});
 $("#g-t").addEventListener("input",()=>{$("#g-t-v").textContent=$("#g-t").value+" K";});
 $("#g-v").addEventListener("input",()=>{$("#g-v-v").textContent=$("#g-v").value+" dm³";});
 $("#g-shape").addEventListener("input",()=>{gasShape=$("#g-shape").value;gasScatter();});
+$("#g-100").addEventListener("click",()=>{
+  gasSetN(100); gasHud(); burstFrom($("#g-100"));
+});
 $("#g-pump").addEventListener("click",()=>{
   if(gasCount()>=4)return;
   const D=gasGeom?gasGeom.D:{E:[1,1,1]};
