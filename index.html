@@ -5392,6 +5392,7 @@ function rkInfo(rp){
     label:tier>=7?RK_TIERS[7][0]:RK_TIERS[tier][0]+" "+["III","II","I"][div]};
 }
 function rkUnlocked(){
+  if(window.chemAdmin)return true;
   return (load("chemlab-perfectruns",[]).length>=3)&&(load("chemlab-learntime",0)>=3600);
 }
 function rkLog(st,txt,rp){st.log.unshift({t:Date.now(),txt,rp});st.log=st.log.slice(0,12);}
@@ -6446,9 +6447,10 @@ async function refresh(){
   user=session?.user||null;
   if(user){
     window.chemStoreSync&&window.chemStoreSync.persistOn();
-    const {data:p}=await sb.from("profiles").select("premium,progress,nickname,avatar,avatar_hue").eq("id",user.id).maybeSingle();
+    const {data:p}=await sb.from("profiles").select("premium,progress,nickname,avatar,avatar_hue,admin").eq("id",user.id).maybeSingle();
     prof=p||{};
-    premium=!!p?.premium;
+    window.chemAdmin=!!p?.admin;
+    premium=!!p?.premium||window.chemAdmin;
     const merged=merge(p?.progress||{},snapshot());
     applyLocal(merged); pushProgress();
     localStorage.setItem("chemlab-signedin","1");
@@ -6601,7 +6603,7 @@ function renderCorner(){
   c.innerHTML=`<div class="corner">
     <button id="corner-av" aria-haspopup="true" aria-label="Account menu" style="background:none;border:0;padding:0">${avatarFor(user.email||"?",true)}</button>
     <div class="corner-menu" id="corner-menu">
-      <div class="cm-head"><b>${prof.nickname||user.email}</b>${prof.nickname?`<div style="font-size:11.5px;color:var(--ink-soft)">${user.email}</div>`:""}${premium?' <span class="premium-pill" style="padding:2px 8px;font-size:11px">★ Premium</span>':""}</div>
+      <div class="cm-head"><b>${prof.nickname||user.email}</b>${prof.nickname?`<div style="font-size:11.5px;color:var(--ink-soft)">${user.email}</div>`:""}${window.chemAdmin?' <span class="premium-pill" style="padding:2px 8px;font-size:11px;background:#d84a3c;color:#fff">⚙ ADMIN</span>':premium?' <span class="premium-pill" style="padding:2px 8px;font-size:11px">★ Premium</span>':""}</div>
       <button class="cm-item" id="cm-settings">⚙️&nbsp; Account settings</button>
       ${premium?"":'<button class="cm-item" id="cm-upgrade" style="color:var(--na);font-weight:600">★&nbsp; Upgrade to Premium</button>'}
       <button class="cm-item" id="cm-out">↩&nbsp; Sign out</button>

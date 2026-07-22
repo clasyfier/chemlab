@@ -46,3 +46,6 @@ language sql security definer set search_path=public stable as $fn$
   order by tubes desc, updated_at asc limit 25
 $fn$;
 grant execute on function public.leaderboard() to anon, authenticated;
+
+-- Admin flag: server-set only (not in the authenticated update grant)
+alter table public.profiles add column if not exists admin boolean not null default false;

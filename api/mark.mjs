@@ -62,11 +62,11 @@ async function requirePremium(req) {
   });
   if (!uRes.ok) return { ok: false, status: 401, error: 'invalid session' };
   const user = await uRes.json();
-  const pRes = await fetch(`${url}/rest/v1/profiles?id=eq.${user.id}&select=premium`, {
+  const pRes = await fetch(`${url}/rest/v1/profiles?id=eq.${user.id}&select=premium,admin`, {
     headers: { apikey: key, Authorization: `Bearer ${key}` },
   });
-  const premium = pRes.ok && !!(((await pRes.json())[0]) || {}).premium;
-  if (!premium) return { ok: false, status: 402, error: 'premium required' };
+  const row = (pRes.ok && ((await pRes.json())[0])) || {};
+  if (!row.premium && !row.admin) return { ok: false, status: 402, error: 'premium required' };
   return { ok: true };
 }
 
