@@ -5517,7 +5517,7 @@ function renderRanked(){
     <div class="pchip"><b>${st.tubes}🧪</b><span>test tubes</span></div>
   </div>
   ${Date.now()<st.shieldUntil?`<p style="font-size:13px;color:var(--ok);margin:0 0 12px">🛡️ Promotion shield active — no decay for ${Math.ceil((st.shieldUntil-Date.now())/86400000)} more day(s).</p>`:`<p style="font-size:13px;color:var(--ink-soft);margin:0 0 12px">⚠️ Two quiet days and this rank decays a division. Freezes cover one missed day each.</p>`}
-  ${!isMax&&(st.jumps||0)<10?`<div class="card" style="margin-bottom:14px;border-color:#e0a93c"><h3>🚀 Rank Jump</h3>
+  ${(window.chemAdmin||(!isMax&&(st.jumps||0)<10))?`<div class="card" style="margin-bottom:14px;border-color:#e0a93c"><h3>🚀 Rank Jump${window.chemAdmin&&isMax?" <span style=\'font-size:11px;color:var(--ink-soft)\'>(admin view — hidden from Laureates)</span>":""}</h3>
     <p style="font-size:13.5px;color:var(--ink-soft);margin:4px 0 10px">In a hurry? Buy your way out of ${info.name} — one full rank, instantly. The examiners will never know. Each jump costs €10 more than the last, and the summit itself cannot be bought: jumps stop at the Laureate's door, and test tubes must be earned.</p>
     <button class="btn" id="rk-jump">🚀 Jump one rank — €${((st.jumps||0)+1)*10}</button>
     <span style="font-size:12px;color:var(--ink-soft);margin-left:10px">${st.jumps?`${st.jumps} jump${st.jumps>1?"s":""} purchased so far`:"first jump"}</span>
@@ -5535,7 +5535,7 @@ function renderRanked(){
     ${st.log.length?`<ul class="rk-log" style="list-style:none;margin:4px 0;padding:0">${st.log.map(l=>`<li><span>${l.txt}</span><b class="${l.rp<0?"neg":""}">${l.rp>0?"+":""}${l.rp||""} </b></li>`).join("")}</ul>`:'<p style="font-size:13.5px;color:var(--ink-soft)">No RP yet — go answer something.</p>'}
   </div>
   <div class="card"><h3>🧪 Test-tube leaderboard</h3>
-    ${isMax?`<div id="rk-lb" class="rk-lb"><p style="font-size:13.5px;color:var(--ink-soft)">Summoning the laureates…</p></div>`
+    ${(isMax||window.chemAdmin)?`<div id="rk-lb" class="rk-lb"><p style="font-size:13.5px;color:var(--ink-soft)">Summoning the laureates…</p></div>`
     :`<div style="text-align:center;padding:22px"><div style="font-size:34px">🔒</div>
       <p style="font-size:14px;color:var(--ink-soft);max-width:44ch;margin:6px auto 0">The leaderboard is for <b>Nobel Laureates</b> only. Reach the summit, mint test tubes, and your name appears among the immortals.</p></div>`}
   </div>`;
@@ -5544,13 +5544,13 @@ function renderRanked(){
     if(!window.chemJumpGo){openAccount();return;}
     window.chemJumpGo(RK_JUMPS[Math.min(9,rkState().jumps||0)]);
   });
-  if(isMax&&window.chemFetchLeaderboard){
+  if((isMax||window.chemAdmin)&&window.chemFetchLeaderboard){
     window.chemFetchLeaderboard().then(rows=>{
       const el=$("#rk-lb"); if(!el)return;
       el.innerHTML=rows&&rows.length?`<ol style="list-style:none;margin:0;padding:0">${rows.map((r,i)=>`<li><span class="pos">${i+1}</span><span>${String(r.nickname).replace(/</g,"&lt;")}</span><span class="tub">${r.tubes} 🧪</span></li>`).join("")}</ol>`
         :'<p style="font-size:13.5px;color:var(--ink-soft)">No tubes minted anywhere yet — be the first name on the board.</p>';
     }).catch(()=>{const el=$("#rk-lb");if(el)el.innerHTML='<p style="font-size:13.5px;color:var(--ink-soft)">Sign in to see the leaderboard.</p>';});
-  }else if(isMax){
+  }else if(isMax||window.chemAdmin){
     const el=$("#rk-lb"); if(el)el.innerHTML='<p style="font-size:13.5px;color:var(--ink-soft)">Sign in to compete on the leaderboard.</p>';
   }
 }
@@ -5709,7 +5709,7 @@ function rdRender(){
 }
 /* ---------- topic stats ---------- */
 function updateProgressNav(){
-  const has=Object.keys(load("chemlab-topicstats",{})).length>0||load("chemlab-examhist",[]).length>0;
+  const has=window.chemAdmin||Object.keys(load("chemlab-topicstats",{})).length>0||load("chemlab-examhist",[]).length>0;
   const b=document.querySelector('nav.rail button[data-v="progress"]');
   if(b)b.style.display=has?"":"none";
   if(!has){const v=document.querySelector("#v-progress");if(v&&v.classList.contains("on"))showView("home");}
@@ -6481,6 +6481,7 @@ async function refresh(){
   }
   window.chemPremium=!!(user&&premium);
   window.applyPracLocks(); try{renderQuiz()}catch(e){}
+  try{if(document.querySelector("#v-ranked.on"))renderRanked();updateProgressNav();}catch(e){}
   render(); renderCorner();
 }
 function checkoutUrl(base){
