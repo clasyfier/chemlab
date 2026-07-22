@@ -29,6 +29,7 @@
 {"@type":"Offer","name":"Premium monthly","price":"4.99","priceCurrency":"GBP"},
 {"@type":"Offer","name":"Premium yearly","price":"29.00","priceCurrency":"GBP"}]}
 </script>
+<script>try{const t=localStorage.getItem("cl-theme");if(t)document.documentElement.dataset.theme=t;}catch(e){}</script>
 <style>
 :root{
   --ground:#F3F6F5; --panel:#FFFFFF; --panel2:#EAF0EF; --ink:#16232B; --ink-soft:#51636E;
@@ -609,6 +610,8 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
 .ranktrack{display:flex;gap:3px;flex:1;min-width:110px}
 .ranktrack i{height:10px;flex:1;border-radius:3px;background:var(--panel2);box-shadow:inset 0 0 0 1px var(--line);transition:background .2s}
 .ranklabel{font-size:11.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;min-width:96px;color:var(--ink-soft);transition:color .2s}
+#themebtn{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--panel);cursor:pointer;font-size:16px;display:grid;place-items:center;transition:transform .15s,border-color .15s;padding:0}
+#themebtn:hover{transform:rotate(-14deg) scale(1.08);border-color:var(--bunsen)}
 .topbar{position:sticky;top:0;z-index:35;display:flex;justify-content:flex-end;align-items:center;gap:8px;
   padding:6px 0 10px;background:linear-gradient(var(--ground) 75%,transparent);min-height:46px}
 .avatar.sm{width:36px;height:36px;font-size:15px;flex:0 0 36px;cursor:pointer;transition:transform .12s}
@@ -690,7 +693,7 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
   </div>
 </nav>
 <main>
-<div class="topbar"><div id="acct-corner"></div></div>
+<div class="topbar"><button id="themebtn" aria-label="Toggle dark or light mode">🌙</button><div id="acct-corner"></div></div>
 <div class="reader" id="reader" hidden>
   <div class="reader-bar">
     <button class="rarrow" id="r-close">✕ Close</button>
@@ -4476,6 +4479,25 @@ window.addEventListener("chemlab:changed",updateProgressNav);
   check();
   document.addEventListener("visibilitychange",()=>{if(!document.hidden)check();});
   setInterval(check,5*60*1000);
+})();
+
+/* ---------- dark / light toggle ---------- */
+(()=>{
+  const btn=$("#themebtn"); if(!btn)return;
+  const sys=()=>matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";
+  const cur=()=>document.documentElement.dataset.theme||sys();
+  const paint=()=>{
+    btn.textContent=cur()==="dark"?"☀️":"🌙";
+    btn.title=cur()==="dark"?"Switch to light mode":"Switch to dark mode";
+  };
+  btn.addEventListener("click",()=>{
+    const next=cur()==="dark"?"light":"dark";
+    document.documentElement.dataset.theme=next;
+    try{localStorage.setItem("cl-theme",next);}catch(e){}
+    paint(); redrawAll();
+  });
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change",paint);
+  paint();
 })();
 
 /* ---------- instrument controls: sliders, chip decks, switches ---------- */
