@@ -291,6 +291,24 @@ canvas.plot{width:100%;height:320px;display:block;border-radius:8px;background:v
 #eldetail table{border-collapse:collapse;margin-top:10px;font-size:14.5px}
 #eldetail td{padding:5px 18px 5px 0;vertical-align:top}
 #eldetail td:first-child{color:var(--ink-soft);white-space:nowrap}
+.elpop .elhead{display:flex;align-items:center;gap:14px;padding:18px 18px 14px;border-radius:14px 14px 0 0;
+  background:linear-gradient(135deg,color-mix(in srgb,var(--elc) 22%,var(--panel)),var(--panel) 70%)}
+.elpop .elnav{background:var(--panel);border:1px solid var(--line);border-radius:50%;width:34px;height:34px;cursor:pointer;font-size:15px;color:var(--ink);flex:0 0 34px;transition:transform .12s,border-color .12s}
+.elpop .elnav:hover{transform:scale(1.12);border-color:var(--elc)}
+.elpop canvas{flex:0 0 148px;width:148px;height:148px;cursor:grab;touch-action:none}
+.elpop .bigsym{font-size:44px;font-weight:800;color:var(--elc);line-height:1}
+.elpop .badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.elpop .badge{font-size:10.5px;font-weight:700;letter-spacing:.04em;padding:3px 9px;border-radius:99px;background:var(--panel2);color:var(--ink-soft)}
+.elpop .elbody{padding:6px 18px 18px}
+.elstat{display:grid;grid-template-columns:150px 1fr 84px;gap:10px;align-items:center;font-size:12.5px;margin:7px 0}
+.elstat .lbl{color:var(--ink-soft);font-weight:600}
+.elstat .bar{height:8px;border-radius:99px;background:var(--panel2);overflow:hidden}
+.elstat .bar i{display:block;height:100%;border-radius:99px;width:0;transition:width .7s cubic-bezier(.2,.8,.3,1)}
+.elstat .num{font-family:ui-monospace,"SF Mono",Menlo,monospace;text-align:right;font-variant-numeric:tabular-nums}
+.elpop .cfg{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:13px;background:var(--panel2);border-radius:9px;padding:8px 12px;margin:10px 0 0;overflow-x:auto;white-space:nowrap}
+.elpop .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+@media (max-width:560px){.elpop .elhead{flex-wrap:wrap}.elpop canvas{flex-basis:110px;width:110px;height:110px}.elstat{grid-template-columns:110px 1fr 74px}}
+.el:hover{transform:scale(1.16);z-index:6;box-shadow:0 4px 14px rgba(15,25,40,.25)}
 #pttip{position:fixed;z-index:340;pointer-events:none;background:rgba(25,32,44,.94);color:#fff;border-radius:10px;padding:9px 13px;font-size:12px;line-height:1.5;max-width:230px;box-shadow:0 8px 24px rgba(0,0,0,.3)}
 #pttip b{font-size:13.5px}
 #pttip .tcat{opacity:.75}
@@ -2349,7 +2367,7 @@ function applyPtMode(){
   if(ptMode==="state")$("#pt-counts").textContent=`${counts.solid} solid · ${counts.liquid} liquid · ${counts.gas} gas`;
   /* legend */
   const lg=$("#ptlegend");
-  if(ptMode==="cat")lg.innerHTML=Object.entries(CAT_META).map(([k,v])=>`<span><i style="background:${v[1]}"></i>${v[0]}</span>`).join("");
+  if(ptMode==="cat")lg.innerHTML=Object.entries(CAT_META).map(([k,v])=>`<span data-cat="${k}" style="cursor:pointer">​<i style="background:${v[1]}"></i>${v[0]}</span>`).join("");
   else if(ptMode==="state")lg.innerHTML=`<span><i style="background:#6a7f95"></i>solid</span><span><i style="background:#e8944a"></i>liquid</span><span><i style="background:#57b877"></i>gas</span><span><i style="background:var(--line)"></i>no data</span>`;
   else lg.innerHTML=`<span>low</span><span style="flex:0 0 140px;height:10px;border-radius:99px;background:linear-gradient(90deg,${ptHeat(0)},${ptHeat(0.5)},${ptHeat(1)})"></span><span>high</span>`;
   /* chips */
@@ -2378,23 +2396,138 @@ $("#pt-t").addEventListener("input",applyPtMode);
   pt.addEventListener("pointerleave",()=>tip.hidden=true);
 })();
 applyPtMode();
+let elZ=1,elMat=null,elDrag=false,elLX=0,elLY=0,elRAF=0;
+function elStateAt(z,T){
+  const mp=ptVal(PT_MP,z),bp=ptVal(PT_BP,z);
+  if(!mp||!bp)return null;
+  return T<mp?["🧊","solid"]:T<bp?["💧","liquid"]:["💨","gas"];
+}
 function showElement(z){
+  elZ=z;
   const e=ELEMENTS[z-1], cat=catOf(z), [catName,color]=CAT_META[cat];
   $$(".el").forEach(el=>el.classList.toggle("sel",+el.dataset.z===z));
   const fl=FLAME[z];
-  $("#eldetail").innerHTML=`<div class="card">
-    <div class="head"><span class="bigsym" style="color:${color}">${e.sym}</span>
-      <div><h3 style="font-size:24px">${e.name}</h3>
-      <span class="tagline" style="background:color-mix(in srgb,${color} 15%,transparent);color:${color}">${catName}</span></div></div>
-    <table>
-      <tr><td>Atomic number</td><td class="mono">${e.z}</td></tr>
-      <tr><td>Relative atomic mass</td><td class="mono">${e.mass}</td></tr>
-      <tr><td>Electron configuration</td><td class="mono">${econfig(z)}</td></tr>
-      <tr><td>Shorthand</td><td class="mono">${econfigShort(z)}</td></tr>
-      ${fl?`<tr><td>Flame test</td><td><span class="flamechip"><i style="background:${fl[1]}"></i>${fl[0]}</span></td></tr>`:""}
-      ${z===24||z===29?`<tr><td>Note</td><td>Aufbau exception — a ${z===24?"half-filled":"full"} 3d subshell is more stable, so one 4s electron is promoted.</td></tr>`:""}
-    </table></div>`;
+  const [row,col]=ptPos(z);
+  const st=elStateAt(z,298);
+  const stat=(lbl,val,txt,lo,hi)=>val?`<div class="elstat"><span class="lbl">${lbl}</span>
+      <div class="bar"><i data-w="${Math.round(Math.max(3,Math.min(100,(val-lo)/(hi-lo)*100)))}" style="background:${color}"></i></div>
+      <span class="num">${txt}</span></div>`:"";
+  $("#eldetail").innerHTML=`<div class="elpop" style="--elc:${color}">
+    <div class="elhead">
+      <button class="elnav" id="el-prev" aria-label="Previous element" ${z<=1?"disabled":""}>←</button>
+      <canvas id="el-atom" aria-label="Interactive atom model — drag to spin"></canvas>
+      <div style="flex:1;min-width:140px">
+        <span class="bigsym">${e.sym}</span>
+        <h3 style="font-size:22px;margin:2px 0 0">${e.name}</h3>
+        <div class="badges">
+          <span class="badge" style="background:color-mix(in srgb,${color} 16%,transparent);color:${color}">${catName}</span>
+          ${row<=7?`<span class="badge">group ${col}</span>`:""}
+          <span class="badge">period ${row>7?row-3:row}</span>
+          ${st?`<span class="badge">${st[0]} ${st[1]} at 25 °C</span>`:""}
+        </div>
+      </div>
+      <button class="elnav" id="el-next" aria-label="Next element" ${z>=118?"disabled":""}>→</button>
+    </div>
+    <div class="elbody">
+      ${stat("Aᵣ",1,e.mass,0,0).replace('class="bar"','class="bar" hidden').replace('<i data-w="3"','<i data-w="0"')}
+      ${stat("Electronegativity",ptVal(PT_EN,z),(ptVal(PT_EN,z)/100).toFixed(2),70,400)}
+      ${stat("1st ionisation energy",ptVal(PT_IE,z),ptVal(PT_IE,z)+" kJ mol⁻¹",370,2400)}
+      ${stat("Covalent radius",ptVal(PT_R,z),ptVal(PT_R,z)+" pm",28,260)}
+      ${stat("Melting point",ptVal(PT_MP,z),ptVal(PT_MP,z)+" K",1,3900)}
+      ${stat("Boiling point",ptVal(PT_BP,z),ptVal(PT_BP,z)+" K",4,5900)}
+      <div class="cfg">${econfig(z)}</div>
+      <div class="cfg" style="margin-top:6px">${econfigShort(z)}</div>
+      ${fl?`<p style="margin:12px 0 0"><span class="flamechip"><i style="background:${fl[1]}"></i>flame test: ${fl[0]}</span></p>`:""}
+      ${z===24||z===29?`<p style="font-size:13px;color:var(--ink-soft);margin:10px 0 0">⚡ Aufbau exception — a ${z===24?"half-filled":"full"} 3d subshell is more stable, so one 4s electron is promoted.</p>`:""}
+      <div class="actions">
+        <button class="btn ghost" id="el-build">⚛ Build it in the simulator</button>
+      </div>
+    </div>
+  </div>`;
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    $$("#eldetail .bar i").forEach(i=>i.style.width=i.dataset.w+"%");
+  }));
+  $("#el-prev").addEventListener("click",ev=>{ev.stopPropagation();if(elZ>1)showElement(elZ-1);});
+  $("#el-next").addEventListener("click",ev=>{ev.stopPropagation();if(elZ<118)showElement(elZ+1);});
+  $("#el-build").addEventListener("click",()=>{
+    atomP=z; atomN=Math.max(0,Math.round(parseFloat(e.mass))-z); atomE=z;
+    drawAtom(); closeElModal(); showView("lab");
+    const sim=document.querySelector("#sim-atom"); if(sim)sim.scrollIntoView({behavior:"smooth",block:"center"});
+  });
+  /* mini 3D atom: drag to spin (deferred a frame so 3D helpers are initialised) */
+  requestAnimationFrame(()=>{
+  const c=$("#el-atom"); if(!c)return;
+  const dpr=window.devicePixelRatio||1;
+  c.width=148*dpr; c.height=148*dpr;
+  const ctx=c.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0);
+  if(!elMat)elMat=m3mul(rotX(-0.4),rotY(0.5));
+  const shells=shellFill(z);
+  cancelAnimationFrame(elRAF);
+  (function loop(){
+    elRAF=requestAnimationFrame(loop);
+    if($("#elmodal").hidden)return;
+    const now=performance.now();
+    if(!elDrag&&!reduced)elMat=m3mul(rotY(0.006),elMat);
+    ctx.clearRect(0,0,148,148);
+    const cx=74,cy=74,maxR=64,f=4.2;
+    const proj=p=>{const sc=f/(f-p[2]/maxR);return [cx+p[0]*sc,cy-p[1]*sc,sc];};
+    const items=[];
+    items.push({z:0,draw(){
+      const g=ctx.createRadialGradient(cx-4,cy-5,1,cx,cy,11);
+      g.addColorStop(0,"#fff");g.addColorStop(0.4,color);g.addColorStop(1,"color-mix(in srgb,"+color+" 60%,#000)");
+      ctx.fillStyle=g;ctx.beginPath();ctx.arc(cx,cy,11,0,7);ctx.fill();
+    }});
+    const base=17, gap=shells.length?(maxR-base)/shells.length:0;
+    shells.forEach((cnt,i)=>{
+      const r=base+(i+0.5)*gap;
+      const tilt=m3mul(rotY(i*0.9),rotX(0.5+i*0.42));
+      let prev=null;
+      for(let k=0;k<=30;k++){
+        const a=k/30*Math.PI*2;
+        const p=m3v(elMat,m3v(tilt,[Math.cos(a)*r,Math.sin(a)*r,0]));
+        if(prev){const q=prev,pt=p;
+          items.push({z:(q[2]+pt[2])/2,draw(){
+            const [x1,y1]=proj(q),[x2,y2]=proj(pt);
+            ctx.strokeStyle=cssVar("--ink-soft");ctx.globalAlpha=0.25+0.45*((q[2]+pt[2])/2/maxR+1)/2;
+            ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.globalAlpha=1;
+          }});}
+        prev=p;
+      }
+      const speed=(i%2?-1:1)*0.0005/(1+i*0.5);
+      for(let j=0;j<cnt;j++){
+        const a=j/cnt*Math.PI*2+now*speed;
+        const p=m3v(elMat,m3v(tilt,[Math.cos(a)*r,Math.sin(a)*r,0]));
+        items.push({z:p[2],draw(){
+          const [x,y,sc]=proj(p);
+          ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,2.1*sc,0,7);ctx.fill();
+        }});
+      }
+    });
+    items.sort((a,b)=>a.z-b.z).forEach(it=>it.draw());
+  })();
+  c.addEventListener("pointerdown",ev=>{elDrag=true;elLX=ev.clientX;elLY=ev.clientY;c.setPointerCapture(ev.pointerId);ev.preventDefault();});
+  c.addEventListener("pointermove",ev=>{
+    if(!elDrag)return;
+    elMat=m3mul(rotY((ev.clientX-elLX)*0.012),m3mul(rotX((ev.clientY-elLY)*0.012),elMat));
+    elLX=ev.clientX;elLY=ev.clientY;
+  });
+  c.addEventListener("pointerup",()=>elDrag=false);
+  });
 }
+document.addEventListener("keydown",e=>{
+  if($("#elmodal").hidden)return;
+  if(e.key==="ArrowLeft"&&elZ>1)showElement(elZ-1);
+  if(e.key==="ArrowRight"&&elZ<118)showElement(elZ+1);
+});
+/* interactive legend: hover a category to spotlight its elements */
+$("#ptlegend").addEventListener("pointerover",e=>{
+  const sp=e.target.closest("span[data-cat]"); if(!sp)return;
+  const k=sp.dataset.cat;
+  $$("#pt .el").forEach(el=>el.style.opacity=catOf(+el.dataset.z)===k?"1":"0.18");
+});
+$("#ptlegend").addEventListener("pointerout",()=>{
+  $$("#pt .el").forEach(el=>el.style.opacity="");
+});
 /* element hunt game */
 const HUNT_POOLS={
 easy:[["the element whose flame test is lilac",19],["the element whose flame test is crimson red",3],
