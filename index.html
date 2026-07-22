@@ -613,6 +613,22 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
 #lm-dots button.done{background:var(--ok);border-color:var(--ok)}
 #lm-dots button.cur{border-color:var(--k);box-shadow:0 0 0 3px color-mix(in srgb,var(--k) 25%,transparent)}
 .lab-brief li{margin:5px 0;font-size:14.5px}
+.lab-grid{display:grid;grid-template-columns:1fr 300px;gap:26px;align-items:start}
+@media (max-width:900px){.lab-grid{grid-template-columns:1fr}}
+.lab-side{position:sticky;top:10px}
+.lab-dia{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:var(--shadow)}
+.lab-dia svg{width:100%;height:auto;display:block}
+.lab-dia .dia-cap{font-size:11px;color:var(--ink-soft);text-align:center;margin-top:8px;letter-spacing:.04em;text-transform:uppercase;font-weight:700}
+.lab-dia [data-part]{transition:all .3s}
+.lab-dia [data-part].hl{stroke:#d84a3c !important;stroke-width:2.5;filter:drop-shadow(0 0 4px rgba(216,74,60,.6));animation:diapulse 1.4s ease-in-out infinite}
+.lab-dia text[data-part].hl{fill:#d84a3c !important;stroke:none !important;font-weight:800}
+@keyframes diapulse{50%{opacity:.55}}
+.lab-fade{animation:labfade .35s ease}
+@keyframes labfade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.haz.ackable{cursor:pointer;transition:transform .15s}
+.haz.ackable:hover{transform:scale(1.04)}
+.haz.acked{outline:2px solid var(--ok);opacity:.85}
+.haz.acked::after{content:" ✓";font-weight:800}
 .lab-details{border:1px solid var(--line);border-radius:11px;margin:8px 0;overflow:hidden}
 .lab-details summary{cursor:pointer;padding:11px 14px;font-weight:700;font-size:14px;list-style:none;display:flex;gap:8px;align-items:center}
 .lab-details summary::before{content:"▸";color:var(--k);transition:transform .15s}
@@ -3328,6 +3344,138 @@ $("#pt-trends").addEventListener("input",applyTrends);
     store("chemlab-prac",np);
   }
 })();
+/* ---------- apparatus diagrams (inline SVG, theme-aware, per-step highlights) ---------- */
+const DIA_S='stroke="var(--ink-soft)" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"';
+const DIA_T='fill="var(--ink-soft)" font-size="8" font-family="-apple-system,sans-serif"';
+const PRAC_DIA={
+titration:`<svg viewBox="0 0 200 165">
+  <rect data-part="burette" x="93" y="5" width="12" height="68" ${DIA_S}/>
+  ${[15,27,39,51,63].map(y=>`<line x1="105" y1="${y}" x2="109" y2="${y}" ${DIA_S}/>`).join("")}
+  <rect data-part="meniscus" x="95" y="22" width="8" height="49" fill="rgba(90,150,220,.4)" stroke="none"/>
+  <path data-part="tap" d="M93,73 L105,73 L99,82 Z" ${DIA_S}/><line data-part="tap" x1="105" y1="76" x2="115" y2="74" ${DIA_S}/>
+  <line x1="99" y1="82" x2="99" y2="96" ${DIA_S}/>
+  <path data-part="flask" d="M92,100 L85,145 Q84,150 90,150 L108,150 Q114,150 113,145 L106,100" ${DIA_S}/>
+  <path d="M86.5,138 L111.5,138 L108,150 L90,150 Z" fill="rgba(232,67,147,.25)" stroke="none"/>
+  <rect data-part="tile" x="70" y="152" width="60" height="6" fill="#fff" ${DIA_S}/>
+  <text x="120" y="30" ${DIA_T}>burette</text><text x="120" y="80" ${DIA_T}>tap</text>
+  <text x="118" y="128" ${DIA_T}>conical flask</text><text x="133" y="158" ${DIA_T}>white tile</text>
+</svg>`,
+calorimeter:`<svg viewBox="0 0 200 165">
+  <path data-part="beaker" d="M55,60 L55,150 L150,150 L150,60" ${DIA_S}/>
+  <rect data-part="cup" x="72" y="82" width="60" height="64" rx="4" fill="rgba(200,210,225,.25)" ${DIA_S}/>
+  <rect data-part="lid" x="68" y="74" width="68" height="9" rx="3" ${DIA_S}/>
+  <line data-part="thermometer" x1="103" y1="15" x2="103" y2="128" ${DIA_S}/>
+  <circle data-part="thermometer" cx="103" cy="132" r="5" fill="#d84a3c" stroke="none"/>
+  <path d="M74,105 L130,105 L130,144 L74,144 Z" fill="rgba(90,150,220,.28)" stroke="none"/>
+  <text x="140" y="25" ${DIA_T}>thermometer</text><text x="20" y="75" ${DIA_T}>lid</text>
+  <text x="8" y="118" ${DIA_T}>polystyrene</text><text x="20" y="127" ${DIA_T}>cup</text><text x="155" y="120" ${DIA_T}>beaker</text>
+</svg>`,
+flaskcross:`<svg viewBox="0 0 200 165">
+  <path data-part="flask" d="M85,55 L78,120 Q77,127 84,127 L116,127 Q123,127 122,120 L115,55" ${DIA_S}/>
+  <path d="M80,102 L120,102 L117,127 L83,127 Z" fill="rgba(240,220,120,.4)" stroke="none"/>
+  <line data-part="thermo" x1="100" y1="30" x2="100" y2="98" ${DIA_S}/><circle data-part="thermo" cx="100" cy="100" r="4" fill="#d84a3c" stroke="none"/>
+  <rect x="65" y="132" width="70" height="18" fill="#fff" ${DIA_S}/>
+  <path data-part="cross" d="M92,136 L108,146 M108,136 L92,146" stroke="var(--ink)" stroke-width="2.5" fill="none"/>
+  <circle data-part="timer" cx="165" cy="60" r="16" ${DIA_S}/><line data-part="timer" x1="165" y1="60" x2="165" y2="50" ${DIA_S}/><line data-part="timer" x1="165" y1="60" x2="172" y2="63" ${DIA_S}/>
+  <text x="147" y="90" ${DIA_T}>stop-clock</text><text x="140" y="146" ${DIA_T}>paper cross</text><text x="30" y="80" ${DIA_T}>reaction</text><text x="38" y="89" ${DIA_T}>mixture</text>
+</svg>`,
+distill:`<svg viewBox="0 0 200 165">
+  <circle data-part="flask" cx="45" cy="112" r="24" ${DIA_S}/>
+  <path d="M25,122 A24,24 0 0 0 65,122 L62,116 L28,116 Z" fill="rgba(240,190,120,.4)" stroke="none"/>
+  ${[38,45,52].map(x=>`<circle data-part="granules" cx="${x}" cy="128" r="1.6" fill="var(--ink-soft)" stroke="none"/>`).join("")}
+  <rect x="40" y="62" width="10" height="28" ${DIA_S}/>
+  <line data-part="thermometer" x1="45" y1="28" x2="45" y2="74" ${DIA_S}/><circle data-part="thermometer" cx="45" cy="74" r="3.5" fill="#d84a3c" stroke="none"/>
+  <path d="M50,68 L70,78" ${DIA_S}/>
+  <path data-part="condenser" d="M62,72 L142,104 M70,90 L134,116 M66,81 L60,95 M138,110 L146,98" ${DIA_S}/>
+  <path data-part="waterin" d="M132,124 L126,112" ${DIA_S}/><text data-part="waterin" x="120" y="136" ${DIA_T}>water in</text>
+  <path data-part="waterout" d="M76,78 L82,66" ${DIA_S}/><text data-part="waterout" x="70" y="60" ${DIA_T}>water out</text>
+  <path data-part="receiver" d="M150,112 L145,148 Q144,153 150,153 L166,153 Q172,153 171,148 L166,112" ${DIA_S}/>
+  <path d="M8,150 L18,132 L28,150 Z" fill="rgba(240,150,60,.6)" stroke="none"/><path d="M18,150 L28,136 L38,150 Z" fill="rgba(240,150,60,.45)" stroke="none"/>
+  <text x="8" y="162" ${DIA_T}>heat</text><text x="8" y="35" ${DIA_T}>thermometer at</text><text x="8" y="44" ${DIA_T}>side-arm level</text><text x="148" y="105" ${DIA_T}>receiver</text>
+</svg>`,
+syringe:`<svg viewBox="0 0 200 165">
+  <path data-part="flask" d="M35,75 L28,130 Q27,136 33,136 L63,136 Q69,136 68,130 L61,75" ${DIA_S}/>
+  <path d="M30,112 L66,112 L64,136 L32,136 Z" fill="rgba(150,220,160,.35)" stroke="none"/>
+  <rect x="40" y="63" width="16" height="12" rx="3" ${DIA_S}/>
+  <path data-part="tube" d="M48,63 L48,40 L120,40 L120,58" ${DIA_S}/>
+  <rect data-part="syringe" x="98" y="58" width="86" height="16" rx="4" ${DIA_S}/>
+  <line data-part="syringe" x1="140" y1="58" x2="140" y2="74" ${DIA_S}/><rect data-part="syringe" x="140" y="62" width="52" height="8" fill="rgba(200,210,225,.35)" stroke="none"/>
+  ${[108,118,128].map(x=>`<line x1="${x}" y1="58" x2="${x}" y2="64" ${DIA_S}/>`).join("")}
+  <text x="95" y="90" ${DIA_T}>gas syringe</text><text x="12" y="155" ${DIA_T}>reaction flask</text><text x="60" y="32" ${DIA_T}>delivery tube</text>
+</svg>`,
+cell:`<svg viewBox="0 0 200 165">
+  <path d="M20,85 L20,150 L85,150 L85,85" ${DIA_S}/><path d="M115,85 L115,150 L180,150 L180,85" ${DIA_S}/>
+  <rect x="22" y="112" width="61" height="36" fill="rgba(160,180,200,.25)" stroke="none"/><rect x="117" y="112" width="61" height="36" fill="rgba(90,150,220,.25)" stroke="none"/>
+  <rect data-part="zinc" x="44" y="62" width="9" height="70" fill="#9aa5b1" stroke="var(--ink-soft)"/>
+  <rect data-part="copper" x="147" y="62" width="9" height="70" fill="#c98a5a" stroke="var(--ink-soft)"/>
+  <path data-part="bridge" d="M75,100 L75,72 Q100,52 125,72 L125,100" ${DIA_S} stroke-width="5" stroke="rgba(160,140,200,.8)"/>
+  <path d="M48,62 L48,30 L92,30" ${DIA_S}/><path d="M151,62 L151,30 L108,30" ${DIA_S}/>
+  <circle data-part="voltmeter" cx="100" cy="30" r="11" ${DIA_S}/><text data-part="voltmeter" x="96" y="34" font-size="10" font-weight="800" fill="var(--ink)">V</text>
+  <text x="12" y="160" ${DIA_T}>Zn in ZnSO₄(aq)</text><text x="120" y="160" ${DIA_T}>Cu in CuSO₄(aq)</text><text x="78" y="52" ${DIA_T}>salt bridge</text><text x="120" y="20" ${DIA_T}>high-resistance voltmeter</text>
+</svg>`,
+buchner:`<svg viewBox="0 0 200 165">
+  <path data-part="funnel" d="M62,32 L138,32 L138,58 L108,58 L108,80 L92,80 L92,58 L62,58 Z" ${DIA_S}/>
+  <ellipse data-part="paper" cx="100" cy="44" rx="30" ry="5" stroke-dasharray="3,3" ${DIA_S}/>
+  <path data-part="flask" d="M78,84 L64,142 Q62,150 70,150 L130,150 Q138,150 136,142 L122,84" ${DIA_S}/>
+  <path data-part="pump" d="M130,100 L162,100" ${DIA_S}/><path data-part="pump" d="M156,95 L164,100 L156,105" ${DIA_S}/>
+  <text data-part="pump" x="138" y="92" ${DIA_T}>to pump</text>
+  <text x="20" y="40" ${DIA_T}>Büchner</text><text x="24" y="49" ${DIA_T}>funnel</text><text x="8" y="130" ${DIA_T}>side-arm flask</text><text x="72" y="27" ${DIA_T}>damp filter paper</text>
+</svg>`,
+tlc:`<svg viewBox="0 0 200 165">
+  <path d="M55,35 L55,150 L145,150 L145,35" ${DIA_S}/>
+  <line data-part="lid" x1="50" y1="33" x2="150" y2="33" ${DIA_S} stroke-width="3"/>
+  <rect data-part="plate" x="82" y="45" width="36" height="98" fill="var(--panel2)" ${DIA_S}/>
+  <line data-part="front" x1="84" y1="62" x2="116" y2="62" stroke-dasharray="3,3" ${DIA_S}/>
+  <line data-part="baseline" x1="84" y1="128" x2="116" y2="128" ${DIA_S}/>
+  <circle cx="93" cy="128" r="3" fill="rgba(200,80,140,.7)" stroke="none"/><circle cx="107" cy="128" r="3" fill="rgba(90,120,220,.7)" stroke="none"/>
+  <circle cx="93" cy="92" r="3.5" fill="rgba(200,80,140,.5)" stroke="none"/><circle cx="107" cy="74" r="3.5" fill="rgba(90,120,220,.5)" stroke="none"/>
+  <rect data-part="solvent" x="57" y="136" width="86" height="12" fill="rgba(90,150,220,.3)" stroke="none"/>
+  <text x="8" y="30" ${DIA_T}>lid on!</text><text x="150" y="65" ${DIA_T}>solvent front</text><text x="150" y="131" ${DIA_T}>pencil</text><text x="150" y="140" ${DIA_T}>baseline</text><text x="8" y="146" ${DIA_T}>solvent below</text><text x="8" y="155" ${DIA_T}>the baseline</text>
+</svg>`,
+tubes:`<svg viewBox="0 0 200 165">
+  <line x1="15" y1="60" x2="185" y2="60" ${DIA_S}/><line x1="15" y1="100" x2="185" y2="100" ${DIA_S}/>
+  ${[["t1",40,"rgba(90,150,220,.5)"],["t2",80,"rgba(120,200,140,.5)"],["t3",120,"rgba(170,120,80,.55)"],["t4",160,"rgba(230,220,180,.6)"]].map(([p,x,c])=>`
+  <path data-part="${p}" d="M${x-7},40 L${x-7},125 Q${x-7},138 ${x},138 Q${x+7},138 ${x+7},125 L${x+7},40" ${DIA_S}/>
+  <path d="M${x-7},95 L${x+7},95 L${x+7},125 Q${x+7},136 ${x},136 Q${x-7},136 ${x-7},125 Z" fill="${c}" stroke="none"/>`).join("")}
+  <text x="55" y="155" ${DIA_T}>~1 cm depth per test</text>
+</svg>`,
+phprobe:`<svg viewBox="0 0 200 165">
+  <path d="M45,70 L45,150 L135,150 L135,70" ${DIA_S}/>
+  <rect x="47" y="100" width="86" height="48" fill="rgba(232,67,147,.18)" stroke="none"/>
+  <rect data-part="probe" x="82" y="20" width="9" height="98" rx="4" fill="rgba(160,175,195,.5)" stroke="var(--ink-soft)"/>
+  <circle data-part="probe" cx="86.5" cy="120" r="5" ${DIA_S}/>
+  <path d="M86,20 L86,10 L158,10 L158,24" ${DIA_S}/>
+  <rect data-part="meter" x="140" y="24" width="52" height="26" rx="5" fill="#1c2733" stroke="none"/>
+  <text data-part="meter" x="147" y="41" font-size="11" font-family="ui-monospace,Menlo,monospace" font-weight="800" fill="#6fe3a0">pH 4.76</text>
+  <ellipse data-part="stirrer" cx="90" cy="144" rx="14" ry="3.5" fill="var(--ink-soft)" stroke="none"/>
+  <text x="8" y="60" ${DIA_T}>pH probe</text><text x="145" y="62" ${DIA_T}>meter</text><text x="112" y="160" ${DIA_T}>stirrer bar</text>
+</svg>`};
+const PRAC_DIA_MAP=["titration","calorimeter","flaskcross","tubes","distill","tubes","syringe","cell","phprobe","buchner","tubes","tlc"];
+const PRAC_DIA_CAP=["Titration setup","Simple calorimeter","Disappearing cross","Test-tube analysis","Distillation apparatus","Organic test tubes","Gas collection by syringe","Electrochemical cell","pH titration with probe","Vacuum filtration","Ion test tubes","TLC development tank"];
+const PRAC_HL=[
+["","burette","flask","tap","meniscus"],
+["","cup","cup","thermometer","thermometer"],
+["flask","timer","cross","thermo","timer"],
+["t1","t2","t3","t4","t1","t2","t1"],
+["flask","thermometer","receiver","","","condenser"],
+["t1","t2","t3","t4","t1","t2"],
+["flask","flask","","syringe","syringe"],
+["zinc","bridge","voltmeter","copper","copper"],
+["probe","meter","stirrer","meter","meter","probe"],
+["","funnel","paper","paper","","pump"],
+["t1","t2","t3","t4","t1"],
+["baseline","plate","solvent","front","plate","front"]];
+let lmAck=new Set();
+function lmDia(hl){
+  const key=PRAC_DIA_MAP[lmI];
+  if(!key)return "";
+  return `<div class="lab-side"><div class="lab-dia" id="lm-dia">${PRAC_DIA[key]}<div class="dia-cap">${PRAC_DIA_CAP[lmI]}</div></div></div>`;
+}
+function lmHighlight(part){
+  const d=$("#lm-dia"); if(!d)return;
+  d.querySelectorAll(".hl").forEach(e=>e.classList.remove("hl"));
+  if(part)d.querySelectorAll(`[data-part="${part}"]`).forEach(e=>e.classList.add("hl"));
+}
 const SPOTMAP={0:0,1:1,2:2,4:3,5:4};   // practical index → spot-the-mistake game
 function pracDone(i){
   const a=(load("chemlab-prac",{})[i])||[];
@@ -3355,7 +3503,7 @@ function renderPracCards(){
 function refreshPrac(){renderPracCards();}
 /* ---------- Lab Mode wizard ---------- */
 let lmI=0,lmStep=0;   // 0 = briefing, 1..n = steps, n+1 = debrief
-function openLab(i){ lmI=i; lmStep=0; $("#labmode").hidden=false; document.body.style.overflow="hidden"; lmRender(); }
+function openLab(i){ lmI=i; lmStep=0; lmAck=new Set(); $("#labmode").hidden=false; document.body.style.overflow="hidden"; lmRender(); }
 function closeLab(){ $("#labmode").hidden=true; document.body.style.overflow=""; renderPracCards(); }
 function lmSetDone(i,j,v){
   const st=load("chemlab-prac",{});
@@ -3377,23 +3525,40 @@ function lmRender(){
   const body=$("#lm-body"), next=$("#lm-next"), back=$("#lm-back");
   back.style.visibility=lmStep===0?"hidden":"visible";
   if(lmStep===0){
-    next.textContent="Start the method ▶";
-    body.innerHTML=`<div class="lab-step-k">Briefing · ${p.time} · difficulty ${"●".repeat(p.diff)}${"○".repeat(3-p.diff)}</div>
+    const allAck=p.haz.every((h,i)=>lmAck.has(i));
+    next.textContent=allAck?"Start the method ▶":"Acknowledge the hazards first";
+    next.disabled=!allAck;
+    body.innerHTML=`<div class="lab-grid lab-fade"><div>
+      <div class="lab-step-k">Briefing · ${p.time} · difficulty ${"●".repeat(p.diff)}${"○".repeat(3-p.diff)}</div>
       <h2 class="lab-step-s">${p.icon} ${p.t}</h2>
-      <h4>Safety — before you touch anything</h4>
-      <div class="hazards">${p.haz.map(h=>`<span class="haz ${h[0]}">⚠ ${h[1]}</span>`).join("")}</div>
+      <h4>Safety — tap each hazard to acknowledge it</h4>
+      <div class="hazards">${p.haz.map((h,i)=>`<span class="haz ${h[0]} ackable ${lmAck.has(i)?"acked":""}" data-h="${i}">⚠ ${h[1]}</span>`).join("")}</div>
       <h4 style="margin-top:18px">What you'll do</h4>
-      <ol class="lab-brief">${p.steps.map((st,j)=>`<li>${arr[j]?"✅ ":""}${st.s}</li>`).join("")}</ol>`;
+      <ol class="lab-brief">${p.steps.map((st,j)=>`<li>${arr[j]?"✅ ":""}${st.s}</li>`).join("")}</ol>
+    </div>${lmDia()}</div>`;
+    body.querySelectorAll(".haz.ackable").forEach(hz=>hz.addEventListener("click",()=>{
+      const i=+hz.dataset.h;
+      if(lmAck.has(i))return;
+      lmAck.add(i);
+      if(!reduced)burstFrom(hz);
+      lmRender();
+    }));
+    lmHighlight(null);
   }else if(lmStep<=n){
+    next.disabled=false;
     const j=lmStep-1, st=p.steps[j];
     next.textContent=arr[j]?(lmStep===n?"Debrief ▶":"Next ▶"):(lmStep===n?"✓ Done — debrief":"✓ Done — next");
-    body.innerHTML=`<div class="lab-step-k">Step ${lmStep} of ${n}${arr[j]?" · ✅ done":""}</div>
+    body.innerHTML=`<div class="lab-grid lab-fade"><div>
+      <div class="lab-step-k">Step ${lmStep} of ${n}${arr[j]?" · ✅ done":""}</div>
       <h2 class="lab-step-s">${st.s}</h2>
       <p class="lab-step-d">${st.d}</p>
-      ${arr[j]?`<p class="lab-done-toggle"><a style="cursor:pointer;color:var(--ink-soft);text-decoration:underline" id="lm-undo">mark as not done</a></p>`:""}`;
+      ${arr[j]?`<p class="lab-done-toggle"><a style="cursor:pointer;color:var(--ink-soft);text-decoration:underline" id="lm-undo">mark as not done</a></p>`:""}
+    </div>${lmDia()}</div>`;
     const u=$("#lm-undo");
     if(u)u.addEventListener("click",()=>{lmSetDone(lmI,j,false);lmRender();});
+    lmHighlight((PRAC_HL[lmI]||[])[j]||null);
   }else{
+    next.disabled=false;
     next.textContent="Finish ✓";
     const spotI=SPOTMAP[lmI];
     body.innerHTML=`<div class="lab-step-k">Debrief</div>
