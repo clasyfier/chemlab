@@ -490,7 +490,7 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
 .prog-row .pbar{flex:1}
 .prog-row .pc{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:13px;min-width:86px;text-align:right;font-variant-numeric:tabular-nums}
 .prog-row .em{width:24px;text-align:center}
-.pickrow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pickrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
 .pickcard{display:flex;flex-direction:column;gap:8px;align-items:flex-start;text-align:left;
   border:1px solid var(--line);border-radius:12px;background:var(--panel2);padding:18px;cursor:pointer;
   transition:transform .12s,border-color .12s;font:inherit;color:inherit}
@@ -656,6 +656,25 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
 .ck-item.sel{background:color-mix(in srgb,var(--bunsen) 10%,transparent)}
 .ck-hint{padding:8px 16px;font-size:11px;color:var(--ink-soft);border-top:1px solid var(--line)}
 .ck-hint kbd{background:var(--panel2);border-radius:4px;padding:1px 5px;font-family:inherit}
+.rd-count{display:inline-grid;place-items:center;min-width:22px;height:22px;border-radius:99px;background:#d84a3c;color:#fff;font-size:12px;font-weight:800;padding:0 6px;margin-left:6px;vertical-align:2px}
+.rd-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px}
+.rd-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:11px;margin-top:14px}
+.rd-ghost{background:var(--panel);border:1.5px solid var(--line);border-radius:14px;padding:14px;cursor:pointer;transition:transform .15s,border-color .15s;position:relative}
+.rd-ghost:hover{transform:translateY(-3px);border-color:#d84a3c}
+.rd-ghost .flames{font-size:14px;letter-spacing:1px}
+.rd-ghost .qq{font-size:13.5px;margin:7px 0;line-height:1.45;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.rd-ghost.boss{border-color:#d84a3c;background:linear-gradient(160deg,color-mix(in srgb,#d84a3c 10%,var(--panel)),var(--panel))}
+.rd-ghost.boss::after{content:"👑 BOSS — your most-missed";position:absolute;top:-10px;right:10px;background:#d84a3c;color:#fff;font-size:9.5px;font-weight:800;letter-spacing:.05em;padding:3px 9px;border-radius:99px}
+.rd-embers{display:inline-flex;gap:4px;margin-left:8px}
+.rd-embers i{width:10px;height:10px;border-radius:50%;background:var(--panel2);border:1px solid var(--line)}
+.rd-embers i.lit{background:radial-gradient(circle at 35% 35%,#ffd27a,#e8590c);border-color:#e8590c;box-shadow:0 0 6px #e8590c88}
+.rd-arena{max-width:760px}
+@keyframes rdburn{0%{transform:scale(1);filter:none;opacity:1}45%{transform:scale(1.04) rotate(1deg);filter:hue-rotate(-30deg) brightness(1.4)}100%{transform:scale(.6) rotate(4deg);filter:blur(6px) brightness(2);opacity:0}}
+.rd-burning{animation:rdburn .8s ease forwards}
+@keyframes rdshake{0%,100%{transform:none}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+.rd-shake{animation:rdshake .3s ease 2}
+.rd-clear{text-align:center;padding:48px 20px}
+.rd-clear .big{font-size:56px;animation:cfloat 2.5s ease-in-out infinite alternate}
 #resume{margin-top:10px}
 #resume .btn{font-size:13.5px;padding:9px 16px}
 #themebtn{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--panel);cursor:pointer;font-size:16px;display:grid;place-items:center;transition:transform .15s,border-color .15s;padding:0}
@@ -803,6 +822,11 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
           <span style="font-size:30px">📝</span>
           <b>Exam-like questions</b>
           <span class="sub">Timed papers — multiple choice, written or practical — marked by the AI examiner.</span>
+        </button>
+        <button class="pickcard" data-pick="redeem">
+          <span style="font-size:30px">🔥</span>
+          <b>Redemption <span id="pick-rd-n" class="rd-count" hidden></span></b>
+          <span class="sub">Face every question that has beaten you. Light two embers on each to redeem it for good.</span>
         </button>
       </div>
     </div>
@@ -955,6 +979,13 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
     </div>
     <div id="ex-area"></div>
   </div>
+</section>
+
+<section class="view" id="v-redeem">
+  <div class="eyebrow">Redemption arc</div>
+  <h1>🔥 Redemption</h1>
+  <p class="lede">Every question that has ever beaten you waits here, haunting your scores. Answer one correctly to light an ember — <b>two embers and it burns away for good</b>. Get it wrong again and the embers go out. Clear the room and the slate is clean.</p>
+  <div id="rd-body"></div>
 </section>
 
 <section class="view" id="v-progress">
@@ -2566,12 +2597,13 @@ $$("nav.rail button[data-v]").forEach(b=>b.addEventListener("click",()=>{
   showView(b.dataset.v);
 }));
 function showView(v){
-  if((v==="quiz"||v==="exam")&&!window.chemPremium){openAccount();return;}
+  if((v==="quiz"||v==="exam"||v==="redeem")&&!window.chemPremium){openAccount();return;}
   $$("nav.rail button[data-v]").forEach(b=>b.classList.toggle("on",b.dataset.v===v||(v==="exam"&&b.dataset.v==="quiz")));
   $$("section.view").forEach(s=>s.classList.toggle("on",s.id==="v-"+v));
   window.scrollTo({top:0});
   if(v==="home")renderDash();
   if(v==="progress")renderProgress();
+  if(v==="redeem")renderRedeem();
   if(v==="periodic"&&!reduced){
     const pt=document.querySelector("#pt");
     if(pt){
@@ -3463,6 +3495,7 @@ function renderQuiz(){
     const j=+b.dataset.j;
     qanswered++;
     recTopic(QTOPIC[QPOOL[qi%QPOOL.length]], j===q.a?1:0, 1);
+    redeemNote(QPOOL[qi%QPOOL.length], j===q.a);
     if(j===q.a){
       qscore++; qstreak++; burstFrom(b);
       if(qstreak>load("chemlab-quiz-beststreak",0))store("chemlab-quiz-beststreak",qstreak);
@@ -5241,14 +5274,20 @@ shSync();
 requestAnimationFrame(shRender);
 
 /* ---------- test-type chooser ---------- */
-function showTestPick(){ const m=$("#testpick"); if(m)m.hidden=false; }
+function showTestPick(){
+  const m=$("#testpick"); if(!m)return;
+  const n=Object.keys(load("chemlab-wrong",{})).length;
+  const b=$("#pick-rd-n");
+  if(b){b.hidden=!n;b.textContent=n;}
+  m.hidden=false;
+}
 function closeTestPick(){ const m=$("#testpick"); if(m)m.hidden=true; }
 $("#testpick-x").addEventListener("click",closeTestPick);
 $("#testpick").addEventListener("click",e=>{if(e.target.id==="testpick")closeTestPick();});
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeTestPick();});
 $$("#testpick .pickcard").forEach(b=>b.addEventListener("click",()=>{
   closeTestPick();
-  showView(b.dataset.pick==="exam"?"exam":"quiz");
+  showView(b.dataset.pick==="exam"?"exam":b.dataset.pick==="redeem"?"redeem":"quiz");
 }));
 function openTestPick(){
   if(!window.chemPremium){openAccount();return;}
@@ -5256,6 +5295,127 @@ function openTestPick(){
   showTestPick();
 }
 
+/* ---------- redemption: the wrong-answer ledger ---------- */
+function redeemNote(qi,correct){
+  const w=load("chemlab-wrong",{});
+  if(correct){
+    /* correct answers outside the arc do not redeem — deliberate practice only */
+    return;
+  }
+  const e=w[qi]||{w:0,s:0};
+  e.w++; e.s=0; w[qi]=e;
+  store("chemlab-wrong",w);
+}
+let rdQueue=[],rdCur=-1;
+function renderRedeem(){
+  const w=load("chemlab-wrong",{});
+  const keys=Object.keys(w).map(Number).filter(k=>QUIZ[k]);
+  const redeemedTotal=load("chemlab-redeemed",0);
+  const body=$("#rd-body");
+  if(!keys.length){
+    body.innerHTML=`<div class="rd-clear card">
+      <div class="big">🕊️</div>
+      <h3 style="margin:10px 0 6px">${redeemedTotal?"The room is empty — every soul redeemed.":"Nothing haunts you yet."}</h3>
+      <p style="color:var(--ink-soft);font-size:14.5px;max-width:46ch;margin:0 auto 16px">${redeemedTotal?`You have redeemed ${redeemedTotal} question${redeemedTotal===1?"":"s"} all-time. Keep answering — anything that beats you comes here.`:"Get a quick-fire or exam question wrong and it will appear here, waiting for its redemption."}</p>
+      <button class="btn" id="rd-goquiz">⚡ Go earn some mistakes</button>
+    </div>`;
+    $("#rd-goquiz").addEventListener("click",()=>showView("quiz"));
+    return;
+  }
+  const sorted=[...keys].sort((a,b)=>w[a].w-w[b].w);
+  const boss=sorted[sorted.length-1];
+  body.innerHTML=`
+    <div class="rd-stats">
+      <div class="pchip"><b>${keys.length}</b><span>haunting you</span></div>
+      <div class="pchip"><b>${redeemedTotal}</b><span>redeemed all-time</span></div>
+      <div class="pchip"><b>${Math.max(...keys.map(k=>w[k].w))}×</b><span>boss missed</span></div>
+    </div>
+    <button class="btn" id="rd-run" style="font-size:15px;padding:12px 22px">⚔️ Begin the redemption run — ${keys.length} to face</button>
+    <div class="rd-grid">${sorted.map(k=>{
+      const q=QUIZ[k], e=w[k];
+      return `<div class="rd-ghost ${k===boss&&e.w>1?"boss":""}" data-k="${k}">
+        <span class="flames">${"🔥".repeat(Math.min(3,e.w))}</span>
+        <span class="code-chip">${TOPICS[QTOPIC[k]]?.t||""}</span>
+        <span class="rd-embers"><i class="${e.s>=1?"lit":""}"></i><i class="${e.s>=2?"lit":""}"></i></span>
+        <div class="qq">${q.q}</div>
+        <span style="font-size:11.5px;font-weight:800;color:#d84a3c">Face it →</span>
+      </div>`;
+    }).join("")}</div>`;
+  $("#rd-run").addEventListener("click",()=>{
+    rdQueue=[...sorted]; rdNext();
+  });
+  body.querySelectorAll(".rd-ghost").forEach(g=>g.addEventListener("click",()=>{
+    rdQueue=[+g.dataset.k]; rdNext();
+  }));
+}
+function rdNext(){
+  if(!rdQueue.length){
+    const body=$("#rd-body");
+    const w=load("chemlab-wrong",{});
+    if(Object.keys(w).filter(k=>QUIZ[+k]).length){renderRedeem();return;}
+    body.innerHTML=`<div class="rd-clear card">
+      <div class="big">🔥→🕊️</div>
+      <h3 style="margin:10px 0 6px">REDEMPTION COMPLETE</h3>
+      <p style="color:var(--ink-soft);font-size:15px;max-width:46ch;margin:0 auto 16px">Every question that ever beat you has been faced and burned. The slate is clean.</p>
+      <button class="btn" id="rd-again">⚡ Back to the quiz</button>
+    </div>`;
+    $("#rd-again").addEventListener("click",()=>showView("quiz"));
+    burstFrom($("#rd-again")); setTimeout(()=>burstFrom($("#rd-again")),350);
+    return;
+  }
+  rdCur=rdQueue.shift();
+  rdRender();
+}
+function rdRender(){
+  const k=rdCur, q=QUIZ[k];
+  const w=load("chemlab-wrong",{}), e=w[k]||{w:1,s:0};
+  const body=$("#rd-body");
+  body.innerHTML=`<div class="quiz-card card rd-arena" id="rd-card">
+    <span class="tagline" style="background:color-mix(in srgb,#d84a3c 14%,transparent);color:#d84a3c">REDEMPTION · ${rdQueue.length+1} soul${rdQueue.length?"s":""} remaining</span>
+    <span class="code-chip" style="margin-left:8px">${TOPICS[QTOPIC[k]]?.t||""}</span>
+    <span class="rd-embers" title="Two embers redeem the question"><i class="${e.s>=1?"lit":""}"></i><i></i></span>
+    <span style="font-size:12px;color:var(--ink-soft);margin-left:6px">missed ${e.w}× before</span>
+    <div class="qtext">${q.q}</div>
+    <div class="opts">${q.o.map((o,j)=>`<button data-j="${j}"><span class="optletter">${"ABCD"[j]}</span><span>${o}</span></button>`).join("")}</div>
+    <div class="expl" id="rd-expl">${q.e}</div>
+    <div class="quiz-foot"><button class="btn" id="rd-next" style="display:none">Next ▶</button></div>
+  </div>`;
+  body.querySelectorAll(".opts button").forEach(b=>b.addEventListener("click",()=>{
+    if($("#rd-expl").classList.contains("on"))return;
+    const j=+b.dataset.j, right=j===q.a;
+    const w2=load("chemlab-wrong",{}), e2=w2[k]||{w:1,s:0};
+    body.querySelectorAll(".opts button").forEach(x=>{
+      x.disabled=true;
+      if(+x.dataset.j===q.a)x.classList.add("right");
+      else if(+x.dataset.j===j&&!right)x.classList.add("wrong");
+    });
+    recTopic(QTOPIC[k],right?1:0,1);
+    if(right){
+      e2.s=(e2.s||0)+1;
+      if(e2.s>=2){
+        delete w2[k];
+        store("chemlab-wrong",w2);
+        store("chemlab-redeemed",load("chemlab-redeemed",0)+1);
+        toast("⚡ REDEEMED");
+        burstFrom(b);
+        $("#rd-card").classList.add("rd-burning");
+        setTimeout(rdNext,850);
+        return;
+      }
+      w2[k]=e2; store("chemlab-wrong",w2);
+      toast("🔥 One ember lit — face it once more");
+      burstFrom(b);
+      rdQueue.push(k);                      // returns later in the run — spaced by design
+    }else{
+      e2.w++; e2.s=0; w2[k]=e2; store("chemlab-wrong",w2);
+      $("#rd-card").classList.add("rd-shake");
+      $("#rd-expl").classList.add("on");
+      rdQueue.push(k);
+    }
+    $("#rd-next").style.display="";
+    $("#rd-next").addEventListener("click",rdNext);
+  }));
+}
 /* ---------- topic stats ---------- */
 function updateProgressNav(){
   const has=Object.keys(load("chemlab-topicstats",{})).length>0||load("chemlab-examhist",[]).length>0;
@@ -5303,6 +5463,7 @@ function ckBuild(){
     ...PRACS.map((p,i)=>({t:p.n+" — "+p.t,ic:p.icon,kind:"practical",go:()=>{showView("prac");(!window.chemPremium&&i>0)?openAccount():openLab(i);}})),
     ...SIMS_LIST.map(([t,id,ic])=>({t,ic,kind:"simulation",go:()=>{showView("lab");const el=document.getElementById(id);if(el)el.scrollIntoView({behavior:"smooth",block:"center"});}})),
     ...ELEMENTS.map(e=>({t:e.sym+" — "+e.name,ic:"⚛️",kind:"element",sym:e.sym.toLowerCase(),go:()=>{showView("periodic");showElement(e.z);openElModal();}})),
+    {t:"Redemption — requeue everything you got wrong",ic:"🔥",kind:"section",go:()=>showView("redeem")},
     {t:"Toggle dark / light mode",ic:"🌗",kind:"action",go:()=>$("#themebtn").click()},
     {t:"Element Hunt",ic:"🎯",kind:"action",go:()=>{showView("periodic");$("#hunt-btn").click();}},
     {t:"Reset the gas simulation",ic:"🗑",kind:"action",go:()=>{showView("lab");$("#g-reset").click();}},
@@ -5599,6 +5760,7 @@ async function exFinish(){
       const Q=QUIZ[q.qi], ok=EX.ans[i]===Q.a;
       if(ok)got++;
       recTopic(q.t,ok?1:0,1);
+      redeemNote(q.qi,ok);
       return `<div class="ex-res ${ok?"good":"bad"}"><b>Q${i+1}</b> ${ok?"✓ 1/1":"✗ 0/1"} — ${Q.q}
         ${ok?"":`<div class="fb">Correct answer: <b>${Q.o[Q.a]}</b>. ${Q.e}</div>`}</div>`;
     }).join("");
