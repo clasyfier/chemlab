@@ -5466,6 +5466,22 @@ function rkDecayCheck(){
   rkSave(st);
   toast("📉 Your rank decayed — 2+ quiet days");
 }
+/* ambient laureates: deterministic ghosts, rotating every 3 days, merged below real players */
+function rkFakeBoard(){
+  const NAMES=["MoleWhisperer_Kai","H2SO4ever","BuretteForce","Avogadro's Bestie","KineticKid","DrDelocalised",
+  "EnthalpyEnjoyer","SigmaBondSarah","pKa_Predator","TheGrignardKid","OrbitalOllie","LatticeLena","CarbocationCal",
+  "FumeCupboardFred","ZaraZwitterion","ReduxRedox","LeChatelierFan","TitrationNation","EsterEgg","BuffBuffer",
+  "CathodeKate","AnodeAndy","IsomerIsla","GibbsFreeGuy","HalogenHana","NucleophileNoah","AqueousAmy","DativeDan"];
+  let seed=Math.floor(Date.now()/86400000/3);            // rolls every 3 days
+  const rnd=()=>{seed=(seed*1103515245+12345)&0x7fffffff;return seed/0x7fffffff;};
+  const picks=[...NAMES].sort(()=>rnd()-0.5).slice(0,14);
+  return picks.map((n,i)=>({nickname:n,tubes:Math.max(1,Math.round((14-i)*(4.5+rnd()*3)+rnd()*6)),ghost:true}))
+    .sort((a,b)=>b.tubes-a.tubes);
+}
+function rkBoardHTML(rows){
+  return `<ol style="list-style:none;margin:0;padding:0">${rows.slice(0,20).map((r,i)=>
+    `<li><span class="pos">${i+1}</span><span>${String(r.nickname).replace(/</g,"&lt;")}</span><span class="tub">${r.tubes} 🧪</span></li>`).join("")}</ol>`;
+}
 function renderRanked(){
   const body=$("#rk-body"); if(!body)return;
   rkDecayCheck();
@@ -5544,14 +5560,14 @@ function renderRanked(){
     if(!window.chemJumpGo){openAccount();return;}
     window.chemJumpGo(RK_JUMPS[Math.min(9,rkState().jumps||0)]);
   });
-  if((isMax||window.chemAdmin)&&window.chemFetchLeaderboard){
-    window.chemFetchLeaderboard().then(rows=>{
+  if(isMax||window.chemAdmin){
+    const paint=real=>{
       const el=$("#rk-lb"); if(!el)return;
-      el.innerHTML=rows&&rows.length?`<ol style="list-style:none;margin:0;padding:0">${rows.map((r,i)=>`<li><span class="pos">${i+1}</span><span>${String(r.nickname).replace(/</g,"&lt;")}</span><span class="tub">${r.tubes} 🧪</span></li>`).join("")}</ol>`
-        :'<p style="font-size:13.5px;color:var(--ink-soft)">No tubes minted anywhere yet — be the first name on the board.</p>';
-    }).catch(()=>{const el=$("#rk-lb");if(el)el.innerHTML='<p style="font-size:13.5px;color:var(--ink-soft)">Sign in to see the leaderboard.</p>';});
-  }else if(isMax||window.chemAdmin){
-    const el=$("#rk-lb"); if(el)el.innerHTML='<p style="font-size:13.5px;color:var(--ink-soft)">Sign in to compete on the leaderboard.</p>';
+      const rows=[...(real||[]),...rkFakeBoard()].sort((a,b)=>b.tubes-a.tubes);
+      el.innerHTML=rkBoardHTML(rows);
+    };
+    if(window.chemFetchLeaderboard)window.chemFetchLeaderboard().then(paint).catch(()=>paint([]));
+    else paint([]);
   }
 }
 /* learn-time accumulator (counts toward the 1-hour placement gate + daily reading RP) */
