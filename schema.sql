@@ -34,3 +34,15 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
+
+-- Ranked: prestige test tubes + public leaderboard (added 2026-07-22)
+alter table public.profiles add column if not exists tubes integer not null default 0;
+grant update (progress, email, nickname, avatar, avatar_hue, updated_at, tubes) on public.profiles to authenticated;
+create or replace function public.leaderboard()
+returns table(nickname text, avatar_hue int, tubes int)
+language sql security definer set search_path=public stable as $fn$
+  select coalesce(nullif(nickname,''),'anonymous chemist'), avatar_hue, tubes
+  from public.profiles where tubes > 0
+  order by tubes desc, updated_at asc limit 25
+$fn$;
+grant execute on function public.leaderboard() to anon, authenticated;

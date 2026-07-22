@@ -691,6 +691,45 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
 .rd-shake{animation:rdshake .3s ease 2}
 .rd-clear{text-align:center;padding:48px 20px}
 .rd-clear .big{font-size:56px;animation:cfloat 2.5s ease-in-out infinite alternate}
+.rk-shield{width:92px;height:104px;clip-path:polygon(50% 0,100% 18%,100% 62%,50% 100%,0 62%,0 18%);display:grid;place-items:center;color:#fff;font-weight:800;position:relative;background:linear-gradient(155deg,var(--rkc,#8a8f98),color-mix(in srgb,var(--rkc,#8a8f98) 55%,#111))}
+.rk-shield .sym{font-size:34px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.4))}
+.rk-shield.big{width:150px;height:170px}
+.rk-shield.big .sym{font-size:56px}
+.rk-pips{display:flex;gap:5px;justify-content:center;margin-top:8px}
+.rk-pips i{width:10px;height:10px;border-radius:50%;background:var(--panel2);border:1.5px solid var(--line)}
+.rk-pips i.on{background:var(--rkc);border-color:var(--rkc)}
+.rk-head{display:flex;gap:22px;align-items:center;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:var(--shadow);margin-bottom:14px}
+.rk-title{font-family:"Iowan Old Style",Palatino,Georgia,serif;font-size:26px;font-weight:700}
+.rk-bar{height:10px;border-radius:99px;background:var(--panel2);overflow:hidden;margin:8px 0 4px}
+.rk-bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--rkc),color-mix(in srgb,var(--rkc) 60%,#fff));transition:width .6s cubic-bezier(.2,.8,.3,1)}
+.rk-ladder{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}
+.rk-ladder span{font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;background:var(--panel2);color:var(--ink-soft);border:1.5px solid transparent}
+.rk-ladder span.cur{border-color:var(--rkc);color:var(--rkc);background:color-mix(in srgb,var(--rkc) 12%,transparent)}
+.rk-ladder span.done{opacity:.55;text-decoration:none}
+.rk-chips{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.rk-log{font-size:12.5px}
+.rk-log li{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px dashed var(--line)}
+.rk-log b{color:var(--ok)}
+.rk-log b.neg{color:var(--danger)}
+.rk-gate{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin:14px 0}
+.rk-gatecard{background:var(--panel);border:1.5px solid var(--line);border-radius:14px;padding:16px}
+.rk-gatecard.done{border-color:var(--ok)}
+.rk-gatecard h4{margin:0 0 6px;font-size:14.5px}
+#rk-promo{position:fixed;inset:0;z-index:500;background:rgba(8,12,20,.72);display:grid;place-items:center;backdrop-filter:blur(3px)}
+#rk-promo[hidden]{display:none}
+.rk-promo-card{text-align:center;animation:promoin .5s cubic-bezier(.2,1.4,.4,1)}
+.rk-promo-card .rk-shield{margin:0 auto}
+.rk-promo-txt{color:#fff;font-family:"Iowan Old Style",Palatino,Georgia,serif;font-size:30px;font-weight:700;margin-top:16px;text-shadow:0 2px 12px rgba(0,0,0,.5)}
+@keyframes promoin{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+.rk-lb{margin-top:4px}
+.rk-lb li{display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:11px;font-size:14px}
+.rk-lb li:nth-child(odd){background:var(--panel2)}
+.rk-lb .pos{font-weight:800;width:28px;color:var(--ink-soft)}
+.rk-lb li:nth-child(1) .pos{color:#e0a93c}.rk-lb li:nth-child(2) .pos{color:#9aa7b5}.rk-lb li:nth-child(3) .pos{color:#b87333}
+.rk-lb .tub{margin-left:auto;font-weight:800;font-variant-numeric:tabular-nums}
+.rk-freeze{display:inline-flex;gap:4px;margin-left:8px}
+.rk-freeze i{font-style:normal;filter:grayscale(1);opacity:.35}
+.rk-freeze i.have{filter:none;opacity:1}
 #resume{margin-top:10px}
 #resume .btn{font-size:13.5px;padding:9px 16px}
 #themebtn{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--panel);cursor:pointer;font-size:16px;display:grid;place-items:center;transition:transform .15s,border-color .15s;padding:0}
@@ -788,6 +827,7 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
   <button data-v="periodic"><span class="dot" style="background:var(--na)"></span>Periodic table</button>
   <button data-v="prac"><span class="dot" style="background:var(--k)"></span>Practicals</button>
   <button data-v="quiz"><span class="dot" style="background:var(--bunsen)"></span>Test your knowledge</button>
+  <button data-v="ranked"><span class="dot" style="background:#e0a93c"></span>Ranked</button>
   <button data-v="progress"><span class="dot" style="background:var(--na)"></span>Progress</button>
   <button data-v="sources"><span class="dot" style="background:var(--ink-soft)"></span>Sources</button>
   <div class="spacer"></div>
@@ -996,6 +1036,14 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
     <div id="ex-area"></div>
   </div>
 </section>
+
+<section class="view" id="v-ranked">
+  <div class="eyebrow">Competitive</div>
+  <h1>🏆 Ranked</h1>
+  <p class="lede">Climb from Lab Rat to Nobel Laureate on Research Points. Perfect papers pay the most, quiet days cost you, and only Laureates mint 🧪 test tubes for the leaderboard.</p>
+  <div id="rk-body"></div>
+</section>
+<div id="rk-promo" hidden><div class="rk-promo-card"><div class="rk-shield big" id="rk-promo-shield"></div><div class="rk-promo-txt" id="rk-promo-txt"></div></div></div>
 
 <section class="view" id="v-redeem">
   <div class="eyebrow">Redemption arc</div>
@@ -2620,6 +2668,7 @@ function showView(v){
   if(v==="home")renderDash();
   if(v==="progress")renderProgress();
   if(v==="redeem")renderRedeem();
+  if(v==="ranked")renderRanked();
   if(v==="periodic"&&!reduced){
     const pt=document.querySelector("#pt");
     if(pt){
@@ -3309,8 +3358,14 @@ let lmI=0,lmStep=0;   // 0 = briefing, 1..n = steps, n+1 = debrief
 function openLab(i){ lmI=i; lmStep=0; $("#labmode").hidden=false; document.body.style.overflow="hidden"; lmRender(); }
 function closeLab(){ $("#labmode").hidden=true; document.body.style.overflow=""; renderPracCards(); }
 function lmSetDone(i,j,v){
-  const st=load("chemlab-prac",{}); st[i]=st[i]||[]; st[i][j]=v; st._v=2;
+  const st=load("chemlab-prac",{});
+  const was=!!(st[i]&&st[i][j]);
+  st[i]=st[i]||[]; st[i][j]=v; st._v=2;
   store("chemlab-prac",st);
+  if(v&&!was){
+    rpAdd(3,"lab step mastered");
+    if(st[i].filter(Boolean).length===PRACS[i].steps.length)rpAdd(30,PRACS[i].n+" completed");
+  }
 }
 function lmRender(){
   const p=PRACS[lmI], n=p.steps.length;
@@ -3512,6 +3567,14 @@ function renderQuiz(){
     qanswered++;
     recTopic(QTOPIC[QPOOL[qi%QPOOL.length]], j===q.a?1:0, 1);
     redeemNote(QPOOL[qi%QPOOL.length], j===q.a);
+    rkTrackRun(qTopicSel, j===q.a);
+    rkCheckin();
+    if(j===q.a){
+      rpAdd(2,"quick-fire correct");
+      if(qstreak+1===5)rpAdd(10,"5-streak");
+      if(qstreak+1===10)rpAdd(20,"10-streak");
+      if(qstreak+1===20)rpAdd(40,"20-streak");
+    }
     if(j===q.a){
       qscore++; qstreak++; burstFrom(b);
       if(qstreak>load("chemlab-quiz-beststreak",0))store("chemlab-quiz-beststreak",qstreak);
@@ -5311,6 +5374,203 @@ function openTestPick(){
   showTestPick();
 }
 
+/* ---------- ranked: RP ladder, decay, freezes, test tubes ---------- */
+const RK_TIERS=[["Lab Rat","🐀","#8a8f98"],["Bunsen Apprentice","🔥","#b87333"],["Titration Technician","💧","#8fa3c8"],
+["Mole Wrangler","🐾","#e0a93c"],["Catalyst","⚡","#3aa6a0"],["Equilibrist","⚖️","#5b8dd9"],
+["Reaction Master","💥","#8a5bd6"],["Nobel Laureate","🏅","#e84393"]];
+const RK_DIV=150, RK_TIER=450, RK_MAX=7*RK_TIER, RK_TUBE=500;
+const rkToday=()=>new Date().toISOString().slice(0,10);
+const rkDayDiff=(a,b)=>Math.round((new Date(b)-new Date(a))/86400000);
+function rkState(){return load("chemlab-ranked",{rp:0,tubes:0,minted:0,streak:0,freezes:0,lastCheck:null,lastActive:null,decayedFor:null,shieldUntil:0,log:[]});}
+function rkSave(st){store("chemlab-ranked",st);}
+function rkInfo(rp){
+  const tier=Math.min(7,Math.floor(rp/RK_TIER));
+  const inTier=rp-tier*RK_TIER;
+  const div=tier>=7?0:Math.floor(inTier/RK_DIV);
+  const prog=tier>=7?Math.min(1,((rp-RK_MAX)%RK_TUBE)/RK_TUBE):(inTier%RK_DIV)/RK_DIV;
+  return {tier,div,prog,name:RK_TIERS[tier][0],sym:RK_TIERS[tier][1],col:RK_TIERS[tier][2],
+    label:tier>=7?RK_TIERS[7][0]:RK_TIERS[tier][0]+" "+["III","II","I"][div]};
+}
+function rkUnlocked(){
+  return (load("chemlab-perfectruns",[]).length>=3)&&(load("chemlab-learntime",0)>=3600);
+}
+function rkLog(st,txt,rp){st.log.unshift({t:Date.now(),txt,rp});st.log=st.log.slice(0,12);}
+function rpAdd(n,why){
+  if(!rkUnlocked())return;
+  const st=rkState();
+  const before=rkInfo(st.rp);
+  st.rp=Math.max(0,st.rp+n);
+  rkLog(st,why,n);
+  /* mint test tubes past the summit */
+  while(st.rp>=RK_MAX+ (st.minted+1)*RK_TUBE){
+    st.minted++; st.tubes++;
+    rkLog(st,"🧪 TEST TUBE MINTED",0);
+    toast("🧪 Test tube minted!");
+    if(window.chemPushTubes)window.chemPushTubes(st.tubes);
+  }
+  const after=rkInfo(st.rp);
+  rkSave(st);
+  if(n>0&&(after.tier>before.tier||(after.tier===before.tier&&after.div>before.div))){
+    st.shieldUntil=Date.now()+3*86400000; rkSave(st);
+    rkPromo(after);
+  }else if(n>0){toast(`+${n} RP · ${why}`);}
+  if(!$("#v-ranked").classList.contains("on"))return;
+  renderRanked();
+}
+function rkPromo(info){
+  const o=$("#rk-promo"); if(!o)return;
+  $("#rk-promo-shield").style.setProperty("--rkc",info.col);
+  $("#rk-promo-shield").innerHTML=`<span class="sym">${info.sym}</span>`;
+  $("#rk-promo-txt").textContent="PROMOTED — "+info.label;
+  o.hidden=false;
+  burstFrom($("#rk-promo-txt"));
+  setTimeout(()=>burstFrom($("#rk-promo-txt")),400);
+  setTimeout(()=>{o.hidden=true;},2600);
+}
+function rkCheckin(){
+  if(!rkUnlocked())return;
+  const st=rkState(), today=rkToday();
+  if(st.lastCheck===today)return;
+  const gap=st.lastCheck?rkDayDiff(st.lastCheck,today):1;
+  if(gap===1||!st.lastCheck)st.streak++;
+  else{
+    let missed=gap-1;
+    while(missed>0&&st.freezes>0){st.freezes--;missed--;}
+    if(missed>0){st.streak=1;}
+    else{st.streak++;toast("🧊 Rank freeze spent — streak saved!");}
+  }
+  st.lastCheck=today; st.lastActive=today;
+  const bonus=20+Math.min(30,st.streak*2);
+  if(st.streak>0&&st.streak%5===0){st.freezes=Math.min(3,st.freezes+1);toast("🧊 +1 rank freeze earned (5-day streak)");}
+  rkSave(st);
+  rpAdd(bonus,`daily check-in · day ${st.streak}`);
+}
+function rkDecayCheck(){
+  if(!rkUnlocked())return;
+  const st=rkState(), today=rkToday();
+  if(!st.lastActive||st.decayedFor===st.lastActive)return;
+  const gap=rkDayDiff(st.lastActive,today);
+  if(gap<2)return;
+  let missed=gap-1, used=0;
+  while(missed>=2&&st.freezes>0){st.freezes--;missed--;used++;}
+  st.decayedFor=st.lastActive;
+  if(missed<2){rkSave(st);if(used)toast("🧊 Rank freeze absorbed your absence");return;}
+  if(Date.now()<st.shieldUntil){rkSave(st);toast("🛡️ Promotion shield absorbed the decay");return;}
+  const divStart=Math.floor(st.rp/RK_DIV)*RK_DIV;
+  st.rp=Math.max(0,divStart-RK_DIV);
+  st.streak=0;
+  rkLog(st,"rank decay — "+(gap-1)+" quiet days",-RK_DIV);
+  rkSave(st);
+  toast("📉 Your rank decayed — 2+ quiet days");
+}
+function renderRanked(){
+  const body=$("#rk-body"); if(!body)return;
+  rkDecayCheck();
+  const st=rkState();
+  if(!rkUnlocked()){
+    const runs=load("chemlab-perfectruns",[]);
+    const secs=load("chemlab-learntime",0), mins=Math.floor(secs/60);
+    body.innerHTML=`<div class="card" style="text-align:center;padding:30px 22px;margin-bottom:14px">
+      <div style="font-size:44px">🔒</div><h3 style="margin:8px 0 4px">Placement trials</h3>
+      <p style="color:var(--ink-soft);font-size:14.5px;max-width:52ch;margin:0 auto">Prove yourself before the ladder opens. Complete both trials and Ranked unlocks permanently.</p>
+    </div>
+    <div class="rk-gate">
+      <div class="rk-gatecard ${runs.length>=3?"done":""}">
+        <h4>${runs.length>=3?"✅":"⚡"} Three perfect chapter runs — ${Math.min(3,runs.length)}/3</h4>
+        <p style="font-size:13px;color:var(--ink-soft)">In the quick-fire quiz, pick a single chapter and answer <b>10 in a row with 100% accuracy</b>. Three different chapters needed.</p>
+        <div class="rk-bar" style="--rkc:#e0a93c"><i style="width:${Math.min(100,runs.length/3*100)}%"></i></div>
+        ${runs.length?`<p style="font-size:12px;color:var(--ok)">Conquered: ${runs.map(t=>TOPICS[t]?.t||t).join(", ")}</p>`:""}
+      </div>
+      <div class="rk-gatecard ${secs>=3600?"done":""}">
+        <h4>${secs>=3600?"✅":"📚"} One hour in the Learn section — ${Math.min(60,mins)}/60 min</h4>
+        <p style="font-size:13px;color:var(--ink-soft)">Time reading chapters (including Study Mode) counts automatically while the page is open and visible.</p>
+        <div class="rk-bar" style="--rkc:#5b8dd9"><i style="width:${Math.min(100,secs/3600*100)}%"></i></div>
+      </div>
+    </div>
+    <div class="card"><h3>The ladder that awaits</h3>
+      <div class="rk-ladder">${RK_TIERS.map(t=>`<span style="--rkc:${t[2]}">${t[1]} ${t[0]}</span>`).join("")}</div>
+      <p style="font-size:13px;color:var(--ink-soft)">Earn RP from quick-fire answers, exams, redemptions, labs and daily check-ins. A perfect exam of 10+ questions pays the legendary <b>+150 RP</b>. Go quiet for two days and your rank decays — unless a 🧊 freeze saves you.</p>
+    </div>`;
+    return;
+  }
+  const info=rkInfo(st.rp);
+  const isMax=info.tier>=7;
+  const today=rkToday(), checked=st.lastCheck===today;
+  body.innerHTML=`
+  <div class="rk-head" style="--rkc:${info.col}">
+    <div><div class="rk-shield" style="--rkc:${info.col}"><span class="sym">${info.sym}</span></div>
+      <div class="rk-pips">${[0,1,2].map(d=>`<i class="${!isMax&&d<=info.div?"on":""}" style="--rkc:${info.col}"></i>`).join("")}</div></div>
+    <div style="flex:1;min-width:220px">
+      <div class="rk-title" style="color:${info.col}">${info.label}</div>
+      <div style="font-size:13px;color:var(--ink-soft)">${st.rp} RP${isMax?` · ${RK_TUBE-((st.rp-RK_MAX)%RK_TUBE)} RP to the next 🧪`:` · ${RK_DIV-(st.rp%RK_DIV)} RP to ${info.div<2?info.name+" "+["III","II","I"][info.div+1]:RK_TIERS[Math.min(7,info.tier+1)][0]}`}</div>
+      <div class="rk-bar"><i style="width:${info.prog*100}%"></i></div>
+      <div class="rk-ladder">${RK_TIERS.map((t,i)=>`<span class="${i===info.tier?"cur":i<info.tier?"done":""}" style="--rkc:${t[2]}">${t[1]} ${t[0]}</span>`).join("")}</div>
+    </div>
+  </div>
+  <div class="rk-chips">
+    <div class="pchip"><b>${checked?"✅":"⏳"}</b><span>${checked?"checked in today":"answer 1 question to check in"}</span></div>
+    <div class="pchip"><b>${st.streak}🔥</b><span>day streak</span></div>
+    <div class="pchip"><b><span class="rk-freeze">${[0,1,2].map(i=>`<i class="${i<st.freezes?"have":""}">🧊</i>`).join("")}</span></b><span>rank freezes</span></div>
+    <div class="pchip"><b>${st.tubes}🧪</b><span>test tubes</span></div>
+  </div>
+  ${Date.now()<st.shieldUntil?`<p style="font-size:13px;color:var(--ok);margin:0 0 12px">🛡️ Promotion shield active — no decay for ${Math.ceil((st.shieldUntil-Date.now())/86400000)} more day(s).</p>`:`<p style="font-size:13px;color:var(--ink-soft);margin:0 0 12px">⚠️ Two quiet days and this rank decays a division. Freezes cover one missed day each.</p>`}
+  <div class="card" style="margin-bottom:14px"><h3>How RP is earned</h3>
+    <ul style="font-size:13.5px;margin:6px 0;padding-left:20px">
+      <li><b>+150</b> — PERFECT PAPER: an exam of 10+ questions at 100% (the jackpot)</li>
+      <li><b>+3 per mark</b> — every exam mark scored</li>
+      <li><b>+2</b> per quick-fire correct · streak bonuses at 5/10/20</li>
+      <li><b>+8</b> per soul redeemed in Redemption</li>
+      <li><b>+3</b> per Lab Mode step · <b>+30</b> for a completed practical</li>
+      <li><b>+10 per 10 min</b> reading in Learn (max 60/day) · <b>+20↗</b> daily check-in, scaling with streak</li>
+    </ul></div>
+  <div class="card" style="margin-bottom:14px"><h3>Recent RP</h3>
+    ${st.log.length?`<ul class="rk-log" style="list-style:none;margin:4px 0;padding:0">${st.log.map(l=>`<li><span>${l.txt}</span><b class="${l.rp<0?"neg":""}">${l.rp>0?"+":""}${l.rp||""} </b></li>`).join("")}</ul>`:'<p style="font-size:13.5px;color:var(--ink-soft)">No RP yet — go answer something.</p>'}
+  </div>
+  <div class="card"><h3>🧪 Test-tube leaderboard</h3>
+    ${isMax?`<div id="rk-lb" class="rk-lb"><p style="font-size:13.5px;color:var(--ink-soft)">Summoning the laureates…</p></div>`
+    :`<div style="text-align:center;padding:22px"><div style="font-size:34px">🔒</div>
+      <p style="font-size:14px;color:var(--ink-soft);max-width:44ch;margin:6px auto 0">The leaderboard is for <b>Nobel Laureates</b> only. Reach the summit, mint test tubes, and your name appears among the immortals.</p></div>`}
+  </div>`;
+  if(isMax&&window.chemFetchLeaderboard){
+    window.chemFetchLeaderboard().then(rows=>{
+      const el=$("#rk-lb"); if(!el)return;
+      el.innerHTML=rows&&rows.length?`<ol style="list-style:none;margin:0;padding:0">${rows.map((r,i)=>`<li><span class="pos">${i+1}</span><span>${String(r.nickname).replace(/</g,"&lt;")}</span><span class="tub">${r.tubes} 🧪</span></li>`).join("")}</ol>`
+        :'<p style="font-size:13.5px;color:var(--ink-soft)">No tubes minted anywhere yet — be the first name on the board.</p>';
+    }).catch(()=>{const el=$("#rk-lb");if(el)el.innerHTML='<p style="font-size:13.5px;color:var(--ink-soft)">Sign in to see the leaderboard.</p>';});
+  }else if(isMax){
+    const el=$("#rk-lb"); if(el)el.innerHTML='<p style="font-size:13.5px;color:var(--ink-soft)">Sign in to compete on the leaderboard.</p>';
+  }
+}
+/* learn-time accumulator (counts toward the 1-hour placement gate + daily reading RP) */
+let rkReadRP=load("chemlab-readrp",{d:null,n:0});
+setInterval(()=>{
+  const reading=($("#v-learn")&&$("#v-learn").classList.contains("on"))||($("#reader")&&!$("#reader").hidden);
+  if(!reading||document.hidden)return;
+  store("chemlab-learntime",load("chemlab-learntime",0)+15);
+  const secs=load("chemlab-learntime",0);
+  if(secs%600<15&&secs>=600&&rkUnlocked()){
+    rkReadRP=load("chemlab-readrp",{d:null,n:0});
+    if(rkReadRP.d!==rkToday()){rkReadRP={d:rkToday(),n:0};}
+    if(rkReadRP.n<60){rkReadRP.n+=10;store("chemlab-readrp",rkReadRP);rpAdd(10,"10 minutes of reading");}
+  }
+},15000);
+/* perfect-run tracker for placement */
+let rkRunTopic=-1,rkRunN=0;
+function rkTrackRun(topic,correct){
+  if(topic<0){rkRunTopic=-1;rkRunN=0;return;}
+  if(topic!==rkRunTopic){rkRunTopic=topic;rkRunN=0;}
+  if(!correct){rkRunN=0;return;}
+  rkRunN++;
+  if(rkRunN>=10){
+    rkRunN=0;
+    const runs=load("chemlab-perfectruns",[]);
+    if(!runs.includes(topic)){
+      runs.push(topic); store("chemlab-perfectruns",runs);
+      toast(`⚡ PERFECT RUN — ${TOPICS[topic].t} (${Math.min(3,runs.length)}/3 for Ranked)`);
+      if(runs.length===3)toast("🏆 RANKED UNLOCKED — the ladder awaits");
+    }
+  }
+}
 /* ---------- redemption: the wrong-answer ledger ---------- */
 function redeemNote(qi,correct){
   const w=load("chemlab-wrong",{});
@@ -5398,6 +5658,7 @@ function rdRender(){
   </div>`;
   body.querySelectorAll(".opts button").forEach(b=>b.addEventListener("click",()=>{
     if($("#rd-expl").classList.contains("on"))return;
+    rkCheckin();
     const j=+b.dataset.j, right=j===q.a;
     const w2=load("chemlab-wrong",{}), e2=w2[k]||{w:1,s:0};
     body.querySelectorAll(".opts button").forEach(x=>{
@@ -5412,6 +5673,7 @@ function rdRender(){
         delete w2[k];
         store("chemlab-wrong",w2);
         store("chemlab-redeemed",load("chemlab-redeemed",0)+1);
+        rpAdd(8,"soul redeemed");
         toast("⚡ REDEEMED");
         burstFrom(b);
         $("#rd-card").classList.add("rd-burning");
@@ -5479,6 +5741,7 @@ function ckBuild(){
     ...PRACS.map((p,i)=>({t:p.n+" — "+p.t,ic:p.icon,kind:"practical",go:()=>{showView("prac");(!window.chemPremium&&i>0)?openAccount():openLab(i);}})),
     ...SIMS_LIST.map(([t,id,ic])=>({t,ic,kind:"simulation",go:()=>{showView("lab");const el=document.getElementById(id);if(el)el.scrollIntoView({behavior:"smooth",block:"center"});}})),
     ...ELEMENTS.map(e=>({t:e.sym+" — "+e.name,ic:"⚛️",kind:"element",sym:e.sym.toLowerCase(),go:()=>{showView("periodic");showElement(e.z);openElModal();}})),
+    {t:"Ranked — climb to Nobel Laureate",ic:"🏆",kind:"section",go:()=>showView("ranked")},
     {t:"Redemption — requeue everything you got wrong",ic:"🔥",kind:"section",go:()=>showView("redeem")},
     {t:"Toggle dark / light mode",ic:"🌗",kind:"action",go:()=>$("#themebtn").click()},
     {t:"Element Hunt",ic:"🎯",kind:"action",go:()=>{showView("periodic");$("#hunt-btn").click();}},
@@ -5849,6 +6112,9 @@ function exRecord(got){
   const h=load("chemlab-examhist",[]);
   h.push({ts:Date.now(),type:EX.type,n:EX.qs.length,got,max:EX.marks});
   store("chemlab-examhist",h.slice(-30));
+  rkCheckin();
+  if(got>0)rpAdd(got*3,`exam: ${got}/${EX.marks} marks`);
+  if(EX.qs.length>=10&&got===EX.marks&&EX.marks>0)rpAdd(150,"🏆 PERFECT PAPER (10+ questions, 100%)");
 }
 $("#ex-start").addEventListener("click",exStart);
 
@@ -6135,9 +6401,11 @@ if(!CFG.url||!CFG.anon){
 const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
 const sb=createClient(CFG.url,CFG.anon);
 window.chemAuthHeader=async()=>{const {data:{session}}=await sb.auth.getSession();return session?{Authorization:"Bearer "+session.access_token}:{};};
+window.chemFetchLeaderboard=async()=>{const {data,error}=await sb.rpc("leaderboard");if(error)throw error;return data;};
+window.chemPushTubes=async(t)=>{try{const {data:{session}}=await sb.auth.getSession();if(session)await sb.from("profiles").update({tubes:t}).eq("id",session.user.id);}catch(e){}};
 window.chemPremium=false; window.applyPracLocks(); if(typeof renderQuiz==="function")renderQuiz();
 
-const KEYS=["chemlab-mastered","chemlab-quiz","chemlab-prac","chemlab-hunt-best","chemlab-quiz-beststreak","chemlab-mood"];
+const KEYS=["chemlab-mastered","chemlab-quiz","chemlab-prac","chemlab-hunt-best","chemlab-quiz-beststreak","chemlab-mood","chemlab-ranked","chemlab-learntime","chemlab-perfectruns"];
 const lget=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}};
 const lset=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));window.chemStoreSync&&window.chemStoreSync.drop(k)}catch(e){}};
 function snapshot(){const o={};KEYS.forEach(k=>o[k]=lget(k,null));return o;}
@@ -6154,6 +6422,10 @@ function merge(cloud,local){
   out["chemlab-hunt-best"]=Math.max(cloud?.["chemlab-hunt-best"]||0,local?.["chemlab-hunt-best"]||0);
   out["chemlab-quiz-beststreak"]=Math.max(cloud?.["chemlab-quiz-beststreak"]||0,local?.["chemlab-quiz-beststreak"]||0);
   out["chemlab-mood"]={...(cloud?.["chemlab-mood"]||{}),...(local?.["chemlab-mood"]||{})};
+  const cr=cloud?.["chemlab-ranked"], lr=local?.["chemlab-ranked"];
+  out["chemlab-ranked"]=(!cr)?lr:(!lr)?cr:((lr.rp||0)>=(cr.rp||0)?lr:cr);
+  out["chemlab-learntime"]=Math.max(cloud?.["chemlab-learntime"]||0,local?.["chemlab-learntime"]||0);
+  out["chemlab-perfectruns"]=[...new Set([...(cloud?.["chemlab-perfectruns"]||[]),...(local?.["chemlab-perfectruns"]||[])])];
   return out;
 }
 function applyLocal(o){KEYS.forEach(k=>{if(o[k]!=null)lset(k,o[k])});
