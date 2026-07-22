@@ -450,6 +450,25 @@ ul.chk{list-style:none;padding-left:0!important;margin:8px 0}
   animation:heroshine 8s linear infinite}
 @keyframes heroshine{0%{background-position:120% 0}100%{background-position:-160% 0}}
 @media (prefers-reduced-motion:reduce){.hero-h{animation:none;background:none;color:var(--ink)}}
+.aurora{position:absolute;top:-40px;left:-40px;right:-40px;height:560px;overflow:hidden;pointer-events:none;z-index:0;
+  -webkit-mask-image:linear-gradient(180deg,#000 55%,transparent);mask-image:linear-gradient(180deg,#000 55%,transparent)}
+.aurora i{position:absolute;width:420px;height:420px;border-radius:50%;filter:blur(70px);opacity:.5}
+.aurora i:nth-child(1){background:radial-gradient(circle,color-mix(in srgb,var(--bunsen) 34%,transparent),transparent 70%);top:-80px;left:5%;animation:aur1 16s ease-in-out infinite alternate}
+.aurora i:nth-child(2){background:radial-gradient(circle,color-mix(in srgb,var(--cu) 30%,transparent),transparent 70%);top:40px;right:8%;animation:aur2 19s ease-in-out infinite alternate}
+.aurora i:nth-child(3){background:radial-gradient(circle,color-mix(in srgb,var(--k) 26%,transparent),transparent 70%);top:180px;left:38%;animation:aur3 23s ease-in-out infinite alternate}
+@keyframes aur1{to{transform:translate(90px,60px) scale(1.15)}}
+@keyframes aur2{to{transform:translate(-70px,90px) scale(.9)}}
+@keyframes aur3{to{transform:translate(60px,-70px) scale(1.2)}}
+@media (prefers-reduced-motion:reduce){.aurora i{animation:none}}
+#hero-right{display:flex;flex-direction:column;gap:14px;width:250px}
+@media (max-width:860px){#hero-right{width:100%}}
+.molcard{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:10px;box-shadow:var(--shadow)}
+.molcard canvas{width:100%;height:210px;display:block;cursor:grab;touch-action:none}
+.molcap{font-size:10.5px;color:var(--ink-soft);text-align:center;letter-spacing:.05em;text-transform:uppercase;font-weight:700;margin-top:6px}
+.card.link{opacity:0;transform:translateY(18px)}
+.card.link.reveal{opacity:1;transform:none;transition:opacity .5s ease,transform .5s cubic-bezier(.2,.8,.3,1)}
+.card.link.reveal:hover{transition:transform .18s ease,box-shadow .18s ease}
+@media (prefers-reduced-motion:reduce){.card.link{opacity:1;transform:none}}
 #hero-bg{position:absolute;top:0;left:0;width:100%;height:480px;pointer-events:none;z-index:0;
   -webkit-mask-image:linear-gradient(180deg,#000 55%,transparent);mask-image:linear-gradient(180deg,#000 55%,transparent)}
 #v-home{position:relative}
@@ -922,7 +941,8 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
 </div>
 
 <section class="view on" id="v-home">
-  <canvas id="hero-bg" aria-hidden="true"></canvas>
+  <div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div>
+<canvas id="hero-bg" aria-hidden="true"></canvas>
   <div class="hero-grid">
     <div>
       <div class="eyebrow">Free to start · AQA · OCR · Edexcel</div>
@@ -935,7 +955,11 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
       <div class="eq-type">⚗️ <span id="eqtype"></span><span class="eq-caret"></span></div>
       <div id="resume"></div>
     </div>
-    <div id="eotd"></div>
+    <div id="hero-right">
+      <div class="molcard"><canvas id="hero-mol" aria-label="Interactive buckminsterfullerene — drag to spin"></canvas>
+        <div class="molcap">buckminsterfullerene C₆₀ — grab it</div></div>
+      <div id="eotd"></div>
+    </div>
   </div>
   <div class="statrow" id="statrow"></div>
   <div class="grid cols3" id="homecards"></div>
@@ -2718,6 +2742,114 @@ $$("#homecards .card").forEach(c=>{
 $("#statrow").innerHTML=[TOPICS.length+" topic guides","7 interactive simulations","118 elements","12 required practicals",QUIZ.length+" quiz questions"]
   .map(x=>`<span>${x}</span>`).join("");
 $$(".hero-cta button").forEach(b=>b.addEventListener("click",()=>showView(b.dataset.goto)));
+
+/* ---------- hero: exact C60 buckyball, draggable ---------- */
+(()=>{
+  const c=$("#hero-mol"); if(!c)return;
+  /* truncated icosahedron vertices: even permutations of (0,±1,±3φ), (±1,±(2+φ),±2φ), (±φ,±2,±(2φ+1)) */
+  const PHI=(1+Math.sqrt(5))/2;
+  const base=[[0,1,3*PHI],[1,2+PHI,2*PHI],[PHI,2,2*PHI+1]];
+  const verts=[];
+  const evenPerms=v=>[[v[0],v[1],v[2]],[v[1],v[2],v[0]],[v[2],v[0],v[1]]];
+  for(const b of base)
+    for(const sx of [1,-1])for(const sy of [1,-1])for(const sz of [1,-1]){
+      for(const p of evenPerms([b[0]*sx,b[1]*sy,b[2]*sz])){
+        if(!verts.some(v=>Math.hypot(v[0]-p[0],v[1]-p[1],v[2]-p[2])<1e-6))verts.push(p);
+      }
+    }
+  /* edges = closest pairs (bond length 2) */
+  const edges=[];
+  for(let i=0;i<verts.length;i++)for(let j=i+1;j<verts.length;j++){
+    const d=Math.hypot(verts[i][0]-verts[j][0],verts[i][1]-verts[j][1],verts[i][2]-verts[j][2]);
+    if(d<2.05)edges.push([i,j]);
+  }
+  const NORM=Math.hypot(...verts[0]);
+  const V=verts.map(v=>v.map(x=>x/NORM));
+  let mat=null,drag=false,lx=0,ly=0,vx=0,vy=0,ctx=null,W=0,H=0,last=0;
+  function frame(ts){
+    requestAnimationFrame(frame);
+    if(!$("#v-home").classList.contains("on")||document.hidden)return;
+    const rc0=c.getBoundingClientRect();
+    if(rc0.bottom<0||rc0.top>innerHeight)return;
+    const dpr=window.devicePixelRatio||1;
+    if(!ctx||c.width!==Math.round(c.clientWidth*dpr)){
+      c.width=c.clientWidth*dpr;c.height=c.clientHeight*dpr;
+      ctx=c.getContext("2d");ctx.setTransform(dpr,0,0,dpr,0,0);
+      W=c.clientWidth;H=c.clientHeight;
+    }
+    if(!mat)mat=m3mul(rotX(-0.4),rotY(0.3));
+    if(!drag){
+      if(Math.abs(vx)>4e-4||Math.abs(vy)>4e-4){mat=m3mul(rotY(vx),m3mul(rotX(vy),mat));vx*=0.95;vy*=0.95;}
+      else if(!reduced)mat=m3mul(rotY(0.004),m3mul(rotX(0.0013),mat));
+    }
+    ctx.clearRect(0,0,W,H);
+    const cx=W/2,cy=H/2,R=Math.min(W,H)/2-14,f=3.6;
+    const proj=p=>{const sc=f/(f-p[2]);return [cx+p[0]*R*sc,cy-p[1]*R*sc,sc];};
+    const rv=V.map(v=>m3v(mat,v));
+    const items=[];
+    for(const [a,b] of edges){
+      const q=rv[a],pt=rv[b];
+      items.push({z:(q[2]+pt[2])/2,draw(){
+        const [x1,y1]=proj(q),[x2,y2]=proj(pt);
+        const depth=((q[2]+pt[2])/2+1)/2;
+        ctx.strokeStyle=cssVar("--ink-soft");ctx.globalAlpha=0.25+0.55*depth;ctx.lineWidth=1+1.2*depth;
+        ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.globalAlpha=1;
+      }});
+    }
+    rv.forEach(p=>{
+      items.push({z:p[2],draw(){
+        const [x,y,sc]=proj(p),r=3.4*sc;
+        ctx.fillStyle=cssVar("--bunsen");
+        ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fill();
+        ctx.fillStyle="rgba(255,255,255,.5)";
+        ctx.beginPath();ctx.arc(x-r*0.3,y-r*0.3,r*0.32,0,7);ctx.fill();
+      }});
+    });
+    items.sort((a,b)=>a.z-b.z).forEach(it=>it.draw());
+  }
+  c.addEventListener("pointerdown",e=>{drag=true;lx=e.clientX;ly=e.clientY;vx=vy=0;c.setPointerCapture(e.pointerId);c.style.cursor="grabbing";e.preventDefault();});
+  c.addEventListener("pointermove",e=>{
+    if(!drag)return;
+    const dx=(e.clientX-lx)*0.012,dy=(e.clientY-ly)*0.012;
+    mat=m3mul(rotY(dx),m3mul(rotX(dy),mat||m3mul(rotX(-0.4),rotY(0.3))));
+    vx=0.6*vx+0.4*dx;vy=0.6*vy+0.4*dy;
+    lx=e.clientX;ly=e.clientY;
+  });
+  const up=()=>{if(!drag)return;drag=false;c.style.cursor="grab";const cap=v=>Math.max(-0.06,Math.min(0.06,v));vx=cap(vx);vy=cap(vy);};
+  c.addEventListener("pointerup",up);c.addEventListener("pointercancel",up);
+  requestAnimationFrame(frame);
+})();
+
+/* ---------- scroll-reveal cards ---------- */
+(()=>{
+  const cards=[...$$("#homecards .card")];
+  if(!cards.length)return;
+  if(reduced||!("IntersectionObserver" in window)){cards.forEach(cd=>cd.classList.add("reveal"));return;}
+  const io=new IntersectionObserver(es=>es.forEach(en=>{
+    if(en.isIntersecting){
+      const i=cards.indexOf(en.target);
+      setTimeout(()=>en.target.classList.add("reveal"),(i%3)*90);
+      io.unobserve(en.target);
+    }
+  }),{threshold:0.15});
+  cards.forEach(cd=>io.observe(cd));
+})();
+
+/* ---------- stat chips count up ---------- */
+(()=>{
+  const spans=$$("#statrow span");
+  if(!spans.length||reduced)return;
+  spans.forEach((sp,k)=>{
+    const m=sp.textContent.match(/^(\d+)(.*)$/);
+    if(!m)return;
+    const target=+m[1],rest=m[2],t0=performance.now()+k*90;
+    (function tick(){
+      const t=Math.min(1,(performance.now()-t0)/900);
+      if(t>0)sp.textContent=Math.round(target*(1-Math.pow(1-t,3)))+rest;
+      if(t<1)requestAnimationFrame(tick);
+    })();
+  });
+})();
 
 /* ---------- hero: drifting atoms that bond into constellations ---------- */
 (()=>{
