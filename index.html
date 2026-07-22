@@ -3640,10 +3640,11 @@ $("#sims").innerHTML=`
   <div class="controls">
     <div class="ctrl"><label>Protons</label><p style="display:flex;gap:6px;margin:0"><button class="btn ghost" data-at="p-">−</button><span class="val" id="at-p" style="min-width:24px;text-align:center;font-size:16px">1</span><button class="btn ghost" data-at="p+">+</button></p></div>
     <div class="ctrl"><label>Neutrons</label><p style="display:flex;gap:6px;margin:0"><button class="btn ghost" data-at="n-">−</button><span class="val" id="at-n" style="min-width:24px;text-align:center;font-size:16px">0</span><button class="btn ghost" data-at="n+">+</button></p></div>
+    <div class="ctrl"><label>Electrons</label><p style="display:flex;gap:6px;margin:0"><button class="btn ghost" data-at="e-">−</button><span class="val" id="at-e" style="min-width:24px;text-align:center;font-size:16px">1</span><button class="btn ghost" data-at="e+">+</button></p></div>
     <div class="ctrl"><label for="at-view">View</label><select id="at-view">
       <option value="shells" selected>Shells (Bohr)</option>
       <option value="orbitals">Orbitals (subshells)</option></select></div>
-    <div class="ctrl"><label>Electrons</label><p style="display:flex;gap:6px;margin:0"><button class="btn ghost" data-at="e-">−</button><span class="val" id="at-e" style="min-width:24px;text-align:center;font-size:16px">1</span><button class="btn ghost" data-at="e+">+</button></p></div>
+    <div class="ctrl"><label>Atom</label><p style="margin:0"><button class="btn ghost" id="at-reset">↺ Reset</button></p></div>
   </div>
   <canvas class="plot" id="at-plot" style="height:340px"></canvas>
   <div class="readout">
@@ -5043,6 +5044,11 @@ function atRender(){
     $("#at-p").textContent=atomP; $("#at-n").textContent=atomN; $("#at-e").textContent=atomE;
     drawAtom();
   };
+  const rst=$("#at-reset");
+  if(rst)rst.addEventListener("click",()=>{
+    atomP=1; atomN=0; atomE=1;
+    drawAtom(); burstFrom(rst);
+  });
   $$("[data-at]").forEach(b=>{
     const k=b.dataset.at[0], d=b.dataset.at[1]==="+"?1:-1;
     let t1=null,t2=null,held=false;
