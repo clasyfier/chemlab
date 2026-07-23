@@ -108,12 +108,33 @@ nav.rail{
 .brand .logo{width:30px;height:34px;flex:0 0 30px;color:var(--ink-soft)}
 .brand b{font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;font-size:20px;font-weight:600;letter-spacing:.01em}
 .brand small{display:block;color:var(--ink-soft);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+nav.rail{background:linear-gradient(180deg,color-mix(in srgb,var(--bunsen) 4%,var(--ground)),var(--ground) 40%)}
 nav.rail button{
   display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;
-  padding:9px 10px;border-radius:8px;color:var(--ink-soft);font-size:14.5px;
+  padding:9px 10px;border-radius:10px;color:var(--ink-soft);font-size:14px;position:relative;z-index:1;
+  transition:color .18s,transform .18s;
 }
-nav.rail button:hover{background:var(--panel2);color:var(--ink)}
-nav.rail button.on{background:var(--bunsen-soft);color:var(--bunsen);font-weight:600}
+nav.rail button .nico{font-size:16px;width:22px;text-align:center;flex:0 0 22px;transition:transform .18s;filter:grayscale(.35);opacity:.85}
+nav.rail button:hover{color:var(--ink);transform:translateX(3px)}
+nav.rail button:hover .nico{transform:scale(1.25) rotate(-8deg);filter:none;opacity:1}
+nav.rail button.on{color:var(--bunsen);font-weight:700}
+nav.rail button.on .nico{filter:none;opacity:1;transform:scale(1.1)}
+#rail-ind{position:absolute;left:10px;right:10px;height:38px;border-radius:10px;z-index:0;opacity:0;
+  background:linear-gradient(120deg,var(--bunsen-soft),color-mix(in srgb,var(--cu) 12%,var(--bunsen-soft)));
+  border:1px solid color-mix(in srgb,var(--bunsen) 25%,transparent);
+  transition:top .3s cubic-bezier(.3,1.2,.4,1),opacity .2s}
+.ngroup{font-size:9.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);opacity:.7;padding:12px 12px 3px}
+#rail-user{margin:8px 4px 4px;background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:10px 12px;box-shadow:var(--shadow)}
+#rail-user .ru-top{display:flex;align-items:center;gap:9px}
+#rail-user .ru-shield{width:30px;height:34px;clip-path:polygon(50% 0,100% 18%,100% 62%,50% 100%,0 62%,0 18%);display:grid;place-items:center;font-size:14px;flex:0 0 30px}
+#rail-user .ru-name{font-size:12.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#rail-user .ru-rank{font-size:10px;color:var(--ink-soft)}
+#rail-user .ru-meta{display:flex;gap:10px;font-size:10.5px;color:var(--ink-soft);margin-top:7px}
+.logo g circle{animation:logobub 2.8s ease-in-out infinite}
+.logo g circle:nth-of-type(2){animation-delay:-.9s}
+.logo g circle:nth-of-type(3){animation-delay:-1.8s}
+@keyframes logobub{0%{transform:translateY(0);opacity:.75}70%{transform:translateY(-9px);opacity:.2}71%{transform:translateY(2px);opacity:0}100%{transform:translateY(0);opacity:.75}}
+@media (prefers-reduced-motion:reduce){.logo g circle,#rail-ind{animation:none;transition:none}}
 nav.rail button:focus-visible,.card:focus-visible,button:focus-visible{outline:2px solid var(--bunsen);outline-offset:2px}
 nav.rail .dot{width:8px;height:8px;border-radius:50%;flex:0 0 8px}
 nav.rail .spacer{flex:1}
@@ -832,6 +853,7 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
   #railhandle{display:none!important}
   :root.railhide nav.rail{width:100%;flex-basis:auto;padding:10px 12px;border-bottom:1px solid var(--line)}
   nav.rail button{white-space:nowrap;width:auto}
+  .ngroup,#rail-ind,#rail-user{display:none!important}
   nav.rail .spacer,nav.rail .dot{display:none}
   main{padding:22px 16px 60px}
 }
@@ -856,16 +878,21 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
     <path d="M27.5 20 L13 48 A6 6 0 0 0 18.5 57 H45.5 A6 6 0 0 0 51 48 L36.5 20 Z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
     <path d="M27.5 21 V7 M36.5 21 V7 M24.5 7 H39.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
   </svg><div><b>ChemLab</b><small>A-Level Chemistry</small></div></div>
-  <button data-v="home" class="on"><span class="dot" style="background:var(--bunsen)"></span>Overview</button>
-  <button data-v="learn"><span class="dot" style="background:var(--li)"></span>Learn</button>
-  <button data-v="lab"><span class="dot" style="background:var(--cu)"></span>Simulations</button>
-  <button data-v="periodic"><span class="dot" style="background:var(--na)"></span>Periodic table</button>
-  <button data-v="prac"><span class="dot" style="background:var(--k)"></span>Practicals</button>
-  <button data-v="quiz"><span class="dot" style="background:var(--bunsen)"></span>Test your knowledge</button>
-  <button data-v="ranked"><span class="dot" style="background:#e0a93c"></span>Ranked</button>
-  <button data-v="progress"><span class="dot" style="background:var(--na)"></span>Progress</button>
-  <button data-v="sources"><span class="dot" style="background:var(--ink-soft)"></span>Sources</button>
+  <div id="rail-ind" aria-hidden="true"></div>
+  <span class="ngroup">Study</span>
+  <button data-v="home" class="on"><span class="nico">🏠</span><span class="nlbl">Overview</span></button>
+  <button data-v="learn"><span class="nico">📚</span><span class="nlbl">Learn</span></button>
+  <button data-v="lab"><span class="nico">⚗️</span><span class="nlbl">Simulations</span></button>
+  <button data-v="periodic"><span class="nico">🧬</span><span class="nlbl">Periodic table</span></button>
+  <button data-v="prac"><span class="nico">🥽</span><span class="nlbl">Practicals</span></button>
+  <span class="ngroup">Compete</span>
+  <button data-v="quiz"><span class="nico">📝</span><span class="nlbl">Test your knowledge</span></button>
+  <button data-v="ranked"><span class="nico">🏆</span><span class="nlbl">Ranked</span></button>
+  <span class="ngroup">You</span>
+  <button data-v="progress"><span class="nico">📊</span><span class="nlbl">Progress</span></button>
+  <button data-v="sources"><span class="nico">🔍</span><span class="nlbl">Sources</span></button>
   <div class="spacer"></div>
+  <div id="rail-user"></div>
   <div style="padding:10px;font-size:11.5px;color:var(--ink-soft)">
     <a href="/privacy.html" style="color:inherit">Privacy</a> · <a href="/terms.html" style="color:inherit">Terms</a>
   </div>
@@ -2700,9 +2727,37 @@ $$("nav.rail button[data-v]").forEach(b=>b.addEventListener("click",()=>{
   if(b.dataset.v==="quiz"){openTestPick();return;}
   showView(b.dataset.v);
 }));
+function railInd(){
+  const ind=document.querySelector("#rail-ind"); if(!ind)return;
+  const btn=document.querySelector("nav.rail button.on");
+  if(!btn||innerWidth<=760){ind.style.opacity="0";return;}
+  ind.style.top=btn.offsetTop+"px";
+  ind.style.height=btn.offsetHeight+"px";
+  ind.style.opacity="1";
+}
+function railUser(){
+  const el=document.querySelector("#rail-user"); if(!el)return;
+  const st=rkState(), info=rkInfo(st.rp), unlocked=rkUnlocked();
+  const nick=window.chemNick||"guest chemist";
+  el.innerHTML=`<div class="ru-top">
+      <div class="ru-shield" style="background:linear-gradient(155deg,${unlocked?info.col:"var(--line)"},color-mix(in srgb,${unlocked?info.col:"var(--line)"} 55%,#111))">${unlocked?info.sym:"🔒"}</div>
+      <div style="min-width:0"><div class="ru-name">${String(nick).replace(/</g,"&lt;")}</div>
+      <div class="ru-rank">${unlocked?info.label+" · "+st.rp+" RP":"unranked"}</div></div>
+    </div>
+    <div class="ru-meta">
+      <span>🔥 ${st.streak||0}d</span>
+      <span>🧊 ${st.freezes||0}</span>
+      ${st.tubes?`<span>🧪 ${st.tubes}</span>`:""}
+    </div>`;
+  el.style.cursor="pointer";
+  el.onclick=()=>showView("ranked");
+}
+window.addEventListener("chemlab:changed",()=>{railUser();});
+window.addEventListener("resize",railInd);
 function showView(v){
   if((v==="quiz"||v==="exam"||v==="redeem")&&!window.chemPremium){openAccount();return;}
-  $$("nav.rail button[data-v]").forEach(b=>b.classList.toggle("on",b.dataset.v===v||(v==="exam"&&b.dataset.v==="quiz")));
+  $$("nav.rail button[data-v]").forEach(b=>b.classList.toggle("on",b.dataset.v===v||((v==="exam"||v==="redeem")&&b.dataset.v==="quiz")));
+  requestAnimationFrame(railInd);
   $$("section.view").forEach(s=>s.classList.toggle("on",s.id==="v-"+v));
   window.scrollTo({top:0});
   if(v==="home")renderDash();
@@ -3789,7 +3844,7 @@ window.applyPracLocks=function(){
   const hardOpt=document.querySelector('#hunt-diff option[value="hard"]');
   if(hardOpt)hardOpt.textContent=prem?"Hard":"Hard · ★ Premium";
   const qnav=document.querySelector('nav.rail button[data-v="quiz"]');
-  if(qnav)qnav.innerHTML=`<span class="dot" style="background:var(--bunsen)"></span>Test your knowledge${prem?"":" 🔒"}`;
+  if(qnav)qnav.innerHTML=`<span class="nico">📝</span><span class="nlbl">Test your knowledge${prem?"":" 🔒"}</span>`;
   const gdoor=document.getElementById("g-door");
   if(gdoor&&!prem){gasDoor=false;gasSuck=false;gdoor.textContent="🚪 Open trap door 🔒";}
   else if(gdoor&&!gasDoor)gdoor.textContent="🚪 Open trap door";
@@ -6833,6 +6888,7 @@ new MutationObserver(redrawAll).observe(document.documentElement,{attributes:tru
 renderDash();
 refreshMoods();
 redrawAll();
+railInd(); railUser();
 
 </script>
 
@@ -6914,6 +6970,7 @@ async function refresh(){
     const {data:p}=await sb.from("profiles").select("premium,progress,nickname,avatar,avatar_hue,admin").eq("id",user.id).maybeSingle();
     prof=p||{};
     window.chemAdmin=!!p?.admin;
+    window.chemNick=p?.nickname||user.email.split("@")[0];
     premium=!!p?.premium||window.chemAdmin;
     const merged=merge(p?.progress||{},snapshot());
     applyLocal(merged); pushProgress();
@@ -6925,7 +6982,7 @@ async function refresh(){
   }
   window.chemPremium=!!(user&&premium);
   window.applyPracLocks(); try{renderQuiz()}catch(e){}
-  try{if(document.querySelector("#v-ranked.on"))renderRanked();updateProgressNav();}catch(e){}
+  try{if(document.querySelector("#v-ranked.on"))renderRanked();updateProgressNav();if(window.railUser)railUser();}catch(e){}
   render(); renderCorner();
 }
 function checkoutUrl(base){
