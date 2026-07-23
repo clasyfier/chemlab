@@ -890,7 +890,6 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
   <button data-v="ranked"><span class="nico">🏆</span><span class="nlbl">Ranked</span></button>
   <span class="ngroup">You</span>
   <button data-v="progress"><span class="nico">📊</span><span class="nlbl">Progress</span></button>
-  <button data-v="sources"><span class="nico">🔍</span><span class="nlbl">Sources</span></button>
   <div class="spacer"></div>
   <div id="rail-user"></div>
   <div style="padding:10px;font-size:11.5px;color:var(--ink-soft)">
@@ -1126,12 +1125,7 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
   <div id="prog-body"></div>
 </section>
 
-<section class="view" id="v-sources">
-  <div class="eyebrow">Accredited references</div>
-  <h1>Sources</h1>
-  <p class="lede">Everything in this app is checked against these bodies. Use them as your primary references for revision and practical work.</p>
-  <div class="srclist" id="srclist"></div>
-</section>
+
 
 </main>
 </div>
@@ -2668,21 +2662,7 @@ const QUIZ3=[
 {t:12,q:"The molecular ion peak M⁺ appears at…",o:["m/z = Mr of the molecule","half Mr","the smallest m/z","δ = 0"],a:0,e:"The unfragmented ionised molecule — read Mr straight off it (M+1 is the ¹³C peak)."}];
 QUIZ3.forEach(x=>{QUIZ.push({q:x.q,o:x.o,a:x.a,e:x.e});QTOPIC.push(x.t);});
 
-/* ---------- sources (accredited) ---------- */
-const SOURCES=[
-["RSC Practical videos (16–18)","Royal Society of Chemistry demonstration videos covering every A-level technique, including all the practicals in this app.","https://edu.rsc.org/practical/practical-videos-16-18-years/4012343.article"],
-["PhET Interactive Simulations (University of Colorado Boulder)","Free research-based science simulations — the inspiration for ChemLab's Build-an-Atom, refinery and molecule-shapes sims.","https://phet.colorado.edu/en/simulations/filter?subjects=chemistry"],
-["RSC Titration screen experiment","The RSC's own interactive titration simulator — good companion practice to the simulation here.","https://edu.rsc.org/concentration-of-solutions-and-titration/titration-screen-experiment/2077.article"],
-["AQA A-level Chemistry (7405) — assessment resources","Past papers, mark schemes and examiner reports: the highest-value practice material there is.","https://www.aqa.org.uk/subjects/chemistry/a-level/chemistry-7405/assessment-resources"],
-["AQA Required Practical Handbook (7404/7405)","The official methods for all 12 required practicals — the walkthroughs in this app follow its exemplars.","https://filestore.aqa.org.uk/resources/chemistry/AQA-7404-7405-PHBK.PDF"],
-["Physics & Maths Tutor — Chemistry past papers","Organised genuine past papers and mark schemes from every exam board — pair them with ChemLab's exam-style practice; the real thing is the final step.","https://www.physicsandmathstutor.com/a-level-chemistry-papers/"],
-["AQA A-level Chemistry Data Booklet","The exact NMR, IR and periodic-table data printed in your exam — the tables in the Analysis chapter mirror it.","https://filestore.aqa.org.uk/resources/chemistry/AQA-7405-SDB.PDF"],
-["CLEAPSS Student Safety Sheets","The UK schools' laboratory-safety authority — free hazard and control-measure sheets you can cite in your own risk assessments.","https://science.cleapss.org.uk/resources/student-safety-sheets/"],
-["RSC Interactive Periodic Table","Verified data, history and podcasts for every element.","https://www.rsc.org/periodic-table"],
-["NIST Chemistry WebBook","Authoritative boiling points, thermochemistry and spectra — source of the physical constants used in the simulations.","https://webbook.nist.gov/chemistry/"],
-["OCR Chemistry A (H432)","OCR's official specification and past-paper page, for cross-board practice.","https://www.ocr.org.uk/qualifications/as-and-a-level/chemistry-a-h032-h432/"],
-["Pearson Edexcel A-level Chemistry","Edexcel's official qualification page with past papers.","https://qualifications.pearson.com/en/qualifications/edexcel-a-levels/chemistry-2015.html"],
-["IUPAC","International Union of Pure and Applied Chemistry — nomenclature rules, atomic weights and the Gold Book of definitions.","https://iupac.org/"]];
+
 </script>
 <script>
 /* ---------- helpers ---------- */
@@ -2782,8 +2762,7 @@ const HOME=[
 ["Run the simulations","lab","--cu","7 interactive sims","Build atoms, refine crude oil, spin 3D VSEPR shapes, titration curves, Maxwell–Boltzmann and more."],
 ["Explore the elements","periodic","--na","118 elements","Electron configurations, categories and flame-test colours at a click."],
 ["Master the practicals","prac","--k","All 12 practicals","Guided Lab Mode for every AQA required practical — step-by-step method, safety, examiner traps and spot-the-mistake challenges."],
-["Test your knowledge","quiz","--bunsen","Quizzes + timed exams","195 quiz questions, plus timed exam papers marked by an AI examiner."],
-["Check the sources","sources","--ink-soft","Accredited only","RSC, AQA, OCR, CLEAPSS, NIST and IUPAC references behind every number."]];
+["Test your knowledge","quiz","--bunsen","Quizzes + timed exams","195 quiz questions, plus timed exam papers marked by an AI examiner."]];
 const HOME_ICONS=["📚","⚗️","⚛️","🥽","📝","🔍"];
 $("#homecards").innerHTML=HOME.map((h,hi)=>`<div class="card link" tabindex="0" role="button" data-goto="${h[1]}">
   <span class="cicon">${HOME_ICONS[hi]||"✨"}</span><br>
@@ -3853,9 +3832,7 @@ window.applyPracLocks=function(){
 };
 
 
-/* ---------- sources ---------- */
-$("#srclist").innerHTML=SOURCES.map(s=>`<div class="card"><h3>${s[0]}</h3><p>${s[1]}</p>
-  <a href="${s[2]}" target="_blank" rel="noopener">${s[2]}</a></div>`).join("");
+
 
 /* ---------- quiz ---------- */
 let qi=0, qstreak=0;
@@ -6247,7 +6224,7 @@ function ckBuild(){
     ["Fractionating column game","sim-frac","🛢️"],["Titration curve","sim-titr","🧪"],["Maxwell–Boltzmann","sim-mb","📈"],["VSEPR shapes","sim-shape","🔮"]];
   ckIdx=[
     ...[["Overview","home","🏠"],["Learn","learn","📚"],["Simulations","lab","⚗️"],["Periodic table","periodic","🧬"],
-        ["Practicals","prac","🥽"],["Test your knowledge","quiz","📝"],["Progress","progress","📊"],["Sources","sources","🔍"]]
+        ["Practicals","prac","🥽"],["Test your knowledge","quiz","📝"],["Progress","progress","📊"]]
       .map(([t,v,ic])=>({t,ic,kind:"section",go:()=>showView(v)})),
     ...TOPICS.map((t,i)=>({t:t.t,ic:"📖",kind:"chapter",go:()=>{topicLocked(i)?openAccount():openReader(i);}})),
     ...PRACS.map((p,i)=>({t:p.n+" — "+p.t,ic:p.icon,kind:"practical",go:()=>{showView("prac");(!window.chemPremium&&i>0)?openAccount():openLab(i);}})),
