@@ -786,6 +786,37 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
 .rk-freeze{display:inline-flex;gap:4px;margin-left:8px}
 .rk-freeze i{font-style:normal;filter:grayscale(1);opacity:.35}
 .rk-freeze i.have{filter:none;opacity:1}
+.vault-tiers{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:12px}
+.vtier{border:1.5px solid var(--line);border-radius:14px;padding:16px;position:relative}
+.vtier.best{border-color:#e0a93c;background:linear-gradient(160deg,color-mix(in srgb,#e0a93c 8%,var(--panel)),var(--panel))}
+.vtier.owned{border-color:var(--ok)}
+.vtier b{font-size:15.5px}
+.vtier .vprice{float:right;font-family:ui-monospace,Menlo,monospace;font-weight:800;font-size:17px}
+.vtier p{font-size:12.5px;color:var(--ink-soft);margin:8px 0 12px;line-height:1.5}
+.vtier p i{font-size:11px}
+.vault-addons{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.vaddon{border:1px solid var(--line);border-radius:12px;padding:13px}
+.vaddon b{font-size:13.5px}
+.vaddon .vprice{float:right;font-family:ui-monospace,Menlo,monospace;font-weight:800;font-size:13px}
+.vaddon p{font-size:12px;color:var(--ink-soft);margin:6px 0 10px}
+.vaddon .btn{font-size:12.5px;padding:7px 13px;margin:2px 4px 0 0}
+.vgot{color:var(--ok);font-weight:800;font-size:12.5px}
+.vaddon.season{border-color:#8a5bd6}
+.rk-skins{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:8px}
+.rk-skin{border:1.5px solid var(--line);border-radius:13px;padding:12px;text-align:center;transition:transform .15s}
+.rk-skin:hover{transform:translateY(-2px)}
+.rk-skin.equipped{border-color:var(--ok)}
+.rk-skin .mini{width:44px;height:50px;clip-path:polygon(50% 0,100% 18%,100% 62%,50% 100%,0 62%,0 18%);margin:0 auto 8px;display:grid;place-items:center;font-size:18px}
+.rk-skin b{font-size:12.5px;display:block;margin-bottom:6px}
+.rk-skin .btn{font-size:11.5px;padding:5px 11px}
+#repview{position:fixed;inset:0;z-index:600;background:var(--ground);overflow-y:auto}
+#repview[hidden]{display:none}
+.rep-doc{max-width:680px;margin:0 auto;padding:44px 28px;font-size:14.5px;line-height:1.7}
+.rep-doc h1{font-size:24px;margin:0 0 2px}
+.rep-doc .rep-sub{color:var(--ink-soft);font-size:12.5px;margin-bottom:22px}
+.rep-doc section{border-top:1px solid var(--line);padding:14px 0;white-space:pre-wrap}
+.rep-bar{position:sticky;top:0;background:var(--panel);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;gap:10px;justify-content:flex-end}
+@media print{body>*{display:none!important}#repview,#repview *{display:block!important}#repview{position:static;overflow:visible}.rep-bar{display:none!important}}
 #resume{margin-top:10px}
 #resume .btn{font-size:13.5px;padding:9px 16px}
 #themebtn{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--panel);cursor:pointer;font-size:16px;display:grid;place-items:center;transition:transform .15s,border-color .15s;padding:0}
@@ -1052,6 +1083,10 @@ ul.spot{list-style:none;padding:0;margin:8px 0;max-width:75ch}
     <div id="ck-list"></div>
     <div class="ck-hint"><kbd>↑↓</kbd> navigate · <kbd>↵</kbd> open · <kbd>esc</kbd> close</div>
   </div>
+</div>
+<div id="repview" hidden>
+  <div class="rep-bar"><button class="btn ghost" id="rep-close">✕ Close</button><button class="btn" id="rep-print">🖨 Print / save as PDF</button></div>
+  <div class="rep-doc" id="rep-doc"></div>
 </div>
 <div id="labmode" hidden>
   <div class="lab-top">
@@ -2720,7 +2755,7 @@ function railUser(){
   const st=rkState(), info=rkInfo(st.rp), unlocked=rkUnlocked();
   const nick=window.chemNick||"guest chemist";
   el.innerHTML=`<div class="ru-top">
-      <div class="ru-shield" style="background:linear-gradient(155deg,${unlocked?info.col:"var(--line)"},color-mix(in srgb,${unlocked?info.col:"var(--line)"} 55%,#111))">${unlocked?info.sym:"🔒"}</div>
+      <div class="ru-shield" style="background:${unlocked?rkShieldStyle(info.col):"var(--line)"}">${unlocked?info.sym:"🔒"}</div>
       <div style="min-width:0"><div class="ru-name">${String(nick).replace(/</g,"&lt;")}</div>
       <div class="ru-rank">${unlocked?info.label+" · "+st.rp+" RP":"unranked"}</div></div>
     </div>
@@ -2744,6 +2779,7 @@ function showView(v){
   if(v==="progress")renderProgress();
   if(v==="redeem")renderRedeem();
   if(v==="ranked")renderRanked();
+  if(v==="exam")exQuota();
   if(v==="periodic"&&!reduced){
     const pt=document.querySelector("#pt");
     if(pt){
@@ -3744,6 +3780,8 @@ function lmRender(){
   dots.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{lmStep=+b.dataset.k;lmRender();}));
   $(".lab-body").scrollTop=0;
 }
+$("#rep-close").addEventListener("click",()=>{$("#repview").hidden=true;document.body.style.overflow="";});
+$("#rep-print").addEventListener("click",()=>window.print());
 $("#lm-x").addEventListener("click",closeLab);
 $("#lm-back").addEventListener("click",()=>{if(lmStep>0){lmStep--;lmRender();}});
 $("#lm-next").addEventListener("click",()=>{
@@ -5839,6 +5877,16 @@ const RK_TIERS=[["Lab Rat","🐀","#8a8f98"],["Bunsen Apprentice","🔥","#b8733
 ["Mole Wrangler","🐾","#e0a93c"],["Catalyst","⚡","#3aa6a0"],["Equilibrist","⚖️","#5b8dd9"],
 ["Reaction Master","💥","#8a5bd6"],["Nobel Laureate","🏅","#e84393"]];
 const RK_DIV=150, RK_TIER=450, RK_MAX=7*RK_TIER, RK_TUBE=500;
+const RK_SKINS={
+  aurora:{n:"Aurora",fl:"✨",g:"linear-gradient(155deg,#57e6a0,#3f7fc2 55%,#8a5bd6)"},
+  magma:{n:"Magma",fl:"🔥",g:"linear-gradient(155deg,#ffb347,#e8590c 55%,#8a1e12)"},
+  holo:{n:"Holo",fl:"🌈",g:"linear-gradient(130deg,#ff8fd8,#8ad0ff 40%,#b0ffc8 70%,#ffe38f)"},
+  void:{n:"Void",fl:"🌑",g:"linear-gradient(155deg,#3a3f55,#12141f 60%,#000)"}};
+function rkShieldStyle(col){
+  const st=rkState();
+  const sk=st.skin&&RK_SKINS[st.skin];
+  return sk?sk.g:`linear-gradient(155deg,${col},color-mix(in srgb,${col} 55%,#111))`;
+}
 const RK_JUMPS=["https://buy.stripe.com/test_00w5kF0m45sD9pr2Yy9fW02", "https://buy.stripe.com/test_bJeaEZgl21cngRTcz89fW03", "https://buy.stripe.com/test_14A14p0m4g7hbxzbv49fW04", "https://buy.stripe.com/test_6oU3cxfgYbR1atvar09fW05", "https://buy.stripe.com/test_cNidRb7OwbR1gRTdDc9fW06", "https://buy.stripe.com/test_aFa3cxb0I2gr457dDc9fW07", "https://buy.stripe.com/test_9B63cx8SA4oz8ln0Qq9fW08", "https://buy.stripe.com/test_28E4gBd8Q4ozgRT7eO9fW09", "https://buy.stripe.com/test_5kQcN75Go2greJL8iS9fW0a", "https://buy.stripe.com/test_8x2cN7c4M9IT457ar09fW0b"];
 const rkToday=()=>new Date().toISOString().slice(0,10);
 const rkDayDiff=(a,b)=>Math.round((new Date(b)-new Date(a))/86400000);
@@ -5883,6 +5931,7 @@ window.rkPromoFromRp=function(rp){const i=rkInfo(rp);rkPromo(i);toast("🚀 Rank
 function rkPromo(info){
   const o=$("#rk-promo"); if(!o)return;
   $("#rk-promo-shield").style.setProperty("--rkc",info.col);
+  $("#rk-promo-shield").style.background=rkShieldStyle(info.col);
   $("#rk-promo-shield").innerHTML=`<span class="sym">${info.sym}</span>`;
   $("#rk-promo-txt").textContent="PROMOTED — "+info.label;
   o.hidden=false;
@@ -5935,12 +5984,13 @@ function rkFakeBoard(){
   let seed=Math.floor(Date.now()/86400000/3);            // rolls every 3 days
   const rnd=()=>{seed=(seed*1103515245+12345)&0x7fffffff;return seed/0x7fffffff;};
   const picks=[...NAMES].sort(()=>rnd()-0.5).slice(0,14);
-  return picks.map((n,i)=>({nickname:n,tubes:Math.max(1,Math.round((14-i)*(4.5+rnd()*3)+rnd()*6)),ghost:true}))
+  const FLS=["✨","🔥","🌈","🌑","",""," ",""];
+  return picks.map((n,i)=>({nickname:n,tubes:Math.max(1,Math.round((14-i)*(4.5+rnd()*3)+rnd()*6)),flair:(FLS[Math.floor(rnd()*FLS.length)]||"").trim(),ghost:true}))
     .sort((a,b)=>b.tubes-a.tubes);
 }
 function rkBoardHTML(rows){
   return `<ol style="list-style:none;margin:0;padding:0">${rows.slice(0,20).map((r,i)=>
-    `<li><span class="pos">${i+1}</span><span>${String(r.nickname).replace(/</g,"&lt;")}</span><span class="tub">${r.tubes} 🧪</span></li>`).join("")}</ol>`;
+    `<li><span class="pos">${i+1}</span><span>${String(r.nickname).replace(/</g,"&lt;")}${r.flair?" "+r.flair:""}</span><span class="tub">${r.tubes} 🧪</span></li>`).join("")}</ol>`;
 }
 function renderRanked(){
   const body=$("#rk-body"); if(!body)return;
@@ -5977,7 +6027,7 @@ function renderRanked(){
   const today=rkToday(), checked=st.lastCheck===today;
   body.innerHTML=`
   <div class="rk-head" style="--rkc:${info.col}">
-    <div><div class="rk-shield" style="--rkc:${info.col}"><span class="sym">${info.sym}</span></div>
+    <div><div class="rk-shield" style="--rkc:${info.col};background:${rkShieldStyle(info.col)}"><span class="sym">${info.sym}</span></div>
       <div class="rk-pips">${[0,1,2].map(d=>`<i class="${!isMax&&d<=info.div?"on":""}" style="--rkc:${info.col}"></i>`).join("")}</div></div>
     <div style="flex:1;min-width:220px">
       <div class="rk-title" style="color:${info.col}">${info.label}</div>
@@ -5998,6 +6048,22 @@ function renderRanked(){
     <button class="btn" id="rk-jump">🚀 Jump one rank — €${((st.jumps||0)+1)*10}</button>
     <span style="font-size:12px;color:var(--ink-soft);margin-left:10px">${st.jumps?`${st.jumps} jump${st.jumps>1?"s":""} purchased so far`:"first jump"}</span>
   </div>`:""}
+  <div class="card" style="margin-bottom:14px"><h3>🎽 Shield skins</h3>
+    <p style="font-size:13px;color:var(--ink-soft);margin:2px 0 4px">Dress your shield; each skin carries a flair that follows your name onto the leaderboard.</p>
+    <div class="rk-skins">${Object.entries(RK_SKINS).map(([k,sk])=>{
+      const owned=(load("chemlab-cosmetics",[])||[]).includes(k)||window.chemAdmin;
+      const eq=st.skin===k;
+      return `<div class="rk-skin ${eq?"equipped":""}">
+        <div class="mini" style="background:${sk.g}">${sk.fl}</div>
+        <b>${sk.n}</b>
+        ${eq?'<span class="vgot">Equipped</span>':owned?`<button class="btn ghost" data-skin="${k}">Equip</button>`:`<button class="btn ghost" data-skinbuy="${k}">€1.99</button>`}
+      </div>`;}).join("")}
+      <div class="rk-skin ${!st.skin?"equipped":""}">
+        <div class="mini" style="background:linear-gradient(155deg,${info.col},color-mix(in srgb,${info.col} 55%,#111))">${info.sym}</div>
+        <b>Classic</b>
+        ${!st.skin?'<span class="vgot">Equipped</span>':'<button class="btn ghost" data-skin="">Equip</button>'}
+      </div>
+    </div></div>
   <div class="card" style="margin-bottom:14px"><h3>How RP is earned</h3>
     <ul style="font-size:13.5px;margin:6px 0;padding-left:20px">
       <li><b>+150</b> — PERFECT PAPER: an exam of 10+ questions at 100% (the jackpot)</li>
@@ -6015,6 +6081,17 @@ function renderRanked(){
     :`<div style="text-align:center;padding:22px"><div style="font-size:34px">🔒</div>
       <p style="font-size:14px;color:var(--ink-soft);max-width:44ch;margin:6px auto 0">The leaderboard is for <b>Nobel Laureates</b> only. Reach the summit, mint test tubes, and your name appears among the immortals.</p></div>`}
   </div>`;
+  $$("#rk-body [data-skin]").forEach(b=>b.addEventListener("click",()=>{
+    const st2=rkState(); st2.skin=b.dataset.skin||null; rkSave(st2);
+    const fl=st2.skin?RK_SKINS[st2.skin].fl:null;
+    if(window.chemSetFlair)window.chemSetFlair(fl);
+    toast(st2.skin?RK_SKINS[st2.skin].fl+" "+RK_SKINS[st2.skin].n+" equipped":"Classic shield restored");
+    renderRanked(); railUser();
+  }));
+  $$("#rk-body [data-skinbuy]").forEach(b=>b.addEventListener("click",()=>{
+    if(!window.chemJumpGo){openAccount();return;}
+    window.chemJumpGo(window.STORE[b.dataset.skinbuy]);
+  }));
   const jb=$("#rk-jump");
   if(jb)jb.addEventListener("click",()=>{
     if(!window.chemJumpGo){openAccount();return;}
@@ -6476,6 +6553,15 @@ function exPool(type,n){
   const picks=[...bank.keys()].sort(()=>Math.random()-.5).slice(0,Math.min(n,bank.length));
   return picks.map(i=>({kind:"open",src:bank[i],marks:bank[i].marks,t:bank[i].t}));
 }
+async function exQuota(){
+  const el=$("#ex-note"); if(!el||!window.chemAuthHeader)return;
+  try{
+    const r=await fetch("/api/mark",{method:"POST",headers:{"Content-Type":"application/json",...(await window.chemAuthHeader())},body:JSON.stringify({action:"quota"})});
+    if(!r.ok)return;
+    const q=await r.json();
+    el.textContent=q.unlimited?"🤖 Examiner Unlimited — no marking meter for you.":`🤖 AI markings left this month: ${q.limit-q.used}/${q.limit}.`;
+  }catch(e){}
+}
 function exStart(){
   const type=exTypeSel, want=exCountSel;
   if(!window.chemPremium && (type!=="mcq" || want>5)){openAccount();return;}
@@ -6561,6 +6647,7 @@ async function exFinish(){
   try{
     const r=await fetch("/api/mark",{method:"POST",headers:{"Content-Type":"application/json",...(window.chemAuthHeader?await window.chemAuthHeader():{})},body:JSON.stringify({action:"mark",items})});
     if(r.ok)ai=await r.json();
+    else if(r.status===402){try{if((await r.json()).error==="quota")window.exQuotaHit=true;}catch(e){}}
   }catch(e){}
   if(ai&&ai.results){
     let got=0;
@@ -6579,11 +6666,17 @@ async function exFinish(){
     return;
   }
   // fallback: self-marking against the schemes
+  const quotaBanner=window.exQuotaHit?`<div class="card" style="border-color:#e0a93c;margin-bottom:14px;text-align:center;padding:18px">
+    <b>🤖 You've used all 25 AI markings this month</b>
+    <p style="font-size:13.5px;color:var(--ink-soft);margin:6px 0 12px">The examiner is resting. Mark this paper yourself below — or remove the meter forever.</p>
+    <button class="btn" onclick="window.chemJumpGo&&window.chemJumpGo(window.STORE.examiner)">Examiner Unlimited — €2/mo</button>
+  </div>`:"";
+  window.exQuotaHit=false;
   const rows=EX.qs.map((q,i)=>`<div class="ex-res part"><b>Q${i+1}</b> (${q.marks} marks) — ${q.src.q}
     <div class="fb"><i>Your answer:</i> ${EX.ans[i]?String(EX.ans[i]).replace(/</g,"&lt;"):"<i>blank</i>"}</div>
     <div class="fb"><b>Mark scheme — tick each point you made:</b></div>
     ${q.src.scheme.map((p,k)=>`<label style="display:flex;gap:8px;font-size:13.5px;margin:4px 0;cursor:pointer"><input type="checkbox" data-sm="${i}"> ${p}</label>`).join("")}</div>`).join("");
-  $("#ex-area").innerHTML=`<h3 class="serif" style="font-size:20px;margin:14px 0 4px">Mark your own paper</h3>
+  $("#ex-area").innerHTML=quotaBanner+`<h3 class="serif" style="font-size:20px;margin:14px 0 4px">Mark your own paper</h3>
     <p style="font-size:14px;color:var(--ink-soft);max-width:70ch">The AI examiner isn't connected yet, so compare your answers with the mark schemes and tick every point you made — self-marking is genuinely good revision.</p>
     ${rows}<p><button class="btn" id="ex-selfdone">Total my marks</button></p>`;
   $("#ex-selfdone").addEventListener("click",()=>{
@@ -6666,6 +6759,15 @@ function renderProgress(){
     ${unseen.length?`<p style="font-size:13px;color:var(--ink-soft);margin-top:10px">Not yet tested: ${unseen.map(u=>u.t.t).join(", ")}.</p>`:""}
     <p style="margin-top:12px"><button class="btn" id="prog-plan">🧠 Generate my study plan</button></p>
     <div id="prog-planout"></div>
+  </div>
+  <div class="card" style="margin-bottom:14px;border-color:#8a5bd6"><h3>📜 Predicted Grade Report</h3>
+    <p style="font-size:13.5px;color:var(--ink-soft);margin:2px 0 10px">A formal, printable report from the AI examiner: predicted grade band, chapter-by-chapter verdicts, your trajectory, and a fortnight plan. Show it to your parents — or your teacher.</p>
+    <p style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <button class="btn" id="prog-report">📜 Generate report${window.chemAdmin?"":" (1 credit)"}</button>
+      <button class="btn ghost" id="prog-report-buy">Buy a credit — €2.99</button>
+      <span style="font-size:12.5px;color:var(--ink-soft)">credits: <b>${window.chemAdmin?"∞":(window.chemCredits||0)}</b></span>
+    </p>
+    <div id="prog-repmsg" style="font-size:13px;margin-top:8px"></div>
   </div>`;
   /* level ring count-up */
   const ring=$("#prog-body .ring");
@@ -6715,6 +6817,33 @@ function renderProgress(){
   });
   ec.addEventListener("pointerleave",()=>progHoverE=-1);
   if(!progLoop){progLoop=true;requestAnimationFrame(progRender);}
+  $("#prog-report-buy").addEventListener("click",()=>{
+    if(!window.chemJumpGo){openAccount();return;}
+    window.chemJumpGo(window.STORE.report);
+  });
+  $("#prog-report").addEventListener("click",async()=>{
+    const msg=$("#prog-repmsg");
+    if(!window.chemAdmin&&!(window.chemCredits>0)){msg.innerHTML='<span style="color:var(--danger)">No credits — buy one first (€2.99), or find it in The Vault.</span>';return;}
+    msg.innerHTML='<span class="spin" style="border-color:rgba(0,0,0,.15);border-top-color:#8a5bd6"></span> The examiner is writing your report…';
+    const stats={nickname:window.chemNick||"student",
+      chapters:rows.map(r=>({name:r.t.t,accuracy_pc:r.pc,questions_answered:r.d.max,confidence_1to5:moods[r.i]||null,mastered:mast.includes(r.i)})),
+      recent_exams:hist.slice(-8),best_streak:load("chemlab-quiz-beststreak",0),
+      rank:rkUnlocked()?rkInfo(rkState().rp).label:"unranked"};
+    try{
+      const r=await fetch("/api/mark",{method:"POST",headers:{"Content-Type":"application/json",...(window.chemAuthHeader?await window.chemAuthHeader():{})},body:JSON.stringify({action:"report",stats})});
+      if(r.status===402){msg.innerHTML='<span style="color:var(--danger)">No credits on the server — refresh and try again.</span>';return;}
+      if(!r.ok)throw 0;
+      const {report}=await r.json();
+      window.chemCredits=Math.max(0,(window.chemCredits||0)-1);
+      msg.textContent="";
+      const secs=String(report).split(/\n?-{4,}\n?/).filter(x=>x.trim());
+      $("#rep-doc").innerHTML=`<h1>Predicted Grade Report</h1>
+        <div class="rep-sub">${(window.chemNick||"student")} · ChemLab · ${new Date().toLocaleDateString("en-GB")}</div>
+        ${secs.map(x=>`<section>${x.trim().replace(/</g,"&lt;")}</section>`).join("")}`;
+      $("#repview").hidden=false;
+      document.body.style.overflow="hidden";
+    }catch(e){msg.innerHTML='<span style="color:var(--danger)">The examiner is unavailable — try again shortly.</span>';}
+  });
   $("#prog-plan").addEventListener("click",async()=>{
     const out=$("#prog-planout");
     out.innerHTML='<p class="hint" style="margin-top:10px"><span class="spin" style="border-color:rgba(0,0,0,.15);border-top-color:var(--bunsen)"></span> Building your plan…</p>';
@@ -6893,6 +7022,17 @@ const sb=createClient(CFG.url,CFG.anon);
 window.chemAuthHeader=async()=>{const {data:{session}}=await sb.auth.getSession();return session?{Authorization:"Bearer "+session.access_token}:{};};
 window.chemFetchLeaderboard=async()=>{const {data,error}=await sb.rpc("leaderboard");if(error)throw error;return data;};
 window.chemPushTubes=async(t)=>{try{const {data:{session}}=await sb.auth.getSession();if(session)await sb.from("profiles").update({tubes:t}).eq("id",session.user.id);}catch(e){}};
+window.STORE={
+  examiner:"https://buy.stripe.com/test_fZu14p1q808j9pr2Yy9fW0c",
+  report:"https://buy.stripe.com/test_8x228tecU6wH9pr56G9fW0d",
+  lifetime:"https://buy.stripe.com/test_3cI5kF4Ck5sDdFH6aK9fW0e",
+  aurora:"https://buy.stripe.com/test_fZucN7b0I1cn9pr56G9fW0f",
+  magma:"https://buy.stripe.com/test_8x26oJ9WE7AL59b8iS9fW0g",
+  holo:"https://buy.stripe.com/test_eVq28t6Ksg7hcBD1Uu9fW0h",
+  void:"https://buy.stripe.com/test_fZu28t3yg3kv0SV7eO9fW0i",
+  season:"https://buy.stripe.com/test_00w9AVc4M1cn7hj6aK9fW0j",
+  everything:"https://buy.stripe.com/test_5kQ7sN8SA7AL59b56G9fW0k"};
+window.chemSetFlair=async(f)=>{try{const {data:{session}}=await sb.auth.getSession();if(session)await sb.from("profiles").update({flair:f}).eq("id",session.user.id);}catch(e){}};
 window.chemJumpGo=async(base)=>{
   const {data:{session}}=await sb.auth.getSession();
   if(!session){openAccount();return;}
@@ -6903,7 +7043,7 @@ window.chemJumpGo=async(base)=>{
 };
 window.chemPremium=false; window.applyPracLocks(); if(typeof renderQuiz==="function")renderQuiz();
 
-const KEYS=["chemlab-mastered","chemlab-quiz","chemlab-prac","chemlab-hunt-best","chemlab-quiz-beststreak","chemlab-mood","chemlab-ranked","chemlab-learntime","chemlab-perfectruns"];
+const KEYS=["chemlab-mastered","chemlab-quiz","chemlab-prac","chemlab-hunt-best","chemlab-quiz-beststreak","chemlab-mood","chemlab-ranked","chemlab-learntime","chemlab-perfectruns","chemlab-cosmetics"];
 const lget=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}};
 const lset=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));window.chemStoreSync&&window.chemStoreSync.drop(k)}catch(e){}};
 function snapshot(){const o={};KEYS.forEach(k=>o[k]=lget(k,null));return o;}
@@ -6924,6 +7064,7 @@ function merge(cloud,local){
   out["chemlab-ranked"]=(!cr)?lr:(!lr)?cr:((lr.rp||0)>=(cr.rp||0)?lr:cr);
   out["chemlab-learntime"]=Math.max(cloud?.["chemlab-learntime"]||0,local?.["chemlab-learntime"]||0);
   out["chemlab-perfectruns"]=[...new Set([...(cloud?.["chemlab-perfectruns"]||[]),...(local?.["chemlab-perfectruns"]||[])])];
+  out["chemlab-cosmetics"]=[...new Set([...(cloud?.["chemlab-cosmetics"]||[]),...(local?.["chemlab-cosmetics"]||[])])];
   return out;
 }
 function applyLocal(o){KEYS.forEach(k=>{if(o[k]!=null)lset(k,o[k])});
@@ -6944,10 +7085,14 @@ async function refresh(){
   user=session?.user||null;
   if(user){
     window.chemStoreSync&&window.chemStoreSync.persistOn();
-    const {data:p}=await sb.from("profiles").select("premium,progress,nickname,avatar,avatar_hue,admin").eq("id",user.id).maybeSingle();
+    const {data:p}=await sb.from("profiles").select("premium,progress,nickname,avatar,avatar_hue,admin,lifetime,examiner,report_credits,season_until,flair,tubes").eq("id",user.id).maybeSingle();
     prof=p||{};
     window.chemAdmin=!!p?.admin;
     window.chemNick=p?.nickname||user.email.split("@")[0];
+    window.chemLifetime=!!p?.lifetime;
+    window.chemExaminer=!!p?.examiner||(p?.season_until&&new Date(p.season_until)>new Date())||window.chemAdmin;
+    window.chemCredits=p?.report_credits||0;
+    window.chemSeason=p?.season_until&&new Date(p.season_until)>new Date();
     premium=!!p?.premium||window.chemAdmin;
     const merged=merge(p?.progress||{},snapshot());
     applyLocal(merged); pushProgress();
@@ -7185,9 +7330,10 @@ function render(){
       <table class="featcmp">
         <tr><th></th><th>Free</th><th>Premium</th></tr>
         <tr><td>Topic guides</td><td class="n">6 of 13</td><td class="y">all 13</td></tr>
-        <tr><td>Interactive simulations</td><td class="n">4 of 7</td><td class="y">all 7</td></tr>
-        <tr><td>Practical walkthroughs</td><td class="n">1 of 5</td><td class="y">all 5</td></tr>
-        <tr><td>Quiz bank</td><td class="n">6 per session, mixed only</td><td class="y">${QUIZ.length} + topic practice</td></tr>
+        <tr><td>Interactive simulations</td><td class="n">2 of 7</td><td class="y">all 7 + trap door</td></tr>
+        <tr><td>Practical walkthroughs</td><td class="n">1 of 12</td><td class="y">all 12 in Lab Mode</td></tr>
+        <tr><td>Test your knowledge</td><td class="n">—</td><td class="y">${QUIZ.length} questions, exams, Redemption, Ranked</td></tr>
+        <tr><td>AI examiner</td><td class="n">—</td><td class="y">25 marked papers/month</td></tr>
         <tr><td>Element Hunt hard mode</td><td class="n">—</td><td class="y">✓</td></tr>
         <tr><td>Progress synced across devices</td><td class="n">—</td><td class="y">✓</td></tr>
       </table>
@@ -7196,6 +7342,45 @@ function render(){
         <button class="btn ghost" id="a-refresh">Refresh status</button></p>
       <p style="color:var(--ink-soft);font-size:12.5px;margin:8px 0 0">Secure Stripe checkout — you come straight back and unlock automatically. Test mode: card 4242 4242 4242 4242.</p>
     </div>`}
+  </div>
+  <div class="card acct-card setcard vault">
+    <h3>⚗️ The Vault</h3>
+    <p style="color:var(--ink-soft);font-size:13.5px;margin:2px 0 12px">One-off upgrades. No subscriptions hiding in the fine print — what you buy is yours.</p>
+    <div class="vault-tiers">
+      <div class="vtier ${window.chemLifetime?"owned":""}">
+        <b>♾️ Lifetime</b><span class="vprice">€99</span>
+        <p>Premium for one lifetime.<br><i>A lifetime is exactly 100 years. Immortals must repurchase in 2126.</i></p>
+        ${window.chemLifetime?'<span class="vgot">✓ yours until 2126</span>':`<button class="btn" data-buy="lifetime">Claim a century</button>`}
+      </div>
+      <div class="vtier best">
+        <b>🧪 The Everything Flask</b><span class="vprice">€149</span>
+        <p>Every purchasable thing, in one flask: Lifetime Premium, Examiner Unlimited forever, all four shield skins + flairs, a Season Pass, 3 Grade Reports and one free Rank Jump.<br><i>Test tubes not included — those you earn.</i></p>
+        <button class="btn" data-buy="everything" style="background:linear-gradient(120deg,#e0a93c,#e84393);border:0">Drink the flask</button>
+      </div>
+    </div>
+    <div class="vault-addons">
+      <div class="vaddon">
+        <b>🤖 Examiner Unlimited</b><span class="vprice">€2/mo</span>
+        <p>Premium includes 25 AI-marked papers a month. This removes the meter entirely.</p>
+        ${window.chemExaminer?'<span class="vgot">✓ unlimited active</span>':`<button class="btn ghost" data-buy="examiner">Go unlimited</button>`}
+      </div>
+      <div class="vaddon">
+        <b>📜 Predicted Grade Report</b><span class="vprice">€2.99</span>
+        <p>A formal AI-written report: predicted grade, chapter map, trajectory, fortnight plan. Credits: <b>${window.chemCredits||0}</b></p>
+        <button class="btn ghost" data-buy="report">Buy a report</button>
+        <button class="btn ghost" id="vault-report-go">Open in Progress →</button>
+      </div>
+      <div class="vaddon">
+        <b>🎽 Shield skins</b><span class="vprice">€1.99 each</span>
+        <p>Aurora, Magma, Holo and Void — dress your rank shield and flair your leaderboard name.</p>
+        <button class="btn ghost" id="vault-skins-go">Browse in Ranked →</button>
+      </div>
+      ${(new Date().getMonth()>=3&&new Date().getMonth()<=5)||window.chemAdmin?`<div class="vaddon season">
+        <b>🎓 Exam Season Pass</b><span class="vprice">€7.99</span>
+        <p>April–June only: Examiner Unlimited for the whole exam season${window.chemAdmin&&!(new Date().getMonth()>=3&&new Date().getMonth()<=5)?" <i>(admin preview — hidden off-season)</i>":""}.</p>
+        ${window.chemSeason?'<span class="vgot">✓ season active</span>':`<button class="btn ghost" data-buy="season">Arm the season</button>`}
+      </div>`:""}
+    </div>
   </div>
   <div class="card acct-card setcard">
     <h3>Data &amp; privacy</h3>
@@ -7224,6 +7409,9 @@ function render(){
   const NICK_B=["Badger","Beaker","Burette","Phoenix","Falcon","Isotope","Orbital","Pipette","Crystal","Photon","Vortex","Titan","Comet","Molecule","Electron","Catalyst"];
   const nickGen=()=>NICK_A[Math.floor(Math.random()*NICK_A.length)]+NICK_B[Math.floor(Math.random()*NICK_B.length)]+Math.floor(10+Math.random()*90);
   const nickMsg=(t,ok)=>{const m=$("#nick-msg");if(m){m.textContent=t;m.style.color=ok?"var(--ok)":"var(--danger)";}};
+  $$("#acct [data-buy]").forEach(b=>b.addEventListener("click",()=>window.chemJumpGo(window.STORE[b.dataset.buy])));
+  const vrg=$("#vault-report-go"); if(vrg)vrg.onclick=()=>{closeAcct();showView("progress");};
+  const vsg=$("#vault-skins-go"); if(vsg)vsg.onclick=()=>{closeAcct();showView("ranked");};
   $("#nick-rand").onclick=async()=>{
     for(let i=0;i<6;i++){
       const cand=nickGen();
@@ -7332,6 +7520,25 @@ function render(){
 }
 sb.auth.onAuthStateChange((ev)=>{if(ev==="SIGNED_OUT"){wipeLocal();location.reload();}else refresh();});
 refresh();
+const boughtKind=new URLSearchParams(location.search).get("bought");
+if(boughtKind){
+  history.replaceState({},"",location.pathname);
+  const MSG={examiner:"🤖 Examiner Unlimited active — the meter is gone",report:"📜 Report credit added — generate it from Progress",
+    lifetime:"♾️ Lifetime Premium — see you in 2126",cosmetic:"🎽 Skin acquired — equip it in Ranked",
+    season:"🎓 Season Pass armed — unlimited marking till June 30",everything:"🧪 THE EVERYTHING FLASK — you own it all"};
+  let tries=0;
+  const poll=setInterval(async()=>{
+    await refresh(); tries++;
+    const ok=(boughtKind==="examiner"&&window.chemExaminer)||(boughtKind==="report"&&window.chemCredits>0)||
+      (boughtKind==="lifetime"&&window.chemLifetime)||(boughtKind==="cosmetic"&&(lget("chemlab-cosmetics",[])||[]).length)||
+      (boughtKind==="season"&&window.chemSeason)||(boughtKind==="everything"&&window.chemLifetime);
+    if(ok||tries>20){
+      clearInterval(poll);
+      if(ok){toast(MSG[boughtKind]||"Purchase complete ✓");
+        if(boughtKind==="cosmetic"||boughtKind==="everything")showView("ranked");}
+    }
+  },2500);
+}
 if(new URLSearchParams(location.search).has("jumped")){
   history.replaceState({},"",location.pathname);
   const r0=(lget("chemlab-ranked",{})||{}).rp||0;

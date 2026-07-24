@@ -57,3 +57,16 @@ language sql security definer set search_path=public stable as $fn$
   select exists(select 1 from profiles where lower(nickname)=lower(name) and id <> auth.uid());
 $fn$;
 grant execute on function public.nick_taken(text) to authenticated;
+
+-- Store (2026-07-24): lifetime/examiner/report/season/cosmetics/quota
+alter table public.profiles
+  add column if not exists lifetime boolean not null default false,
+  add column if not exists examiner boolean not null default false,
+  add column if not exists examiner_sub text,
+  add column if not exists report_credits integer not null default 0,
+  add column if not exists season_until timestamptz,
+  add column if not exists flair text,
+  add column if not exists ai_month text,
+  add column if not exists ai_used integer not null default 0;
+grant update (progress, email, nickname, avatar, avatar_hue, updated_at, tubes, flair) on public.profiles to authenticated;
+-- leaderboard() now also returns flair
